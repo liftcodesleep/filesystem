@@ -4,34 +4,32 @@
  ///////////// UNIT TESTS //////////////////////////
 
 void test_extent_init() {
-    uint extent[EXTENT_SIZE][2];
+    Extent extent[EXTENT_SIZE];
     extent_init(extent);
+	extent_print(extent);
+    char question[] = "extent_init test: ";
+    //char question[] = ( "Verifying extent initialization...\n");
 
-    printf("extent_init test:\n");
-    printf("Verifying extent initialization...\n");
-
-    // Check if the extent is initialized to 0
-    int i, j;
+    // Check if each extent element is initialized correctly
+    int i;
     int failed = 0;
     for (i = 0; i < EXTENT_SIZE; i++) {
-        for (j = 0; j < 2; j++) {
-            if (extent[i][j] != 0) {
-                failed = 1;
-                break;
-            }
+        if (extent[i].start_loc != 0 || extent[i].amount_after_start != 0) {
+            failed = 1;
+            break;
         }
     }
 
     // Print the result
     if (failed) {
-        printf("Failed\n");
+        printf( "%-32s Failed\n", question);
     } else {
-        printf("Passed\n");
+        printf( "%-32s Passed\n", question);
     }
 }
 
 void test_extent_get_block_num() {
-    uint extent[EXTENT_SIZE][2];
+    Extent extent[EXTENT_SIZE];
     extent_init(extent);
 
     // Append 5 blocks starting from block number 10
@@ -42,39 +40,39 @@ void test_extent_get_block_num() {
     unsigned int blockNum2 = extent_get_block_num(extent, 2);
     unsigned int blockNum3 = extent_get_block_num(extent, 4);
 
-    printf("extent_get_block_num test:\n");
-    printf("Block number at index 0: %u\n", blockNum1);
-    printf("Block number at index 2: %u\n", blockNum2);
-    printf("Block number at index 4: %u\n", blockNum3);
+    char question[] = "extent_get_block_num test: ";
+    //char question[] = ( "Block number at index 0: %u\n", blockNum1);
+    //char question[] = ( "Block number at index 2: %u\n", blockNum2);
+    //char question[] = ( "Block number at index 4: %u\n", blockNum3);
 
     // Verify the results
     if (blockNum1 == 10 && blockNum2 == 12 && blockNum3 == 14) {
-        printf("Passed\n");
+        printf( "%-32s Passed\n", question);
     } else {
-        printf("Failed\n");
+        printf( "%-32s Failed\n", question);
     }
 }
 
 void test_extent_append() {
-    uint extent[EXTENT_SIZE][2];
+    Extent extent[EXTENT_SIZE];
     extent_init(extent);
 
     // Append 5 blocks starting from block number 10
     unsigned int count = extent_append(extent, 10, 5);
 
-    printf("extent_append test:\n");
-    printf("Number of blocks appended: %u\n", count);
+    char question[] = "extent_append test: ";
+    // char question[] = ( "Number of blocks appended: %u\n", count);
 
     // Verify the result
     if (count == 5) {
-        printf("Passed\n");
+        printf( "%-32s Passed\n", question);
     } else {
-        printf("Failed\n");
+        printf( "%-32s Failed\n", question);
     }
 }
 
 void test_extent_remove_blocks() {
-    uint extent[EXTENT_SIZE][2];
+    Extent extent[EXTENT_SIZE];
     extent_init(extent);
 
     // Append 5 blocks starting from block number 10
@@ -83,21 +81,19 @@ void test_extent_remove_blocks() {
     // Remove 3 blocks starting from block number 12
     unsigned int count = extent_remove_blocks(extent, 12, 3);
 
-    printf("extent_remove_blocks test:\n");
-    printf("Number of blocks removed: %u\n", count);
+    char question[] = "extent_remove_blocks test: ";
+    //char question[] = ( "Number of blocks removed: %u\n", count);
 
     // Verify the result
     if (count == 3) {
-        printf("Passed\n");
+        printf( "%-32s Passed\n", question);
     } else {
-        printf("Failed\n");
+        printf( "%-32s Failed\n", question);
     }
 }
 
-
-
 void test_extent_get_total_blocks() {
-    uint extent[EXTENT_SIZE][2];
+    Extent extent[EXTENT_SIZE];
     extent_init(extent);
 
     // Append 5 blocks starting from block number 10
@@ -106,34 +102,30 @@ void test_extent_get_total_blocks() {
     // Get the total number of blocks in the extent
     unsigned int totalBlocks = extent_get_total_blocks(extent);
 
-    printf("extent_get_total_blocks test:\n");
-    printf("Total number of blocks in extent: %u\n", totalBlocks);
+    char question[] = "extent_get_total_blocks test: ";
+    //char question[] = ( "Total number of blocks in extent: %u\n", totalBlocks);
 
     // Verify the result
     if (totalBlocks == 5) {
-        printf("Passed\n");
+        printf( "%-32s Passed\n", question);
     } else {
-        printf("Failed\n");
+        printf( "%-32s Failed\n", question);
     }
 }
 
 int main() {
     printf("Running extent tests...\n\n");
 
-	test_extent_init();
-    printf("\n");
-	
+    test_extent_init();
+
     test_extent_get_block_num();
-    printf("\n");
 
     test_extent_append();
-    printf("\n");
 
     test_extent_remove_blocks();
-    printf("\n");
 
     test_extent_get_total_blocks();
-    printf("\n");
+
 
     return 0;
 }
