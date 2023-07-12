@@ -23,6 +23,8 @@
 
 #include "fsLow.h"
 #include "mfs.h"
+#include "vcb.h"
+#include "dirEntry.h"
 
 
 int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
@@ -30,7 +32,31 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	printf ("Initializing File System with %ld blocks with a block size of %ld\n", numberOfBlocks, blockSize);
 	/* TODO: Add any code you need to initialize your file system. */
 
-	return 0;
+	// Determine if you need to format the volume or not
+
+	// Malloc a block of memory as your VCB pointer - per spec sheet
+	vcb * test = malloc(blockSize);
+
+	// LBAread block 0
+	//test = LBAread(test, 1, 0); LBAread block zero?
+
+	// If signatures match, vcb already initalized - Don't initalize again
+	// Determine where magicNumber will be if already initalized
+	// if (magicNumber == test->unique_volume_ID)
+	// {
+	// 	return;
+	// }
+
+	// Initalize the values in your VCB - Contained within function
+	initVCB(test);
+
+	//Initalize free space
+	//Initalize the root directory
+	//vcb->root_location = init_dir()?
+	//Set the values returned from above in the VCB
+	//LBAwrite the VCB to block 0;
+
+	return 1;
 	}
 	
 	
