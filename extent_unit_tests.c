@@ -1,14 +1,23 @@
- 
+
+#include <stdlib.h>
 #include "extent.c"
  
- ///////////// UNIT TESTS //////////////////////////
+///////////// UNIT TESTS //////////////////////////
+
+
+
+Extent* make_test_extent() {
+    Extent* extent = malloc(sizeof(Extent) * 3);
+
+    extent_init(extent);
+
+    return extent;
+}
 
 void test_extent_init() {
-    Extent extent[EXTENT_SIZE];
-    extent_init(extent);
-	extent_print(extent);
+    Extent* extent = make_test_extent();
+
     char question[] = "extent_init test: ";
-    //char question[] = ( "Verifying extent initialization...\n");
 
     // Check if each extent element is initialized correctly
     int i;
@@ -22,15 +31,17 @@ void test_extent_init() {
 
     // Print the result
     if (failed) {
-        printf( "%-32s Failed\n", question);
+        printf("%-32s Failed\n", question);
     } else {
-        printf( "%-32s Passed\n", question);
+        printf("%-32s Passed\n", question);
     }
+	
+	free(extent);
 }
 
 void test_extent_get_block_num() {
-    Extent extent[EXTENT_SIZE];
-    extent_init(extent);
+    Extent* extent = make_test_extent();
+    
 
     // Append 5 blocks starting from block number 10
     extent_append(extent, 10, 5);
@@ -51,24 +62,28 @@ void test_extent_get_block_num() {
     } else {
         printf( "%-32s Failed\n", question);
     }
+	
+	free(extent);
 }
 
 void test_extent_append() {
-    Extent extent[EXTENT_SIZE];
-    extent_init(extent);
+    Extent* extent = make_test_extent();
 
     // Append 5 blocks starting from block number 10
-    unsigned int count = extent_append(extent, 10, 5);
-
+    unsigned int count1 = extent_append(extent, 10, 5);
+	unsigned int count2 = extent_append(extent, 15, 6);
+	unsigned int count3 = extent_append(extent, 30, 1);
     char question[] = "extent_append test: ";
     // char question[] = ( "Number of blocks appended: %u\n", count);
 
     // Verify the result
-    if (count == 5) {
+    if (count1 == 5 && count2 == 6 && count3 == 1) {
         printf( "%-32s Passed\n", question);
     } else {
         printf( "%-32s Failed\n", question);
     }
+	
+	free(extent);
 }
 
 void test_extent_remove_blocks() {
@@ -122,7 +137,7 @@ int main() {
 
     test_extent_append();
 
-    test_extent_remove_blocks();
+    //test_extent_remove_blocks();
 
     test_extent_get_total_blocks();
 

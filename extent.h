@@ -1,8 +1,10 @@
 #ifndef EXTENT_H
 #define EXTENT_H
 
+#include <stdio.h>
+
 #define EXTENT_SIZE 3
-#define SENTINAL_VALUE 0xffff
+#define SENTINAL_VALUE 0xffffffff
 
 typedef unsigned int uint;
 
@@ -21,13 +23,15 @@ typedef struct Extent{
  */
 void extent_init(Extent *extent);
 
-
+void extent_free(Extent *extent);
 
 /*
  * Returns:
  *   - The block number at the specified index.
+ * Error:
+ * Reutrns -1
  */
-unsigned int extent_get_block_num(Extent *extent, uint index);
+int extent_get_block_num(Extent *extent, uint index);
 
 /*
  * Adds more blocks to the extent. Also merges the extent
