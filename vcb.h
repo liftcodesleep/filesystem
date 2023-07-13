@@ -1,7 +1,8 @@
-
+#include <stdio.h>
+#include "dirEntry.h"
 
 typedef struct vcb {
-    unsigned int unique_volume_ID; // unique ID / magic number
+    long unique_volume_ID; // unique ID / magic number
     unsigned long total_blocks;
     unsigned int free_block_map; // block number of bitmap startin block - Bierman
     unsigned int block_size; // 512
@@ -15,4 +16,5 @@ typedef struct vcb {
     unsigned long last_mounted_time; // Help for debugging
 } vcb;
 
+// Initalize Volume Control Block - Populate variables
 void initVCB(vcb *vcb);
