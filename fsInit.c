@@ -71,6 +71,10 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
   test->free_block_map = init_free_space(19531, BLOCK_SIZE);
   // Initalize the root directory
   test->root_location = init_dir(10, NULL);
+  test->total_blocks = 19531;
+  test->block_size = BLOCK_SIZE;
+  test->max_file_name_length = 100;
+  test->root_location = 7;
 
   // Set the values returned from above in the VCB
   // LBAwrite the VCB to block 0 - Hexdump will validate

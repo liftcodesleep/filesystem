@@ -24,8 +24,8 @@
 
 typedef struct direntry
 {
-  char name[100];
   unsigned long size;
+  char name[100];
   extent extents[3];
   unsigned long time_created;
   unsigned long time_last_modified;
