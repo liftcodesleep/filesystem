@@ -53,10 +53,23 @@ unsigned int extent_remove_blocks(Extent *extent, uint block_number, uint count)
  */
 unsigned int extent_get_total_blocks(Extent *extent);
 
+
+/*
+* merges the second extent into the first extent
+* Returns:
+*   - The amount of blocks merged 
+*
+*/
+int extent_merge(Extent *first_extent, Extent *second_extent);
+
+
 /* 
  * For debugging purposes, prints the contents of the extent map.
  */
 void extent_print(Extent *extent);
+
+
+
 
 
 #endif /* EXTENT_H */
