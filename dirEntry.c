@@ -52,7 +52,7 @@ int init_dir(int minEntries, direntry * parent){
     strcpy(newDir[0].name, ".");
     newDir[0].size = bytesAlloc;
     strcpy(newDir[1].name, "..");
-    jextent * e = allocate_blocks(blocksNeeded,blocksNeeded);
+    extent * e = allocate_blocks(blocksNeeded,blocksNeeded);
     newDir[0].extents[0] = *e;
     free(e);
     //setup root directory if parent is NULL

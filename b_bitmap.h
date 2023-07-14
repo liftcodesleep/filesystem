@@ -1,9 +1,9 @@
 #include "b_io.h"
-typedef struct jextent
+typedef struct extent
 {
   int start;
   int count;
-} jextent, *pextent;
+} extent, *pextent;
 
 // make space return first free block num
 int init_free_space(int block_count, int block_size);
@@ -12,7 +12,7 @@ int init_free_space(int block_count, int block_size);
 int load_free_space(int block_count, int block_size);
 
 // use this to size things to fit our extents
-jextent *allocate_blocks(int blocks_required, int min_per_extent);
+extent *allocate_blocks(int blocks_required, int min_per_extent);
 
-// frees an jextent's worth
+// frees an extent's worth
 void release_blocks(int start, int count);

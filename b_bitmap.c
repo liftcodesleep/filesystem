@@ -174,7 +174,7 @@ void mark_extent(int start, int length)
   }
 }
 
-int get_extent(int start, int req, int min_size, jextent *pextent)
+int get_extent(int start, int req, int min_size, extent *pextent)
 {
   // printf("get_extent: start: %d req: %d min_size: %d\n", start, req, min_size);
   int begin = start;
@@ -207,10 +207,10 @@ int get_extent(int start, int req, int min_size, jextent *pextent)
   }
 }
 
-jextent *allocate_blocks(int blocks_required, int min_extent_size)
+extent *allocate_blocks(int blocks_required, int min_extent_size)
 {
   int max_extents = blocks_required / min_extent_size + !!(blocks_required % min_extent_size);
-  jextent *rc = (jextent *)calloc(max_extents, sizeof(jextent));
+  extent *rc = (extent *)calloc(max_extents, sizeof(extent));
   int start = 6; // first six blocks are vcb and map
   if (rc == NULL)
   {
@@ -265,10 +265,10 @@ void test_bit_functions()
   print_map(0);
 }
 
-int main(int argv, char *argc[])
-{
-  // init_free_space(19531, 512);
-  init_free_space(640, 512);
-  test_bit_functions();
-  return 0;
-}
+// int main(int argv, char *argc[])
+// {
+//   // init_free_space(19531, 512);
+//   init_free_space(640, 512);
+//   test_bit_functions();
+//   return 0;
+// }

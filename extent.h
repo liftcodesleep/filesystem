@@ -12,16 +12,16 @@
 
 typedef unsigned int uint;
 
-////// Change jextent to an array of struct 
+////// Change extent to an array of struct 
 
 
 
 /*
- * Initializes the jextent to its initial state.
+ * Initializes the extent to its initial state.
  */
-void extent_init(jextent *jextent);
+void extent_init(extent *extent);
 
-void extent_free(jextent *jextent);
+void extent_free(extent *extent);
 
 /*
  * Returns:
@@ -29,42 +29,42 @@ void extent_free(jextent *jextent);
  * Error:
  * Reutrns -1
  */
-int extent_get_block_num(jextent *jextent, uint index);
+int extent_get_block_num(extent *extent, uint index);
 
 /*
- * Adds more blocks to the jextent. Also merges the jextent
+ * Adds more blocks to the extent. Also merges the extent
  * Returns:
  *   - The number of blocks successfully added.
  */
-unsigned int extent_append(jextent *jextent, uint block_number, uint count);
+unsigned int extent_append(extent *extent, uint block_number, uint count);
 
 /*
- * Removes blocks from the jextent.
+ * Removes blocks from the extent.
  * Returns:
  *   - The number of blocks successfully removed.
  */
-unsigned int extent_remove_blocks(jextent *jextent, uint block_number, uint count);
+unsigned int extent_remove_blocks(extent *extent, uint block_number, uint count);
 
 /*
  * Returns:
- *   - The total number of blocks in the jextent.
+ *   - The total number of blocks in the extent.
  */
-unsigned int extent_get_total_blocks(jextent *jextent);
+unsigned int extent_get_total_blocks(extent *extent);
 
 
 /*
-* merges the second jextent into the first jextent
+* merges the second extent into the first extent
 * Returns:
 *   - The amount of blocks merged 
 *
 */
-int extent_merge(jextent *first_extent, jextent *second_extent);
+int extent_merge(extent *first_extent, extent *second_extent);
 
 
 /* 
- * For debugging purposes, prints the contents of the jextent map.
+ * For debugging purposes, prints the contents of the extent map.
  */
-void extent_print(jextent *jextent);
+void extent_print(extent *extent);
 
 
 
