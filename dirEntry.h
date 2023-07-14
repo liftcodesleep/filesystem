@@ -19,5 +19,17 @@
 #include <stdlib.h>			
 #include <string.h>
 #include <time.h>
+#include "extent.h"
 
-int init_dir(int minEntries, dirent * parent);
+typedef struct direntry 
+{
+    unsigned long size;
+    char name[100];
+    struct Extent extents[3];
+    unsigned long time_created;
+    unsigned long time_last_modified;
+    unsigned long time_last_accessed;
+    
+} direntry;
+
+int init_dir(int minEntries, direntry * parent);

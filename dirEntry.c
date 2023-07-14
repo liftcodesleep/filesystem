@@ -27,31 +27,23 @@
 
 #define BLOCK_SIZE 512
 
-typedef struct dirent 
-{
-    unsigned long size;
-    char name[100];
-    struct Extent extents[3];
-    unsigned long time_created;
-    unsigned long time_last_modified;
-    unsigned long time_last_accessed;
-} dirent;
+//a helper function to get the proper block count
+int blockCount(int n, int divider);
 
-
-int init_dir(int minEntries, dirent * parent){
+int init_dir(int minEntries, direntry * parent){
     //minimum bytes needed to fit amount of directory entries
-    int minBytes = minEntries * sizeof(dirent);
+    int minBytes = minEntries * sizeof(direntry);
     //minimum bytes needed to allocate memory
     int blocksNeeded = blockCount(minBytes,BLOCK_SIZE);
     int bytesAlloc = blocksNeeded*BLOCK_SIZE;
     //actual number of entries
-    int actualNEntries = bytesAlloc/sizeof(dirent);
+    int actualNEntries = bytesAlloc/sizeof(direntry);
     //allocate bytes for new directory
-    dirent * newDir = malloc(bytesAlloc);
+    direntry * newDir = malloc(bytesAlloc);
     //entry 0 is . and entry 1 is ..
     for (int i = 2; i < actualNEntries ; i++){
         //directory entry initialize as unused
-        newDir[i].name = "\0";
+        strcpy(newDir[i].name, "\0");
         newDir[i].time_created = 0;
         newDir[i].time_last_modified = 0;
         newDir[i].time_last_accessed = 0;
@@ -60,8 +52,8 @@ int init_dir(int minEntries, dirent * parent){
     strcpy(newDir[0].name, ".");
     newDir[0].size = bytesAlloc;
     strcpy(newDir[1].name, "..");
-    Extent *e = allocate_blocks(blocksNeeded,blocksNeeded);
-    newDir[0].extents[0] = e;
+    Extent * e = allocate_blocks(blocksNeeded,blocksNeeded);
+    newDir[0].extents[0] = *e;
     free(e);
     //setup root directory if parent is NULL
     if (parent == NULL) {
