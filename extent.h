@@ -2,6 +2,7 @@
 #define EXTENT_H
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "b_bitmap.h"
 #include "fsLow.h"
 
@@ -11,22 +12,16 @@
 
 typedef unsigned int uint;
 
-////// Change extent to an array of struct 
+////// Change jextent to an array of struct 
 
-typedef struct Extent{
-	
-	uint start_loc;
-	uint amount_after_start;
-	
-}Extent;
 
 
 /*
- * Initializes the extent to its initial state.
+ * Initializes the jextent to its initial state.
  */
-void extent_init(Extent *extent);
+void extent_init(jextent *jextent);
 
-void extent_free(Extent *extent);
+void extent_free(jextent *jextent);
 
 /*
  * Returns:
@@ -34,42 +29,42 @@ void extent_free(Extent *extent);
  * Error:
  * Reutrns -1
  */
-int extent_get_block_num(Extent *extent, uint index);
+int extent_get_block_num(jextent *jextent, uint index);
 
 /*
- * Adds more blocks to the extent. Also merges the extent
+ * Adds more blocks to the jextent. Also merges the jextent
  * Returns:
  *   - The number of blocks successfully added.
  */
-unsigned int extent_append(Extent *extent, uint block_number, uint count);
+unsigned int extent_append(jextent *jextent, uint block_number, uint count);
 
 /*
- * Removes blocks from the extent.
+ * Removes blocks from the jextent.
  * Returns:
  *   - The number of blocks successfully removed.
  */
-unsigned int extent_remove_blocks(Extent *extent, uint block_number, uint count);
+unsigned int extent_remove_blocks(jextent *jextent, uint block_number, uint count);
 
 /*
  * Returns:
- *   - The total number of blocks in the extent.
+ *   - The total number of blocks in the jextent.
  */
-unsigned int extent_get_total_blocks(Extent *extent);
+unsigned int extent_get_total_blocks(jextent *jextent);
 
 
 /*
-* merges the second extent into the first extent
+* merges the second jextent into the first jextent
 * Returns:
 *   - The amount of blocks merged 
 *
 */
-int extent_merge(Extent *first_extent, Extent *second_extent);
+int extent_merge(jextent *first_extent, jextent *second_extent);
 
 
 /* 
- * For debugging purposes, prints the contents of the extent map.
+ * For debugging purposes, prints the contents of the jextent map.
  */
-void extent_print(Extent *extent);
+void extent_print(jextent *jextent);
 
 
 

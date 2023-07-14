@@ -2,45 +2,44 @@
 #include "extent.h"
 
 
-
-void extent_print(Extent *extent) {
+void extent_print(jextent *jextent) {
     
 	printf("Location    Count\n");
 	for(int i = 0;i < EXTENT_SIZE; i++ ){
-		printf("%05d        %05d\n", extent[i].start_loc, extent[i].amount_after_start);
+		printf("%05d        %05d\n", jextent[i].start, jextent[i].count);
 	}
 	
 }
 
-int extent_get_block_num(Extent *extent, uint index) {
+int extent_get_block_num(jextent *jextent, uint index) {
     
 	int block_index = 0;
 	for(int i = 0;i < EXTENT_SIZE; i++ ){
 		
-		if(extent[i].amount_after_start + block_index > index){
-			return extent[i].start_loc +  index - block_index;
+		if(jextent[i].count + block_index > index){
+			return jextent[i].start +  index - block_index;
 		}
-		block_index += extent[i].amount_after_start;
+		block_index += jextent[i].count;
 	}
 	
 	return -1;
 }
 
-unsigned int extent_append(Extent *extent, uint block_number, uint count) {
+unsigned int extent_append(jextent *jextent, uint block_number, uint count) {
 	
 	uint current_index;
 	for(current_index = 0;current_index < EXTENT_SIZE; current_index++ ){
 		
 		
-		if(extent[current_index].amount_after_start == 0){
+		if(jextent[current_index].count == 0){
 			
-			if(current_index > 0 && extent[current_index-1].amount_after_start + extent[current_index-1].start_loc == block_number){
-				extent[current_index-1].amount_after_start += count;
+			if(current_index > 0 && jextent[current_index-1].count + jextent[current_index-1].start == block_number){
+				jextent[current_index-1].count += count;
 				return count;
 			}
 			
-			extent[current_index].start_loc = block_number;
-			extent[current_index].amount_after_start = count;
+			jextent[current_index].start = block_number;
+			jextent[current_index].count = count;
 			return count;
 		}
 
@@ -49,93 +48,92 @@ unsigned int extent_append(Extent *extent, uint block_number, uint count) {
     return 0;
 }
 
-unsigned int extent_remove_blocks(Extent *extent, uint block_number, uint count) {
+unsigned int extent_remove_blocks(jextent *jextent, uint block_number, uint count) {
     // TODO:
 	return 0;
 }
 
 
-void extent_init(Extent *extent) {
+void extent_init(jextent *jextent) {
 	
     for (uint i = 0; i < EXTENT_SIZE; i++) {
-        extent[i].start_loc = 0;
-		extent[i].amount_after_start = 0;
+        jextent[i].start = 0;
+		jextent[i].count = 0;
     }
 }
 
-unsigned int extent_get_total_blocks(Extent *extent) {
+unsigned int extent_get_total_blocks(jextent *jextent) {
     int block_total = 0;
 	for(int i = 0;i < EXTENT_SIZE; i++ ){
-		block_total += extent[i].amount_after_start;
+		block_total += jextent[i].count;
 	}
 	
 	return block_total;
 }
 
-void extent_free(Extent *extent){
+void extent_free(jextent *jextent){
 	
-	free(extent);
+	free(jextent);
 }
 
 
-/*
-* Makes a new 2nd extent with the first value as the extent passed
-* Returns the block where the table is saved
-*/
-int make_2nd_extent_table(Extent* extent){
-
-	Extent* p_loc = allocate_blocks(1, 1);
-
-	LBAwrite(extent, 1, p_loc->start_loc);
-
-
-	return p_loc->start_loc;
-}
-
-/*
-* Return a pointer to an extent at the block loation given
-*/
-Extent* load_2nd_extent_table(uint block_number){
-
-	Extent* table = malloc( sizeof(Extent)*64 );
-
-	LBAread(table, 1, block_number);
-
-	return table;
-
-
-}
-
-
-/*
-* Makes a new 3nd extent with the first value as the location passed
-* Returns the block where the table is saved
-*/
-int make_3rd_extent_table(uint location){
-
-	Extent* p_loc = allocate_blocks(1, 1);
-
-	uint* location_buffer = &location;
-
-	LBAwrite(location_buffer, 1, p_loc->start_loc);
-
-
-	return p_loc->start_loc;
-}
-
-/*
-* Return a pointer to an extent at the block loation given
-*/
-uint* load_3rd_extent_table(uint block_number){
-
-	Extent* table = malloc( sizeof(block_number)*128 );
-
-	LBAread(table, 1, block_number);
-
-	return table;
-
-
-}
+///*
+//* Makes a new 2nd jextent with the first value as the jextent passed
+//* Returns the block where the table is saved
+//*/
+//int make_2nd_extent_table(jextent* extent){
+//
+//	jextent* p_loc = allocate_blocks(1, 1);
+//
+//	LBAwrite(extent, 1, p_loc->start);
+//
+//
+//	return p_loc->start;
+//}
+//
+///*
+//* Return a pointer to an jextent at the block loation given
+//*/
+//jextent* load_2nd_extent_table(uint block_number){
+//
+//	jextent* table = malloc( sizeof(jextent)*64 );
+//
+//	LBAread(table, 1, block_number);
+//
+//	return table;
+//
+//
+//}
+//
+//
+///*
+//* Makes a new 3nd jextent with the first value as the location passed
+//* Returns the block where the table is saved
+//*/
+//int make_3rd_extent_table(uint location){
+//
+//	jextent* p_loc = allocate_blocks(1, 1);
+//
+//	uint* location_buffer = &location;
+//
+//	LBAwrite(location_buffer, 1, p_loc->start);
+//
+//
+//	return p_loc->start;
+//}
+//
+///*
+//* Return a pointer to an jextent at the block loation given
+//*/
+//jextent* load_3rd_extent_table(uint block_number){
+//
+//	jextent* table = malloc( sizeof(block_number)*128 );
+//
+//	LBAread(table, 1, block_number);
+//
+//	return table;
+//
+//}
 
 
 

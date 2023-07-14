@@ -19,13 +19,15 @@
 #include <stdlib.h>			
 #include <string.h>
 #include <time.h>
-#include "extent.h"
+
+#include "b_bitmap.h"
+
 
 typedef struct direntry 
 {
     unsigned long size;
     char name[100];
-    struct Extent extents[3];
+    struct jextent extents[3];
     unsigned long time_created;
     unsigned long time_last_modified;
     unsigned long time_last_accessed;

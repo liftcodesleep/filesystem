@@ -6,24 +6,24 @@
 
 
 
-Extent* make_test_extent() {
-    Extent* extent = malloc(sizeof(Extent) * 3);
+jextent* make_test_extent() {
+    jextent* jextent = malloc(sizeof(jextent) * 3);
 
-    extent_init(extent);
+    extent_init(jextent);
 
-    return extent;
+    return jextent;
 }
 
 void test_extent_init() {
-    Extent* extent = make_test_extent();
+    jextent* jextent = make_test_extent();
 
     char question[] = "extent_init test: ";
 
-    // Check if each extent element is initialized correctly
+    // Check if each jextent element is initialized correctly
     int i;
     int failed = 0;
     for (i = 0; i < EXTENT_SIZE; i++) {
-        if (extent[i].start_loc != 0 || extent[i].amount_after_start != 0) {
+        if (jextent[i].start != 0 || jextent[i].count != 0) {
             failed = 1;
             break;
         }
@@ -36,20 +36,20 @@ void test_extent_init() {
         printf("%-32s Passed\n", question);
     }
 	
-	free(extent);
+	free(jextent);
 }
 
 void test_extent_get_block_num() {
-    Extent* extent = make_test_extent();
+    jextent* jextent = make_test_extent();
     
 
     // Append 5 blocks starting from block number 10
-    extent_append(extent, 10, 5);
+    extent_append(jextent, 10, 5);
 
     // Test extent_get_block_num for different indices
-    unsigned int blockNum1 = extent_get_block_num(extent, 0);
-    unsigned int blockNum2 = extent_get_block_num(extent, 2);
-    unsigned int blockNum3 = extent_get_block_num(extent, 4);
+    unsigned int blockNum1 = extent_get_block_num(jextent, 0);
+    unsigned int blockNum2 = extent_get_block_num(jextent, 2);
+    unsigned int blockNum3 = extent_get_block_num(jextent, 4);
 
     char question[] = "extent_get_block_num test: ";
     //char question[] = ( "Block number at index 0: %u\n", blockNum1);
@@ -63,16 +63,16 @@ void test_extent_get_block_num() {
         printf( "%-32s Failed\n", question);
     }
 	
-	free(extent);
+	free(jextent);
 }
 
 void test_extent_append() {
-    Extent* extent = make_test_extent();
+    jextent* jextent = make_test_extent();
 
     // Append 5 blocks starting from block number 10
-    unsigned int count1 = extent_append(extent, 10, 5);
-	unsigned int count2 = extent_append(extent, 15, 6);
-	unsigned int count3 = extent_append(extent, 30, 1);
+    unsigned int count1 = extent_append(jextent, 10, 5);
+	unsigned int count2 = extent_append(jextent, 15, 6);
+	unsigned int count3 = extent_append(jextent, 30, 1);
     char question[] = "extent_append test: ";
     // char question[] = ( "Number of blocks appended: %u\n", count);
 
@@ -83,18 +83,18 @@ void test_extent_append() {
         printf( "%-32s Failed\n", question);
     }
 	
-	free(extent);
+	free(jextent);
 }
 
 void test_extent_remove_blocks() {
-    Extent extent[EXTENT_SIZE];
-    extent_init(extent);
+    jextent jextent[EXTENT_SIZE];
+    extent_init(jextent);
 
     // Append 5 blocks starting from block number 10
-    extent_append(extent, 10, 5);
+    extent_append(jextent, 10, 5);
 
     // Remove 3 blocks starting from block number 12
-    unsigned int count = extent_remove_blocks(extent, 12, 3);
+    unsigned int count = extent_remove_blocks(jextent, 12, 3);
 
     char question[] = "extent_remove_blocks test: ";
     //char question[] = ( "Number of blocks removed: %u\n", count);
@@ -108,17 +108,17 @@ void test_extent_remove_blocks() {
 }
 
 void test_extent_get_total_blocks() {
-    Extent extent[EXTENT_SIZE];
-    extent_init(extent);
+    jextent jextent[EXTENT_SIZE];
+    extent_init(jextent);
 
     // Append 5 blocks starting from block number 10
-    extent_append(extent, 10, 5);
+    extent_append(jextent, 10, 5);
 
-    // Get the total number of blocks in the extent
-    unsigned int totalBlocks = extent_get_total_blocks(extent);
+    // Get the total number of blocks in the jextent
+    unsigned int totalBlocks = extent_get_total_blocks(jextent);
 
     char question[] = "extent_get_total_blocks test: ";
-    //char question[] = ( "Total number of blocks in extent: %u\n", totalBlocks);
+    //char question[] = ( "Total number of blocks in jextent: %u\n", totalBlocks);
 
     // Verify the result
     if (totalBlocks == 5) {
@@ -129,7 +129,7 @@ void test_extent_get_total_blocks() {
 }
 
 int main() {
-    printf("Running extent tests...\n\n");
+    printf("Running jextent tests...\n\n");
 
     test_extent_init();
 
