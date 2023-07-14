@@ -44,7 +44,7 @@ int init_dir(int minEntries, direntry *parent)
   for (int i = 2; i < actualNEntries; i++)
   {
     // directory entry initialize as unused
-    strcpy(newDir[i].name, "\0");
+    strcpy(newDir[i].name, "gangsquadunit");
     newDir[i].time_created = 0;
     newDir[i].time_last_modified = 0;
     newDir[i].time_last_accessed = 0;

@@ -68,7 +68,7 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
   initVCB(test);
 
   // Initalize free space
-  test->free_block_map = init_free_space(5, BLOCK_SIZE);
+  test->free_block_map = init_free_space(19531, BLOCK_SIZE);
   // Initalize the root directory
   test->root_location = init_dir(10, NULL);
 
