@@ -6,12 +6,12 @@
 // how big is a dirent? how many blocks for root?
 enum on_masks
 {
-  bit0 = 0x000000001,
-  bit1 = 0x000000002,
-  bit2 = 0x000000004,
-  bit3 = 0x000000008,
-  bit4 = 0x000000010,
-  bit5 = 0x000000020,
+  bit0 = 0x00000001,
+  bit1 = 0x00000002,
+  bit2 = 0x00000004,
+  bit3 = 0x00000008,
+  bit4 = 0x00000010,
+  bit5 = 0x00000020,
 };
 
 enum off_masks
@@ -33,143 +33,213 @@ blockmap map;
 #define WORDSIZE 32
 #define MASK 0x1F
 
-void set_bit(int index)
+void set_bit(uint32_t i, int n)
 {
-  map.blocks[index / WORDSIZE] |= 1 << (index & MASK);
+  i |= 1 << (n & MASK);
+}
+
+int check_bit(uint32_t i, int n)
+{
+  return i & 1 << (n & MASK);
+}
+
+void clear_bit(uint32_t i, int n)
+{
+  i &= ~(1 << (n & MASK));
+}
+
+int count_free_bits(uint32_t i, int n)
+{
+  int m = 0;
+  for (m = 0; m < WORDSIZE - n; m++)
+  {
+    if (check_bit(i, n + m))
+    {
+      break;
+    }
+  }
+  return m;
+}
+
+int find_free_bit(uint32_t i)
+{
+  for (int n = 0; n < WORDSIZE; n++)
+  {
+    if (check_bit(i, n))
+    {
+      return n;
+    }
+  }
+  return -1;
+}
+
+void print_map(int n)
+{
+  printf("printmap: %ld\n", map.size);
+  for (int i = 0; i < map.size; i += 8)
+  {
+    for (int x = 0; x < 8; x++)
+    {
+      printf("%x ", map.blocks[i + x]);
+    }
+    printf("\n");
+  }
+  printf("\n");
 }
 
 int init_free_space(int block_count, int block_size)
 {
-  map.size = block_count;
-  printf("map.size = %ld\n", map.size);
+  // FIXME: small enough block_count gives map size 0
+  map.size = block_count / WORDSIZE;
   map.blocks = (uint32_t *)calloc(map.size + 1, sizeof(uint32_t));
   if (map.blocks == NULL)
   {
     perror("init_bit_map: map.blocks calloc failed\n");
     return -1;
   }
+  print_map(0);
   map.blocks[0] = bit0 | bit1 | bit2 | bit3 | bit4 | bit5;
-  return 6;
-}
-
-uint32_t check_bit(uint32_t index)
-{
-  if (map.blocks[index / WORDSIZE] & 1 << (index & MASK))
-  {
-    return 1;
-  }
-  return 0;
-}
-
-void clear_bit(int index)
-{
-  map.blocks[index / WORDSIZE] &= ~(1 << (index & MASK));
+  print_map(0);
+  return 1;
 }
 
 int get_count(int index)
 {
+  unsigned int v = index; // 32-bit word input to count zero bits on right
+  unsigned int c;         // c will be the number of zero bits on the right,
+                          // so if v is 1101000 (base 2), then c will be 3
+  // NOTE: if 0 == v, then c = 31.
+  if (v & 0x1)
   {
-    unsigned int v = index; // 32-bit word input to count zero bits on right
-    unsigned int c;         // c will be the number of zero bits on the right,
-                            // so if v is 1101000 (base 2), then c will be 3
-    // NOTE: if 0 == v, then c = 31.
-    if (v & 0x1)
+    // special case for odd v (assumed to happen half of the time)
+    c = 0;
+  }
+  else
+  {
+    c = 1;
+    if ((v & 0xffff) == 0)
     {
-      // special case for odd v (assumed to happen half of the time)
-      c = 0;
+      v >>= 16;
+      c += 16;
     }
-    else
+    if ((v & 0xff) == 0)
     {
-      c = 1;
-      if ((v & 0xffff) == 0)
-      {
-        v >>= 16;
-        c += 16;
-      }
-      if ((v & 0xff) == 0)
-      {
-        v >>= 8;
-        c += 8;
-      }
-      if ((v & 0xf) == 0)
-      {
-        v >>= 4;
-        c += 4;
-      }
-      if ((v & 0x3) == 0)
-      {
-        v >>= 2;
-        c += 2;
-      }
-      c -= v & 0x1;
+      v >>= 8;
+      c += 8;
     }
+    if ((v & 0xf) == 0)
+    {
+      v >>= 4;
+      c += 4;
+    }
+    if ((v & 0x3) == 0)
+    {
+      v >>= 2;
+      c += 2;
+    }
+    c -= v & 0x1;
+  }
+  return c;
+}
+
+int next_block(int start, int end, int match)
+{
+  int begin = 0;
+  int found = 0;
+  for (begin = start; begin < end; begin++)
+  {
+    int c = check_bit(map.blocks[begin / WORDSIZE], begin % WORDSIZE);
+    if ((match && c) || (!match && !c))
+    {
+      found = 1;
+      break;
+    }
+  }
+  return found ? begin : -1;
+}
+
+void mark_extent(int start, int length)
+{
+  for (int i = 0; i < length; i++)
+  {
+    set_bit(map.blocks[start / WORDSIZE], i % WORDSIZE);
+  }
+}
+
+int get_extent(int start, int req, int min_size, extent *pextent)
+{
+  int begin = 0;
+  while (1)
+  {
+    begin = next_block(start, map.size * WORDSIZE, 0);
+    if (begin == -1)
+    {
+      return -1; // found nothing
+    }
+    int foo = (begin + min_size < map.size * WORDSIZE) ? begin + min_size : map.size * WORDSIZE;
+    int end = next_block(begin + 1, foo, 1);
+    if (end == -1)
+    {
+      return -1; // no free disk block
+    }
+    if (end - begin < min_size)
+    {
+      begin += end;
+      continue;
+    }
+    pextent->count = end - begin;
+    pextent->start = begin;
+    return 0;
   }
 }
 
 extent *allocate_blocks(int blocks_required, int min_extent_size)
 {
-  extent *free_space = (extent *)malloc(blocks_required * sizeof(extent));
-  int start = 0;
-  int count = 0;
-  int num_extents = 0;
-  // for each word
-  for (int index = 0; index < map.size / WORDSIZE; index++)
+  int max_extents = blocks_required / min_extent_size + !!(blocks_required % min_extent_size);
+  extent *rc = (extent *)calloc(max_extents, sizeof(extent));
+  int start = 6; // first six blocks are vcb and map
+  if (rc == NULL)
   {
-    // if the word is not full
-    if (map.blocks[index / WORDSIZE] != 2 ^ WORDSIZE - 1)
-    {
-      // check for empty bit
-      for (int bit = 0; bit < WORDSIZE; bit++)
-      {
-        if (check_bit(map.blocks[index * WORDSIZE + bit]) == 0)
-        {
-          start = index * WORDSIZE + bit;
-          count = 1;
-          while (check_bit(map.blocks[index * WORDSIZE + bit]) == 0 && count < blocks_required)
-          {
-            count++;
-            bit++;
-          }
-          if (count >= min_extent_size)
-          {
-            free_space[num_extents].count = count;
-            free_space[num_extents].start = start;
-            blocks_required -= count;
-            num_extents++;
-            if (blocks_required == 0)
-            {
-              return free_space;
-            }
-          }
-        }
-      }
-    }
+    perror("rc calloc failed\n");
+    return NULL;
   }
-  // for int in map.blocks
-  // if free note and count until not free
-  // return note and count
+  for (int i = 0; i < max_extents; i++)
+  {
+    int success = get_extent(start, blocks_required, min_extent_size, rc + i);
+    if (success == -1)
+    {
+      perror("Insufficient disk space!");
+      free(rc);
+      return NULL;
+    }
+    start += rc[i].count;
+  }
+  for (int i = 0; i < max_extents; i++)
+  {
+    mark_extent(rc[i].start, rc[i].count - rc[i].start);
+  }
+  return rc;
 }
 
 void test_bit_functions()
 {
   for (int index = 0; index < 33; index = index + 1)
   {
-    check_bit(index);
-    printf("test_bit_functions init:  index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
-    set_bit(index);
-    printf("test_bit_functions set:   index: %d set bit %d\n", index, index);
-    check_bit(index);
-    printf("test_bit_functions check: index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
+    // printf("test_bit_functions init:  index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
+    // set_bit(index);
+    // printf("test_bit_functions set:   index: %d set bit %d\n", index, index);
+    // printf("test_bit_functions check: index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
     // clear_bit(index);
-    // printf("test_bit_functions clear: index: %d bit is: %u\n", index, map.blocks[index / WORDSIZE]);
-    // check_bit(index);
-    // printf("test_bit_functions check: index: %d bit is: %u\n", index, map.blocks[index / WORDSIZE]);
+    // printf("test_bit_functions check: index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
   }
+
+  allocate_blocks(1, 1);
 }
 
 int main(int argv, char *argc[])
 {
-  init_free_space(19531, 512);
+  // init_free_space(19531, 512);
+  init_free_space(640, 512);
   test_bit_functions();
   return 0;
 }
