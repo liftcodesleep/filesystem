@@ -25,6 +25,7 @@
 #include "mfs.h"
 #include "vcb.h"
 #include "dirEntry.h"
+#include "b_bitmap.h"
 
 #define BLOCK_SIZE 512
 #define MAGIC_NUMBER 1920213058
@@ -60,6 +61,7 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	// Using hard coded number to test - Successful
 	if (test->unique_volume_ID == MAGIC_NUMBER)
 	{
+		printf("Magic Number validated.\n");
 		return 0;
 	}
 
@@ -67,9 +69,9 @@ int initFileSystem (uint64_t numberOfBlocks, uint64_t blockSize)
 	initVCB(test);
 
 	//Initalize free space
-
+	test->free_block_map = init_free_space(5, BLOCK_SIZE);
 	//Initalize the root directory
-	test->root_location = init_dir(50, NULL);
+	test->root_location = init_dir(10, NULL);
 
 	//Set the values returned from above in the VCB
 	//LBAwrite the VCB to block 0 - Hexdump will validate

@@ -11,9 +11,6 @@ typedef struct vcb {
     //dirent* res_root; // This is not valid on disk must be init every time
 
     unsigned int max_file_path_length; // File System
-    unsigned int file_count; // Is this covered in free blocks?
-    unsigned long creation_time; // Help for debugging
-    unsigned long last_mounted_time; // Help for debugging
 } vcb;
 
 // Initalize Volume Control Block - Populate variables
