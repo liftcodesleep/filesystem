@@ -2,8 +2,11 @@
 #define EXTENT_H
 
 #include <stdio.h>
+#include "b_bitmap.h"
+#include "fsLow.h"
 
 #define EXTENT_SIZE 3
+
 #define SENTINAL_VALUE 0xffffffff
 
 typedef unsigned int uint;
