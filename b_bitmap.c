@@ -33,9 +33,11 @@ blockmap map;
 #define WORDSIZE 32
 #define MASK 0x1F
 
-void set_bit(uint32_t i, int n)
+void set_bit(uint32_t *pi, int n)
 {
-  i |= 1 << (n & MASK);
+  // printf("set_bit: pi: %d n: %d mask: %d shift mask: %d\n", *pi, n, n & MASK, 1 << (n & MASK));
+  *pi |= 1 << (n & MASK);
+  // printf("set_bit: pi: %d n: %d\n", *pi, n);
 }
 
 int check_bit(uint32_t i, int n)
@@ -75,16 +77,17 @@ int find_free_bit(uint32_t i)
 
 void print_map(int n)
 {
-  printf("printmap: %ld\n", map.size);
+  // printf("printmap: %ld\n", map.size);
   for (int i = 0; i < map.size; i += 8)
   {
-    for (int x = 0; x < 8; x++)
+    int foo = (i > map.size - 8) ? map.size % 8 : 8;
+    for (int x = 0; x < foo; x++)
     {
-      printf("%x ", map.blocks[i + x]);
+      printf("[ %x ]", map.blocks[i * 8 + x]);
     }
     printf("\n");
   }
-  printf("\n");
+  printf("--\n");
 }
 
 int init_free_space(int block_count, int block_size)
@@ -97,9 +100,10 @@ int init_free_space(int block_count, int block_size)
     perror("init_bit_map: map.blocks calloc failed\n");
     return -1;
   }
-  print_map(0);
+  // print_map(0);
   map.blocks[0] = bit0 | bit1 | bit2 | bit3 | bit4 | bit5;
-  print_map(0);
+  // LBAwrite(map.blocks, 5, 1);
+  // print_map(0);
   return 1;
 }
 
@@ -146,37 +150,45 @@ int next_block(int start, int end, int match)
 {
   int begin = 0;
   int found = 0;
-  for (begin = start; begin < end; begin++)
+  // printf("next_block: start: %d end: %d match: %d\n", start, end, match);
+  for (begin = start; begin <= end; begin++)
   {
     int c = check_bit(map.blocks[begin / WORDSIZE], begin % WORDSIZE);
-    if ((match && c) || (!match && !c))
+    // printf("next_block match: %d c: %d\n", match, c);
+    if ((match && c) || (!match && !c) || begin == end)
     {
       found = 1;
       break;
     }
   }
+  // printf("next_block: returning: %d\n", found ? begin : -1);
   return found ? begin : -1;
 }
 
 void mark_extent(int start, int length)
 {
+  // printf("mark_extent: start: %d length %d\n", start, length);
   for (int i = 0; i < length; i++)
   {
-    set_bit(map.blocks[start / WORDSIZE], i % WORDSIZE);
+    set_bit(map.blocks + start / WORDSIZE, (start + i) % WORDSIZE);
   }
 }
 
-int get_extent(int start, int req, int min_size, extent *pextent)
+int get_extent(int start, int req, int min_size, jextent *pextent)
 {
-  int begin = 0;
+  // printf("get_extent: start: %d req: %d min_size: %d\n", start, req, min_size);
+  int begin = start;
   while (1)
   {
-    begin = next_block(start, map.size * WORDSIZE, 0);
+    int foo = (begin + min_size < map.size * WORDSIZE) ? begin + min_size : map.size * WORDSIZE;
+    // printf("get_extent: begin: %d min_size: %d map.size %ld foo: %d\n", begin, min_size, map.size, foo);
+    begin = next_block(start, foo, 0);
     if (begin == -1)
     {
       return -1; // found nothing
     }
-    int foo = (begin + min_size < map.size * WORDSIZE) ? begin + min_size : map.size * WORDSIZE;
+    foo = (begin + min_size < map.size * WORDSIZE) ? begin + min_size : map.size * WORDSIZE;
+    // printf("get_extent: begin: %d min_size: %d map.size %ld foo: %d\n", begin, min_size, map.size, foo);
     int end = next_block(begin + 1, foo, 1);
     if (end == -1)
     {
@@ -187,16 +199,18 @@ int get_extent(int start, int req, int min_size, extent *pextent)
       begin += end;
       continue;
     }
+    // printf("end: %d begin: %d\n", end, begin);
     pextent->count = end - begin;
     pextent->start = begin;
+    // printf("get_ext: ext.count: %d ext.start %d\n", pextent->count, pextent->start);
     return 0;
   }
 }
 
-extent *allocate_blocks(int blocks_required, int min_extent_size)
+jextent *allocate_blocks(int blocks_required, int min_extent_size)
 {
   int max_extents = blocks_required / min_extent_size + !!(blocks_required % min_extent_size);
-  extent *rc = (extent *)calloc(max_extents, sizeof(extent));
+  jextent *rc = (jextent *)calloc(max_extents, sizeof(jextent));
   int start = 6; // first six blocks are vcb and map
   if (rc == NULL)
   {
@@ -216,7 +230,8 @@ extent *allocate_blocks(int blocks_required, int min_extent_size)
   }
   for (int i = 0; i < max_extents; i++)
   {
-    mark_extent(rc[i].start, rc[i].count - rc[i].start);
+    printf("allocate_blocks: i: %d start: %d count: %d\n", i, rc[i].start, rc[i].count);
+    mark_extent(rc[i].start, rc[i].count);
   }
   return rc;
 }
@@ -232,8 +247,17 @@ void test_bit_functions()
     // clear_bit(index);
     // printf("test_bit_functions check: index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
   }
-
+  print_map(0);
   allocate_blocks(1, 1);
+  print_map(0);
+  printf("----------------------------\n");
+  print_map(0);
+  allocate_blocks(2, 2);
+  print_map(0);
+  printf("----------------------------\n");
+  print_map(0);
+  allocate_blocks(50, 10);
+  print_map(0);
 }
 
 int main(int argv, char *argc[])
