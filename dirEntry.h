@@ -20,4 +20,4 @@
 #include <string.h>
 #include <time.h>
 
-void init_dir(int minEntries, dirent * parent);
+int init_dir(int minEntries, dirent * parent);
