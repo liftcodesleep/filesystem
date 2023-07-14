@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "fsLow.h"
-
+#include "b_bitmap.h"
 #define EXTENT_SIZE 3
 
 #define SENTINAL_VALUE 0xffffffff
