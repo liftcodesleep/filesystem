@@ -188,7 +188,7 @@ int get_extent(int start, int req, int min_size, jextent *pextent)
       return -1; // found nothing
     }
     foo = (begin + min_size < map.size * WORDSIZE) ? begin + min_size : map.size * WORDSIZE;
-    printf("get_extent: begin: %d min_size: %d map.size %ld foo: %d\n", begin, min_size, map.size, foo);
+    // printf("get_extent: begin: %d min_size: %d map.size %ld foo: %d\n", begin, min_size, map.size, foo);
     int end = next_block(begin + 1, foo, 1);
     if (end == -1)
     {
@@ -199,10 +199,10 @@ int get_extent(int start, int req, int min_size, jextent *pextent)
       begin += end;
       continue;
     }
-    printf("end: %d begin: %d\n", end, begin);
+    // printf("end: %d begin: %d\n", end, begin);
     pextent->count = end - begin;
     pextent->start = begin;
-    printf("get_ext: ext.count: %d ext.start %d\n", pextent->count, pextent->start);
+    // printf("get_ext: ext.count: %d ext.start %d\n", pextent->count, pextent->start);
     return 0;
   }
 }
@@ -230,6 +230,7 @@ jextent *allocate_blocks(int blocks_required, int min_extent_size)
   }
   for (int i = 0; i < max_extents; i++)
   {
+    printf("allocate_blocks: i: %d start: %d count: %d\n", i, rc[i].start, rc[i].count);
     mark_extent(rc[i].start, rc[i].count);
   }
   return rc;
@@ -252,6 +253,10 @@ void test_bit_functions()
   printf("----------------------------\n");
   print_map(0);
   allocate_blocks(2, 2);
+  print_map(0);
+  printf("----------------------------\n");
+  print_map(0);
+  allocate_blocks(50, 10);
   print_map(0);
 }
 

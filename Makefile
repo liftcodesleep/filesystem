@@ -60,6 +60,9 @@ OBJ = $(ROOTNAME)$(HW)$(FOPTION).o $(ADDOBJ) $(ARCHOBJ)
 $(ROOTNAME)$(HW)$(FOPTION): $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) -lm -l readline -l $(LIBS)
 
+b_bitmap: b_bitmap.o
+	$(CC) -o $@ $^ $(CFLAGS) -lm -l readline -l $(LIBS)
+
 clean:
 	rm $(ROOTNAME)$(HW)$(FOPTION).o $(ADDOBJ) $(ROOTNAME)$(HW)$(FOPTION)
 
