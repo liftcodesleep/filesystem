@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "b_bitmap.h"
 #include "fsLow.h"
 
 #define EXTENT_SIZE 3

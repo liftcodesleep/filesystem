@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <stdlib.h> // for malloc
 #include "b_bitmap.h"
+#include "fsLow.h"
 
-// how big is a dirent? how many blocks for root?
 enum on_masks
 {
   bit0 = 0x00000001,
@@ -23,6 +23,8 @@ enum off_masks
   nbit5 = ~bit5,
 };
 
+// TODO
+
 typedef struct blockmap
 {
   uint32_t *blocks;
@@ -35,9 +37,7 @@ blockmap map;
 
 void set_bit(uint32_t *pi, int n)
 {
-  // printf("set_bit: pi: %d n: %d mask: %d shift mask: %d\n", *pi, n, n & MASK, 1 << (n & MASK));
   *pi |= 1 << (n & MASK);
-  // printf("set_bit: pi: %d n: %d\n", *pi, n);
 }
 
 int check_bit(uint32_t i, int n)
@@ -92,19 +92,22 @@ void print_map(int n)
 
 int init_free_space(int block_count, int block_size)
 {
-  // FIXME: small enough block_count gives map size 0
-  map.size = block_count / WORDSIZE;
+  if (block_count < 1)
+  {
+    perror("Invalid block count\n");
+  }
+  map.size = (block_count - 1) / WORDSIZE + 1;
   map.blocks = (uint32_t *)calloc(map.size + 1, sizeof(uint32_t));
   if (map.blocks == NULL)
   {
     perror("init_bit_map: map.blocks calloc failed\n");
     return -1;
   }
-  // print_map(0);
+  print_map(0);
   map.blocks[0] = bit0 | bit1 | bit2 | bit3 | bit4 | bit5;
-  // LBAwrite(map.blocks, 5, 1);
-  // print_map(0);
-  return 1;
+  LBAwrite(map.blocks, 5, 1);
+  print_map(0);
+  return 0;
 }
 
 int get_count(int index)
@@ -161,7 +164,7 @@ int next_block(int start, int end, int match)
       break;
     }
   }
-  printf("next_block: returning: %d\n", found ? begin : -1);
+  // printf("next_block: returning: %d\n", found ? begin : -1);
   return found ? begin : -1;
 }
 
@@ -170,7 +173,7 @@ void mark_extent(int start, int length)
   // printf("mark_extent: start: %d length %d\n", start, length);
   for (int i = 0; i < length; i++)
   {
-    set_bit(map.blocks + start / WORDSIZE, (start + i) % WORDSIZE);
+    set_bit(map.blocks + (start + i) / WORDSIZE, (start % WORDSIZE) + i);
   }
 }
 
@@ -181,10 +184,12 @@ int get_extent(int start, int req, int min_size, extent *pextent)
   while (1)
   {
     int foo = (begin + min_size < map.size * WORDSIZE) ? begin + min_size : map.size * WORDSIZE;
-    printf("get_extent: begin: %d min_size: %d foo: %d\n", begin, min_size, foo);
+    // int foo = map.size * WORDSIZE;
+    // printf("get_extent: begin: %d min_size: %d foo: %d\n", begin, min_size, foo);
     begin = next_block(start, foo, 0);
     if (begin == -1)
     {
+      perror("begin error");
       return -1; // found nothing
     }
     foo = (begin + min_size < map.size * WORDSIZE) ? begin + min_size : map.size * WORDSIZE;
@@ -192,6 +197,7 @@ int get_extent(int start, int req, int min_size, extent *pextent)
     int end = next_block(begin + 1, foo, 1);
     if (end == -1)
     {
+      perror("end error");
       return -1; // no free disk block
     }
     if (end - begin < min_size)
@@ -202,7 +208,7 @@ int get_extent(int start, int req, int min_size, extent *pextent)
     // printf("end: %d begin: %d\n", end, begin);
     pextent->count = end - begin;
     pextent->start = begin;
-    printf("get_ext: extent.start: %d extent.count %d\n", pextent->start, pextent->count);
+    // printf("get_ext: extent.start: %d extent.count %d\n", pextent->start, pextent->count);
     return 0;
   }
 }
@@ -231,7 +237,7 @@ extent *allocate_blocks(int blocks_required, int min_extent_size)
   }
   for (int i = 0; i < max_extents; i++)
   {
-    printf("allocate_blocks: i: %d start: %d count: %d\n", i, rc[i].start, rc[i].count);
+    // printf("allocate_blocks: i: %d start: %d count: %d\n", i, rc[i].start, rc[i].count);
     mark_extent(rc[i].start, rc[i].count);
   }
   return rc;
@@ -239,36 +245,36 @@ extent *allocate_blocks(int blocks_required, int min_extent_size)
 
 void test_bit_functions()
 {
-  for (int index = 0; index < 33; index = index + 1)
-  {
-    // printf("test_bit_functions init:  index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
-    // set_bit(index);
-    // printf("test_bit_functions set:   index: %d set bit %d\n", index, index);
-    // printf("test_bit_functions check: index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
-    // clear_bit(index);
-    // printf("test_bit_functions check: index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
-  }
+  // for (int index = 0; index < 33; index = index + 1)
+  // {
+  //   // printf("test_bit_functions init:  index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
+  //   // set_bit(index);
+  //   // printf("test_bit_functions set:   index: %d set bit %d\n", index, index);
+  //   // printf("test_bit_functions check: index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
+  //   // clear_bit(index);
+  //   // printf("test_bit_functions check: index: %d bit is 2^%d checkbit reads %d\n", index, index, check_bit(index));
+  // }
+  // print_map(0);
+  // allocate_blocks(1, 1);
+  // print_map(0);
+  // printf("----------------------------\n");
   print_map(0);
-  allocate_blocks(1, 1);
-  print_map(0);
-  printf("----------------------------\n");
-  print_map(0);
-  allocate_blocks(2, 2);
-  print_map(0);
-  printf("----------------------------\n");
-  print_map(0);
-  allocate_blocks(9, 3);
-  print_map(0);
-  printf("----------------------------\n");
-  print_map(0);
-  allocate_blocks(50, 7);
+  allocate_blocks(32, 32);
+  // print_map(0);
+  // printf("----------------------------\n");
+  // print_map(0);
+  // allocate_blocks(9, 3);
+  // print_map(0);
+  // printf("----------------------------\n");
+  // print_map(0);
+  // allocate_blocks(50, 50);
   print_map(0);
 }
 
 // int main(int argv, char *argc[])
 // {
-//   // init_free_space(19531, 512);
-//   init_free_space(640, 512);
+//   init_free_space(19531, 512);
+//   // init_free_space(640, 512);
 //   test_bit_functions();
 //   return 0;
 // }

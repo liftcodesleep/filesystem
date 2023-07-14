@@ -1,5 +1,7 @@
 #include "b_io.h"
-#ifndef BITMAP
+#ifndef BITMAP_H
+#define BITMAP_H
+
 typedef struct extent
 {
   int start;
