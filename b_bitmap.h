@@ -1,4 +1,5 @@
 #include "b_io.h"
+#ifndef BITMAP
 typedef struct extent
 {
   int start;
@@ -16,3 +17,5 @@ extent *allocate_blocks(int blocks_required, int min_per_extent);
 
 // frees an extent's worth
 void release_blocks(int start, int count);
+
+#endif

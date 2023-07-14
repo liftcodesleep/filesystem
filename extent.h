@@ -12,9 +12,7 @@
 
 typedef unsigned int uint;
 
-////// Change extent to an array of struct 
-
-
+////// Change extent to an array of struct
 
 /*
  * Initializes the extent to its initial state.
@@ -51,23 +49,17 @@ unsigned int extent_remove_blocks(extent *extent, uint block_number, uint count)
  */
 unsigned int extent_get_total_blocks(extent *extent);
 
-
 /*
-* merges the second extent into the first extent
-* Returns:
-*   - The amount of blocks merged 
-*
-*/
+ * merges the second extent into the first extent
+ * Returns:
+ *   - The amount of blocks merged
+ *
+ */
 int extent_merge(extent *first_extent, extent *second_extent);
 
-
-/* 
+/*
  * For debugging purposes, prints the contents of the extent map.
  */
 void extent_print(extent *extent);
-
-
-
-
 
 #endif /* EXTENT_H */
