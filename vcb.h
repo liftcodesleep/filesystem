@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "dirEntry.h"
+//#include "dirEntry.h"
 
 typedef struct vcb {
     long unique_volume_ID; // unique ID / magic number
