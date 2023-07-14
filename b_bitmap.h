@@ -5,7 +5,7 @@ typedef struct extent
   int count;
 } extent, *pextent;
 
-// make space
+// make space return first free block num
 int init_free_space(int block_count, int block_size);
 
 // get space
