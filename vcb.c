@@ -1,3 +1,20 @@
+/**************************************************************
+* Class: CSC-415-01 Summer 2023
+* Name: Oscar Galvez
+* Student ID: 911813414
+* Group Name: Coffee on the Rocks
+* Project: File System Project
+*
+* File: vcb.c
+*
+* Description: The main purpose of this file is to initalize the
+*              values that comprise of the Volume Control Block.
+*              initVCB is called if it is determined that the
+               volume must be formatted due to a mismatch of the
+               unique_volume_ID.
+*
+**************************************************************/
+
 #include <stdio.h>
 
 #include "vcb.h"
