@@ -1,3 +1,15 @@
+/**************************************************************
+ * Class:  CSC-415
+ * Name: Jacob Lawrence
+ * Student ID: 922384785
+ * Project: Basic File System
+ *
+ * File: b_bitmap.h
+ *
+ * Description: This file allows its user to initialize and interact with 
+ * a bitmap to manage the free space of their system. It provides functions
+ * to load, allocate, and free blocks.
+ **************************************************************/
 #include "b_io.h"
 #ifndef BITMAP_H
 #define BITMAP_H
