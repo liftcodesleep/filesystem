@@ -6,7 +6,7 @@
  * Group Name: Coffee On The Rocks
  * Project: Basic File System
  *
- * File: dirEntry.c
+ * File: dirEntry.h
  *
  * Description: Handler for directory entries. Creates directory entries,
  *              and other helper functions to facilitate modifications of
