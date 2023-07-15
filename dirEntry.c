@@ -1,17 +1,18 @@
 /**************************************************************
- * Class:  CSC-415-0# Fall 2021
+ * Class:  CSC-415-01 Summer 2023
  * Names: Hyok In Kwon
- * Student IDs:
- * GitHub Name:
- * Group Name:
+ * Student IDs: 922373878
+ * GitHub Name: hkwon4
+ * Group Name: Coffee On The Rocks
  * Project: Basic File System
  *
- * File: fsInit.c
+ * File: dirEntry.c
  *
- * Description: Main driver for file system assignment.
+ * Description: Handler for directory entries. Creates directory entries,
+ *              and other helper functions to facilitate modifications of
+ *              directory entries.
  *
- * This file is where you will start and initialize your system
- *
+ * 
  **************************************************************/
 
 #include <stdio.h>
@@ -29,6 +30,11 @@
 // a helper function to get the proper block count
 int blockCount(int n, int divider);
 
+//function to initialize directory entries
+//takes a value to set the minimum number of entries to be created
+//takes a directory entry to be set as the parent
+//when parent is null, sets up the root directory
+//returns the value of the first block of the first extent
 int init_dir(int minEntries, direntry *parent)
 {
   // minimum bytes needed to fit amount of directory entries

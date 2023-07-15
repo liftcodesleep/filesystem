@@ -1,3 +1,17 @@
+/**************************************************************
+ * Class:  CSC-415-01 Spring 2023
+ * Name: Jacob Lawrence
+ * Student ID: 922384785
+ * Group Name: Coffee on the Rocks
+ * Project: Basic File System
+ *
+ * File: b_bitmap.c
+ *
+ * Description: This file allows its user to initialize and interact with 
+ * a bitmap to manage the free space of their system. It provides functions
+ * to load, allocate, and free blocks.
+ **************************************************************/
+ 
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h> // for malloc
@@ -103,11 +117,11 @@ int init_free_space(int block_count, int block_size)
     perror("init_bit_map: map.blocks calloc failed\n");
     return -1;
   }
-  print_map(0);
+  //print_map(0);
   map.blocks[0] = bit0 | bit1 | bit2 | bit3 | bit4 | bit5;
   LBAwrite(map.blocks, 5, 1);
-  print_map(0);
-  return 0;
+  //print_map(0);
+  return 2;
 }
 
 int get_count(int index)
@@ -240,6 +254,8 @@ extent *allocate_blocks(int blocks_required, int min_extent_size)
     // printf("allocate_blocks: i: %d start: %d count: %d\n", i, rc[i].start, rc[i].count);
     mark_extent(rc[i].start, rc[i].count);
   }
+  LBAwrite(map.blocks, 5, 1);
+
   return rc;
 }
 
@@ -259,7 +275,7 @@ void test_bit_functions()
   // print_map(0);
   // printf("----------------------------\n");
   print_map(0);
-  allocate_blocks(32, 32);
+  allocate_blocks(128, 32);
   // print_map(0);
   // printf("----------------------------\n");
   // print_map(0);
@@ -273,8 +289,8 @@ void test_bit_functions()
 
 // int main(int argv, char *argc[])
 // {
-//   init_free_space(19531, 512);
-//   // init_free_space(640, 512);
+//   // init_free_space(19531, 512);
+//   init_free_space(640, 512);
 //   test_bit_functions();
 //   return 0;
 // }
