@@ -1,16 +1,15 @@
 /**************************************************************
- * Class:  CSC-415-0# Fall 2021
- * Names:
- * Student IDs:
- * GitHub Name:
- * Group Name:
+ * Class:  CSC-415-01 Summer 2023
+ * Names: Matthew Bush, Oscar Galvez, Hyok In Kwon, Jacob Lawrence
+ * Student IDs: 921619696, 911813414, 922373878, 922384785
+ * GitHub Name: liftcodesleep
+ * Group Name: Coffee On The Rocks
  * Project: Basic File System
  *
  * File: fsInit.c
  *
  * Description: Main driver for file system assignment.
  *
- * This file is where you will start and initialize your system
  *
  **************************************************************/
 
