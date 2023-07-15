@@ -1,7 +1,8 @@
 /**************************************************************
- * Class:  CSC-415
+ * Class:  CSC-415-01 Spring 2023
  * Name: Jacob Lawrence
  * Student ID: 922384785
+ * Group Name: Coffee on the Rocks
  * Project: Basic File System
  *
  * File: b_bitmap.c
@@ -10,6 +11,7 @@
  * a bitmap to manage the free space of their system. It provides functions
  * to load, allocate, and free blocks.
  **************************************************************/
+ 
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h> // for malloc
