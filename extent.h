@@ -24,7 +24,7 @@
 #include "b_bitmap.h"
 #define EXTENT_SIZE 3
 
-#define SENTINAL_VALUE 0xffffffff
+#define SENTINAL_SECOND_EXTENT 0xffffffff
 
 typedef unsigned int uint;
 

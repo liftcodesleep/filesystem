@@ -78,7 +78,13 @@ int test_extent_append()
   unsigned int count1 = extent_append(extent, 10, 5);
   unsigned int count2 = extent_append(extent, 15, 6);
   unsigned int count3 = extent_append(extent, 30, 1);
+  unsigned int count4 = extent_append(extent, 40, 14);
 
+  // Should be in the 2nd extent table
+  unsigned int count5 = extent_append(extent, 145, 15);
+  unsigned int count6 = extent_append(extent, 200, 22);
+
+  extent_print(extent);
 
   // Verify the result
   if (count1 == 5 && count2 == 6 && count3 == 1)
@@ -105,7 +111,6 @@ int test_extent_remove_blocks()
   unsigned int count = extent_remove_blocks(extent, 12, 3);
 
 
-  // char question[] = ( "Number of blocks removed: %u\n", count);
 
   // Verify the result
   if (count == 3)
@@ -129,8 +134,6 @@ int test_extent_get_total_blocks()
   // Get the total number of blocks in the extent
   unsigned int totalBlocks = extent_get_total_blocks(extent);
 
-
-  // char question[] = ( "Total number of blocks in extent: %u\n", totalBlocks);
 
   // Verify the result
   if (totalBlocks == 5)

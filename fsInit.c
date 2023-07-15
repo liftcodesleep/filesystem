@@ -60,11 +60,12 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
 
   // If signatures match, vcb already initalized - Don't initalize again
   // Determine where magicNumber will be if already initalized
-  // if (vcbPointer->unique_volume_ID == MAGIC_NUMBER)
-  // {
-  // 	printf("Magic Number validated.\n");
-  // 	return 0;
-  // }
+  if (vcbPointer->unique_volume_ID == MAGIC_NUMBER && !TEST_RUN)
+  {
+    
+  	printf("Magic Number validated.\n");
+  	return 0;
+  }
 
   // Initalize the values in your VCB - per specs
   initVCB(vcbPointer);
