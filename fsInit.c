@@ -36,17 +36,17 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
 
   // Determine if you need to format the volume or not
   // Malloc a block of memory as your VCB pointer - per spec sheet
-  vcb *test = malloc(blockSize);
+  vcb *vcbPointer = malloc(blockSize);
 
   // Report failure of malloc if occured - Abort program
-  if (test == NULL)
+  if (vcbPointer == NULL)
   {
     printf("Malloc has failed for VCB.\n");
     return -1;
   }
 
   // LBAread block 0 - Returns 1
-  uint64_t blocksRead = LBAread(test, 1, 0);
+  uint64_t blocksRead = LBAread(vcbPointer, 1, 0);
 
   // Report failure if no block is returned - Abort program
   if (blocksRead == 0)
@@ -57,28 +57,23 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
 
   // If signatures match, vcb already initalized - Don't initalize again
   // Determine where magicNumber will be if already initalized
-  // Using hard coded number to test - Successful
-  // if (test->unique_volume_ID == MAGIC_NUMBER)
+  // if (vcbPointer->unique_volume_ID == MAGIC_NUMBER)
   // {
   // 	printf("Magic Number validated.\n");
   // 	return 0;
   // }
 
   // Initalize the values in your VCB - per specs
-  initVCB(test);
+  initVCB(vcbPointer);
 
   // Initalize free space
-  test->free_block_map = init_free_space(19531, BLOCK_SIZE);
+  vcbPointer->free_block_map = init_free_space(19531, BLOCK_SIZE);
   // Initalize the root directory
-  test->root_location = init_dir(10, NULL);
-  test->total_blocks = 19531;
-  test->block_size = BLOCK_SIZE;
-  test->max_file_name_length = 100;
-  test->root_location = 7;
+  vcbPointer->root_location = init_dir(10, NULL);
 
   // Set the values returned from above in the VCB
   // LBAwrite the VCB to block 0 - Hexdump will validate
-  LBAwrite(test, 1, 0);
+  LBAwrite(vcbPointer, 1, 0);
 
   return 0;
 }

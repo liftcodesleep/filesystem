@@ -8,14 +8,12 @@
 // Initalize the values in your VCB
 void initVCB(vcb *vcb)
 {
-  vcb->unique_volume_ID = 1920213058; // Determine how to generate - Hardcoded
-  vcb->total_blocks = 1;
-  vcb->free_block_map = 1; // VCB occupies block 0 - Initalize to 1
+  vcb->unique_volume_ID = 1920213058;
+  vcb->total_blocks = 19531;
+  vcb->free_block_map = 1; // Initalize to 1 - Will be reassigned
   vcb->block_size = BLOCK_SIZE;
-  vcb->max_file_name_length = 0;
-  vcb->root_location = 0;
-  // dirent* res_root;
-  // vcb->res_root = 0; // Figure out what to assign here
+  vcb->max_file_name_length = 100;
+  vcb->root_location = 7;
 
-  vcb->max_file_path_length = 0;
+  vcb->max_file_path_length = 100;
 }
