@@ -103,10 +103,10 @@ int init_free_space(int block_count, int block_size)
     perror("init_bit_map: map.blocks calloc failed\n");
     return -1;
   }
-  print_map(0);
+  //print_map(0);
   map.blocks[0] = bit0 | bit1 | bit2 | bit3 | bit4 | bit5;
   LBAwrite(map.blocks, 5, 1);
-  print_map(0);
+  //print_map(0);
   return 2;
 }
 
