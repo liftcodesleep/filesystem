@@ -1,3 +1,20 @@
+/**************************************************************
+ * Class:  CSC-415-01 Summer 2023
+ * Names: Matthew Bush
+ * Student IDs: 921619696
+ * GitHub Name: fattymatty15
+ * Group Name: Coffee on the Rocks
+ * Project: Basic File System
+ *
+ * File: fsInit.c
+ *
+ * Description: This extents file is used to manage blocks of data within the file system. 
+ * The functions include printing the location and count of extents, retrieving 
+ * the block number based on an index, appending new extents while maintaining 
+ * contiguity, a placeholder function for removing blocks, initializing the extent 
+ * array, calculating the total number of blocks, and freeing the extent memory. 
+ *
+ **************************************************************/
 #ifndef EXTENT_H
 #define EXTENT_H
 
