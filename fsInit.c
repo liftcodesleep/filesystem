@@ -24,9 +24,13 @@
 #include "vcb.h"
 #include "dirEntry.h"
 #include "b_bitmap.h"
+#include "file_system_unit_test.h"
 
 #define BLOCK_SIZE 512
 #define MAGIC_NUMBER 1920213058
+
+
+#define TEST_RUN 1
 
 int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
 {
@@ -73,6 +77,12 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
   // Set the values returned from above in the VCB
   // LBAwrite the VCB to block 0 - Hexdump will validate
   LBAwrite(vcbPointer, 1, 0);
+
+
+  if(TEST_RUN)
+  {
+    file_system_unit_tests();
+  }
 
   return 0;
 }

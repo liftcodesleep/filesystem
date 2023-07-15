@@ -110,60 +110,60 @@ void extent_free(extent *extent)
   free(extent);
 }
 
-///*
-//* Makes a new 2nd extent with the first value as the extent passed
-//* Returns the block where the table is saved
-//*/
-// int make_2nd_extent_table(extent* extent){
-//
-//	extent* p_loc = allocate_blocks(1, 1);
-//
-//	LBAwrite(extent, 1, p_loc->start);
-//
-//
-//	return p_loc->start;
-//}
-//
-///*
-//* Return a pointer to an extent at the block loation given
-//*/
-// extent* load_2nd_extent_table(uint block_number){
-//
-//	extent* table = malloc( sizeof(extent)*64 );
-//
-//	LBAread(table, 1, block_number);
-//
-//	return table;
-//
-//
-//}
-//
-//
-///*
-//* Makes a new 3nd extent with the first value as the location passed
-//* Returns the block where the table is saved
-//*/
-// int make_3rd_extent_table(uint location){
-//
-//	extent* p_loc = allocate_blocks(1, 1);
-//
-//	uint* location_buffer = &location;
-//
-//	LBAwrite(location_buffer, 1, p_loc->start);
-//
-//
-//	return p_loc->start;
-//}
-//
-///*
-//* Return a pointer to an extent at the block loation given
-//*/
-// extent* load_3rd_extent_table(uint block_number){
-//
-//	extent* table = malloc( sizeof(block_number)*128 );
-//
-//	LBAread(table, 1, block_number);
-//
-//	return table;
-//
-//}
+/*
+* Makes a new 2nd extent with the first value as the extent passed
+* Returns the block where the table is saved
+*/
+int make_2nd_extent_table(extent* extent){
+
+	pextent p_loc = allocate_blocks(1, 1);
+
+	LBAwrite(extent, 1, p_loc->start);
+
+
+	return p_loc->start;
+}
+
+/*
+* Return a pointer to an extent at the block loation given
+*/
+extent* load_2nd_extent_table(uint block_number){
+
+	pextent table = malloc( sizeof(extent)*64 );
+
+	LBAread(table, 1, block_number);
+
+	return table;
+
+
+}
+
+
+/*
+* Makes a new 3nd extent with the first value as the location passed
+* Returns the block where the table is saved
+*/
+int make_3rd_extent_table(uint location){
+
+	pextent p_loc = allocate_blocks(1, 1);
+
+	uint* location_buffer = &location;
+
+	LBAwrite(location_buffer, 1, p_loc->start);
+
+
+	return p_loc->start;
+}
+
+/*
+* Return a pointer to an extent at the block loation given
+*/
+extent* load_3rd_extent_table(uint block_number){
+
+	extent* table = malloc( sizeof(block_number)*128 );
+
+	LBAread(table, 1, block_number);
+
+	return table;
+
+}

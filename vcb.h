@@ -13,6 +13,9 @@
 **************************************************************/
 
 
+#ifndef VCB
+#define VCB
+
 
 #include <stdio.h>
 // #include "dirEntry.h"
@@ -32,3 +35,5 @@ typedef struct vcb
 
 // Initalize Volume Control Block - Populate variables
 void initVCB(vcb *vcb);
+
+#endif

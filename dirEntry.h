@@ -15,6 +15,10 @@
  * 
  **************************************************************/
 
+
+#ifndef DIRENTRY
+#define DIRENTRY
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -35,3 +39,7 @@ typedef struct direntry
 } direntry;
 
 int init_dir(int minEntries, direntry *parent);
+
+
+
+#endif
