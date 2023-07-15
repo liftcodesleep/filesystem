@@ -11,13 +11,13 @@
  * a bitmap to manage the free space of their system. It provides functions
  * to load, allocate, and free blocks.
  **************************************************************/
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h> // for malloc
 #include "b_bitmap.h"
 #include "fsLow.h"
 
+// options
 enum on_masks
 {
   bit0 = 0x00000001,
@@ -36,8 +36,6 @@ enum off_masks
   nbit4 = ~bit4,
   nbit5 = ~bit5,
 };
-
-// TODO
 
 typedef struct blockmap
 {

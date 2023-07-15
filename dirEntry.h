@@ -1,17 +1,18 @@
 /**************************************************************
- * Class:  CSC-415-0# Fall 2021
+ * Class:  CSC-415-01 Summer 2023
  * Names: Hyok In Kwon
- * Student IDs:
- * GitHub Name:
- * Group Name:
+ * Student IDs: 922373878
+ * GitHub Name: hkwon4
+ * Group Name: Coffee On The Rocks
  * Project: Basic File System
  *
- * File: fsInit.c
+ * File: dirEntry.h
  *
- * Description: Main driver for file system assignment.
+ * Description: Handler for directory entries. Creates directory entries,
+ *              and other helper functions to facilitate modifications of
+ *              directory entries.
  *
- * This file is where you will start and initialize your system
- *
+ * 
  **************************************************************/
 
 #include <stdio.h>

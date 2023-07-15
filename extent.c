@@ -1,9 +1,25 @@
-
+/**************************************************************
+ * Class:  CSC-415-01 Summer 2023
+ * Names: Matthew Bush
+ * Student IDs: 921619696
+ * GitHub Name: fattymatty15
+ * Group Name: Coffee on the Rocks
+ * Project: Basic File System
+ *
+ * File: fsInit.c
+ *
+ * Description: This extents file is used to manage blocks of data within the file system. 
+ * The functions include printing the location and count of extents, retrieving 
+ * the block number based on an index, appending new extents while maintaining 
+ * contiguity, a placeholder function for removing blocks, initializing the extent 
+ * array, calculating the total number of blocks, and freeing the extent memory. 
+ *
+ **************************************************************/
 #include "extent.h"
 
+// Prints all the values in the extent
 void extent_print(extent *extent)
 {
-
   printf("Location    Count\n");
   for (int i = 0; i < EXTENT_SIZE; i++)
   {
@@ -11,6 +27,7 @@ void extent_print(extent *extent)
   }
 }
 
+// Get the block number of based in the index in the extent
 int extent_get_block_num(extent *extent, uint index)
 {
 
@@ -28,6 +45,8 @@ int extent_get_block_num(extent *extent, uint index)
   return -1;
 }
 
+
+// Adds more blocks to the extent and merges if necessary
 unsigned int extent_append(extent *extent, uint block_number, uint count)
 {
 
@@ -40,46 +59,51 @@ unsigned int extent_append(extent *extent, uint block_number, uint count)
 
       if (current_index > 0 && extent[current_index - 1].count + extent[current_index - 1].start == block_number)
       {
-        extent[current_index - 1].count += count;
+        extent[current_index - 1].count += count; // Merge with the previous extent
         return count;
       }
 
-      extent[current_index].start = block_number;
+      extent[current_index].start = block_number; // Start a new extent
       extent[current_index].count = count;
-      return count;
+      return count; 
     }
   }
 
-  return 0;
+  return 0; // No more space for additional extents
 }
 
+// Removes blocks from the extent
 unsigned int extent_remove_blocks(extent *extent, uint block_number, uint count)
 {
   // TODO:
   return 0;
 }
 
+
+// Initializes the extent to its initial state
 void extent_init(extent *extent)
 {
 
   for (uint i = 0; i < EXTENT_SIZE; i++)
   {
-    extent[i].start = 0;
-    extent[i].count = 0;
+    extent[i].start = 0; // Set the start location to 0
+    extent[i].count = 0; // Set the block count to 0
   }
 }
 
+// Returns the total number of blocks in the extent
 unsigned int extent_get_total_blocks(extent *extent)
 {
   int block_total = 0;
   for (int i = 0; i < EXTENT_SIZE; i++)
   {
-    block_total += extent[i].count;
+    block_total += extent[i].count; // Accumulate the block counts
   }
 
   return block_total;
 }
 
+// Frees the memory allocated for the extent
 void extent_free(extent *extent)
 {
 

@@ -1,3 +1,19 @@
+/**************************************************************
+* Class: CSC-415-01 Summer 2023
+* Name: Oscar Galvez
+* Student ID: 911813414
+* Group Name: Coffee on the Rocks
+* Project: File System Project
+*
+* File: vcb.h
+*
+* Description:  Definition of vcb type and the prototypes
+*               of the functions accessible by user applications
+*
+**************************************************************/
+
+
+
 #include <stdio.h>
 // #include "dirEntry.h"
 
