@@ -41,34 +41,6 @@ int test_extent_init()
   free(extent);
 }
 
-int test_extent_get_block_num()
-{
-  extent *extent = make_test_extent();
-
-  // Append 5 blocks starting from block number 10
-  extent_append(extent, 10, 5);
-
-  // Test extent_get_block_num for different indices
-  unsigned int blockNum1 = extent_get_block_num(extent, 0);
-  unsigned int blockNum2 = extent_get_block_num(extent, 2);
-  unsigned int blockNum3 = extent_get_block_num(extent, 4);
-
-  // char question[] = ( "Block number at index 0: %u\n", blockNum1);
-  // char question[] = ( "Block number at index 2: %u\n", blockNum2);
-  // char question[] = ( "Block number at index 4: %u\n", blockNum3);
-
-  // Verify the results
-  if (blockNum1 == 10 && blockNum2 == 12 && blockNum3 == 14)
-  {
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
-
-  free(extent);
-}
 
 int test_extent_append()
 {
@@ -78,13 +50,19 @@ int test_extent_append()
   unsigned int count1 = extent_append(extent, 10, 5);
   unsigned int count2 = extent_append(extent, 15, 6);
   unsigned int count3 = extent_append(extent, 30, 1);
-  unsigned int count4 = extent_append(extent, 40, 14);
+  unsigned int count4 = extent_append(extent, 40, 1);
 
   // Should be in the 2nd extent table
-  unsigned int count5 = extent_append(extent, 145, 15);
-  unsigned int count6 = extent_append(extent, 200, 22);
+  unsigned int count5 = extent_append(extent, 50, 2);
+  unsigned int count6 = extent_append(extent, 60, 3);
 
-  extent_print(extent);
+  for(int i = 4; i < 70; i++)
+  {
+    extent_append(extent, 70 + i+i, i);
+  }
+  
+
+  //extent_print(extent);
 
   // Verify the result
   if (count1 == 5 && count2 == 6 && count3 == 1)
@@ -123,26 +101,5 @@ int test_extent_remove_blocks()
   }
 }
 
-int test_extent_get_total_blocks()
-{
-  extent extent[EXTENT_SIZE];
-  extent_init(extent);
 
-  // Append 5 blocks starting from block number 10
-  extent_append(extent, 10, 5);
-
-  // Get the total number of blocks in the extent
-  unsigned int totalBlocks = extent_get_total_blocks(extent);
-
-
-  // Verify the result
-  if (totalBlocks == 5)
-  {
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
-}
 

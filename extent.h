@@ -25,6 +25,7 @@
 #define EXTENT_SIZE 3
 
 #define SENTINAL_SECOND_EXTENT 0xffffffff
+#define SENTINAL_THIRD_EXTENT 0xfffffffe
 
 typedef unsigned int uint;
 
@@ -35,15 +36,8 @@ typedef unsigned int uint;
  */
 void extent_init(extent *extent);
 
-void extent_free(extent *extent);
 
-/*
- * Returns:
- *   - The block number at the specified index.
- * Error:
- * Reutrns -1
- */
-int extent_get_block_num(extent *extent, uint index);
+
 
 /*
  * Adds more blocks to the extent. Also merges the extent
@@ -52,6 +46,16 @@ int extent_get_block_num(extent *extent, uint index);
  */
 unsigned int extent_append(extent *extent, uint block_number, uint count);
 
+
+
+/*
+ * 
+ * Returns:
+ *    The extent at the index in the extent table
+ */
+pextent extent_at_index(pextent extent, uint i);
+
+
 /*
  * Removes blocks from the extent.
  * Returns:
@@ -59,11 +63,7 @@ unsigned int extent_append(extent *extent, uint block_number, uint count);
  */
 unsigned int extent_remove_blocks(extent *extent, uint block_number, uint count);
 
-/*
- * Returns:
- *   - The total number of blocks in the extent.
- */
-unsigned int extent_get_total_blocks(extent *extent);
+
 
 /*
  * merges the second extent into the first extent

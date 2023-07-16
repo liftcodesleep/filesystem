@@ -22,9 +22,9 @@ void test( int(*func)(), char* name )
 
 void extent_tests()
 {
-	//test( test_extent_get_total_blocks, "test_extent_get_total_blocks");
+
 	//test( test_extent_init,"test_extent_init");
-	//test( test_extent_get_block_num,"test_extent_get_block_num");
+
 	test( test_extent_append,"test_extent_append");
 	//test( test_extent_remove_blocks,"test_extent_remove_blocks");
 }
