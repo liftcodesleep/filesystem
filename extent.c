@@ -100,45 +100,71 @@ unsigned int extent_append(extent *extent, uint block_number, uint count)
 
 
 pextent extent_at_index(pextent extent, uint i)
-{
-  uint extent_index = 0;
+{ 
 
-  // 
-  for (extent_index = 0; i < EXTENT_SIZE; extent_index++)
+  // first 2 extents
+  if(i < EXTENT_SIZE - 1)
   {
-    if(extent_index == i && extent[extent_index].count != SENTINAL_SECOND_EXTENT)
-    {
-      return extent+extent_index;
-    }
-  }
+    return extent + i;
 
-  extent_index--;
-  if(extent[extent_index].count = SENTINAL_SECOND_EXTENT)
+  // make sure there is no 2nd or 3d extent table
+  }else if(i == EXTENT_SIZE - 1  
+    && extent[2].count != SENTINAL_SECOND_EXTENT
+    && extent[2].count != SENTINAL_THIRD_EXTENT)
+  {
+    return extent + i;
+
+  // if there is a second extent table
+  }else if(extent[2].count == SENTINAL_SECOND_EXTENT
+    && i < 67)
   {
     pextent second_extent = malloc(MINBLOCKSIZE);
+    LBAread(second_extent, 1, extent[2].start );
+
     
-    LBAread(second_extent, 1, extent[extent_index].start);
-    
-    for (int j = 0; j < 64; j++)
-    {
-      if(extent_index == i)
-      {
-        return second_extent + j;
-      }
-      
-      if(second_extent[j].count == 0)
-      {
-        return NULL;
-      }
-      extent_index++;
-    }
+    return second_extent + i - 2;
+
+  // if there is a third extent table
+  }else if(extent[2].count == SENTINAL_THIRD_EXTENT
+    && i < 8000)
+  {
+    unsigned int* third_extent = malloc(MINBLOCKSIZE);
+    LBAread(third_extent, 1, extent[2].start );
+
+    pextent second_extent = malloc(MINBLOCKSIZE);
+    LBAread(second_extent, 1, third_extent[ (i-2) / 64] );
+
+    free(third_extent);
+    return second_extent + (i-2) % 64;
 
   }
-
+  
   return NULL;
-
 }
 
+
+unsigned int extent_block_to_LBA(extent *extent, unsigned int local_block_number)
+{
+
+  pextent current_extent;
+  unsigned int block_in_extent = 0;
+  int i = 0;
+  current_extent = extent_at_index(extent, i);
+  
+  
+
+  while(current_extent != NULL && current_extent->count != 0)
+  {
+    if(current_extent->count + block_in_extent >= local_block_number)
+    {
+      return current_extent->start + block_in_extent + current_extent->count  - local_block_number ;
+    }
+    block_in_extent += current_extent->count;
+    current_extent = extent_at_index(extent, i++);
+  }
+  
+  return 0;
+}
 
 
 

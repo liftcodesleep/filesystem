@@ -49,10 +49,17 @@ unsigned int extent_append(extent *extent, uint block_number, uint count);
 
 
 /*
- * 
- * Returns:
- *    The extent at the index in the extent table
- */
+ * Takes the local block number and returns where it is stored in the LBA
+ * Returns: The LBA from the block passed
+*/
+unsigned int extent_block_to_LBA(extent *extent, unsigned int local_block_number);
+
+
+/*
+ * gets the extents at an index 
+ * MUST FREE THE RETURNED EXTENT!!!
+ * Return NULL if bad value or an empty extent if at the end
+*/
 pextent extent_at_index(pextent extent, uint i);
 
 

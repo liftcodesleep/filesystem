@@ -30,7 +30,7 @@
 #define MAGIC_NUMBER 1920213058
 
 
-#define TEST_RUN 0
+#define TEST_RUN 1
 
 int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
 {

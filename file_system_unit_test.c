@@ -23,10 +23,12 @@ void test( int(*func)(), char* name )
 void extent_tests()
 {
 
-	//test( test_extent_init,"test_extent_init");
-
+	test( test_extent_init,"test_extent_init");
 	test( test_extent_append,"test_extent_append");
-	//test( test_extent_remove_blocks,"test_extent_remove_blocks");
+	test( test_extent_at_index,"test_extent_at_index");
+
+	test( test_extent_block_to_LBA,"test_extent_block_to_LBA");
+	test( test_extent_remove_blocks,"test_extent_remove_blocks");
 }
 
 void file_system_unit_tests()
