@@ -94,6 +94,7 @@ int parsePath(const char* pathname){
         while (token2 != NULL){
             strcpy(ppath->pathArray[ppath->pathSize], token2);
             ppath->pathSize++;
+            token2 = strtok_r(NULL, "/", &tokP);
         }
     }
     return ppath->pathSize;
