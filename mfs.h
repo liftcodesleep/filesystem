@@ -19,6 +19,7 @@
 #include <time.h>
 
 #include "b_io.h"
+#include "dirEntry.h"
 
 #include <dirent.h>
 #define FT_REGFILE	DT_REG
