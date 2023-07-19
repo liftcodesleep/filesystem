@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stdlib.h> // for malloc
 #include "b_bitmap.h"
+#include "extent.h"
 #include "fsLow.h"
 
 // options
@@ -54,6 +55,7 @@ void set_bit(uint32_t *pi, int n)
 
 int check_bit(uint32_t i, int n)
 {
+  // printf("check bit returns: %d\n", i & 1 << (n & MASK));
   return i & 1 << (n & MASK);
 }
 
@@ -90,19 +92,19 @@ int find_free_bit(uint32_t i)
 }
 
 // debug print dump of map
-void print_map(int n)
+void print_map()
 {
+  printf("--\n");
   // printf("printmap: %ld\n", map.size);
   for (int i = 0; i < map.size; i += 8)
   {
     int foo = (i > map.size - 8) ? map.size % 8 : 8;
     for (int x = 0; x < foo; x++)
     {
-      printf("[ %x ]", map.blocks[i * 8 + x]);
+      printf("[%x]", map.blocks[i * 8 + x]);
     }
-    printf("\n");
   }
-  printf("--\n");
+  printf("\n--\n");
 }
 
 // alloc for bitmap
@@ -166,24 +168,6 @@ int get_count(int index)
   return count;
 }
 
-// check a range for a given bit by state
-// if found, return its offset
-int next_block(int start, int end, int match)
-{
-  int begin = 0;
-  int found = 0;
-  for (begin = start; begin <= end; begin++)
-  {
-    int c = check_bit(map.blocks[begin / WORDSIZE], begin % WORDSIZE);
-    if ((match && c) || (!match && !c) || begin == end)
-    {
-      found = 1;
-      break;
-    }
-  }
-  return found ? begin : -1;
-}
-
 // set bits corresponding to passed extent
 void mark_extent(int start, int length)
 {
@@ -193,34 +177,62 @@ void mark_extent(int start, int length)
   }
 }
 
+// check a range for a given bit by state
+// if found, return its offset
+int next_block(int start, int end, int match)
+{
+  // printf("next_block: searching from block %d to %d for %d\n", start, end, match);
+  int begin = 0;
+  int found = 0;
+  for (begin = start; begin <= end; begin++)
+  {
+    int c = check_bit(map.blocks[begin / WORDSIZE], begin % WORDSIZE);
+    if ((match && c) || (!match && !c) || begin == end)
+    {
+      // printf("next_block: found %d at %d end: %d\n", c, begin, end);
+      found = 1;
+      break;
+    }
+  }
+  // printf("next_block: returning %d\n", found ? begin : -1);
+  return found ? begin : -1;
+}
+
 // find satisfactory extents of free space
 int get_extent(int start, int req, int min_size, extent *pextent)
 {
+  // check as far as req
   int begin = start;
   while (1)
   {
-    int foo = (begin + min_size < map.size * WORDSIZE) ? begin + min_size : map.size * WORDSIZE;
+    int foo = (begin + req < map.size * WORDSIZE) ? begin + req : map.size * WORDSIZE;
+    // printf("get_extent: searching from block %d to %d\n", begin, foo);
     begin = next_block(start, foo, 0);
     if (begin == -1)
     {
-      perror("begin error");
+      perror("No free block found!\n");
       return -1; // found nothing
     }
-    foo = (begin + min_size < map.size * WORDSIZE) ? begin + min_size : map.size * WORDSIZE;
+    foo = (begin + req < map.size * WORDSIZE) ? begin + req : map.size * WORDSIZE;
+    // printf("get_extent: searching from block %d to %d\n", begin, foo);
     int end = next_block(begin + 1, foo, 1);
     if (end == -1)
     {
-      perror("end error");
-      return -1; // no free disk block
+      perror("end error\n"); // this should never happen?
+      return -1;             // no free disk block
     }
     if (end - begin < min_size)
     {
       begin += end;
+      // printf("get_extent: end = %d begin = %d size = %d\n", end, begin, end - begin);
       continue;
     }
-    pextent->count = end - begin;
-    pextent->start = begin;
-    return 0;
+    // printf("get_extent: end = %d begin = %d size = %d\n", end, begin, end - begin);
+
+    // pextent->start = begin;
+    // pextent->count = end - begin;
+    extent_append(pextent, begin, end - begin);
+    return end - begin;
   }
 }
 
@@ -230,29 +242,36 @@ int get_extent(int start, int req, int min_size, extent *pextent)
 // return the extents
 // TODO bad contract with dirent extents system
 // Need to return 3 extents not arbitrary
-extent *allocate_blocks(int blocks_required, int min_extent_size)
+extent *allocate_blocks(int blocks_requested, int min_extent_size)
 {
-  int max_extents = blocks_required / min_extent_size + !!(blocks_required % min_extent_size);
-  extent *rc = (extent *)calloc(max_extents, sizeof(extent));
+  // only need 3 extents
+  //  int max_extents = blocks_requested / min_extent_size + !!(blocks_requested % min_extent_size);
+  int num_extents = 3;
+  extent *rc = (extent *)calloc(num_extents, sizeof(extent));
   int start = 6; // first six blocks are vcb and map
   if (rc == NULL)
   {
     perror("rc calloc failed\n");
     return NULL;
   }
-  for (int i = 0; i < max_extents; i++)
+  for (int i = 0; i < num_extents; i++)
   {
-    int success = get_extent(start, blocks_required, min_extent_size, rc + i);
+    int success = get_extent(start, blocks_requested, min_extent_size, rc + i);
     if (success == -1)
     {
-      perror("Insufficient disk space!");
+      perror("Insufficient disk space!\n");
       free(rc);
       return NULL;
     }
-    blocks_required -= rc[i].count;
+
+    blocks_requested -= rc[i].count;
     start = rc[i].start + rc[i].count;
+    if (blocks_requested == 0)
+    {
+      break;
+    }
   }
-  for (int i = 0; i < max_extents; i++)
+  for (int i = 0; i < num_extents; i++)
   {
     mark_extent(rc[i].start, rc[i].count);
   }
@@ -262,9 +281,16 @@ extent *allocate_blocks(int blocks_required, int min_extent_size)
 }
 
 // local debug testing
-//  int main(int argv, char *argc[])
-//  {
-//    // init_free_space(19531, 512);
-//    test_bit_functions();
-//    return 0;
-//  }
+// int main(int argv, char *argc[])
+// {
+//   init_free_space(256, 512);
+//   // print_map();
+
+//   for (int i = 1; i < 20; i++)
+//   {
+//     print_map();
+//     allocate_blocks(i, i);
+//     // print_map();
+//   }
+//   return 0;
+// }
