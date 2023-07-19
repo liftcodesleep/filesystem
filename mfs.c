@@ -33,7 +33,8 @@ typedef struct parsedPath{
 }parsedPath;
 
 //parsed path container
-parsedPath ppath;
+//OBSOLETE WILL DELETE LATER****************************
+//parsedPath ppath;
 //indicator if ppath has been initialized
 int p_init = 0;
 
@@ -54,51 +55,64 @@ void init_parsedPath(){
 }
 
 //returns based on successful parsing
-//returns index of direntry or -1 if it does not exist
+//returns pointer to parsedPath struct or NULL if it fails
 //future plan to validate paths using 
-int parsePath(const char* pathname){
-    //initialize parsedPath object if needed
-    init_parsedPath()
-    //reset parsedPath values for next call
+parsedPath* parsePath(const char* pathname){
+    //allocate space
+    parsedPath* ppath = (parsedPath*)malloc(sizeof(char*) * TEST_MAX_INDEX * MAX_CHAR + sizeof(int) *4 + 1);
+    //init ppath member variables
     ppath->pathSize = 0;
     ppath->absPath = 0;
     ppath->relPath = 0;
     ppath->parPath = 0;
-    //int index = 0;
-    //pointer for strtok_r
+    //save pointer for strtok_r
     char * tokP;
     //copy of pathname to be passed in strtok_r
-    char * copy;
+    char * copy = malloc(strlen(pathname));
     //check if relative path or absolute
-    if (strcmp(pathname[0], "/") == 0){
+    if (pathname[0] == '/'){
         ppath->absPath = 1;
     }
     strcpy(copy, pathname);
     //first token
     char* token1 = strtok_r(copy, "/", &tokP);
-    if (token == NULL){ //Invalid path
-        return -1;
-    } else if (strcmp(token, ".") == 0){ //check if its relative path
-        ppath->relPath = 1;
-    } else if (strcmp(token, "..") == 0){ //check if its relative to parent
+    if (strcmp(token1, "\0") == 0){ //Invalid path
+        printf("INVALID PATH\n");
+        return NULL;
+    }
+    else if (strcmp(token1, ".") == 0){ //check if its relative path
+        ppath->relPath = 1; 
+    } else if (strcmp(token1, "..") == 0){ //check if its relative to parent
         ppath->parPath = 1;
     } else {
-        strcpy(ppath->pathArray[ppath->pathSize], token);
+        //allocate space for each entry
+        ppath->pathArray[ppath->pathSize] = malloc(strlen(token1)+1);
+        strcpy(ppath->pathArray[ppath->pathSize], token1);
         ppath->pathSize++;
     }
-    char * token2 = strtok_r(NULL, "/");
+    //token2 will be used to tokenize remaining path levels
+    char * token2 = strtok_r(NULL, "/", &tokP); //get second token
     if(token2 == NULL){ //END of path
         //use findIndex to find the index of directory entry
     } else {
         //add tokenized path sections to pathArray
-        while (token2 != NULL){
+        while (token2 != NULL && ppath->pathSize < TEST_MAX_INDEX){
+            //allocate space for each entry
+            ppath->pathArray[ppath->pathSize] = malloc(strlen(token2)+1);
             strcpy(ppath->pathArray[ppath->pathSize], token2);
             ppath->pathSize++;
             token2 = strtok_r(NULL, "/", &tokP);
         }
     }
-    return ppath->pathSize;
+    return ppath;
+}
 
+//helper function to free memory of parsedPath
+void freePath(parsedPath* ppath){
+    for (int i = 0; i < ppath->pathSize; i++){
+        free(ppath->pathArray[i]);
+    }
+    free(ppath);
 }
 
 //helper function for returning index of directory based on name of directory entry
@@ -106,10 +120,19 @@ int findEntry(direntry startDir, char* token){
     return 0;
 }
 
+//reads a direntry to memory
+//to be used for various path validations
+void loadDir(char* dir){
+
+}
+
+
+
 
 
 // Key directory functions
 int fs_mkdir(const char *pathname, mode_t mode);
+//ensure that no duplicate directory exists
 int fs_rmdir(const char *pathname);
 
 // Directory iteration functions
