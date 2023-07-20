@@ -57,19 +57,34 @@ typedef struct
 	} fdDir;
 
 // Key directory functions
+
+//JOHNNY***********
 int fs_mkdir(const char *pathname, mode_t mode);
 int fs_rmdir(const char *pathname);
+//*****************
 
 // Directory iteration functions
+
+//JOHNNY***********
 fdDir * fs_opendir(const char *pathname);
+//*****************
+
+//MATT*************
 struct fs_diriteminfo *fs_readdir(fdDir *dirp);
 int fs_closedir(fdDir *dirp);
+//*****************
 
 // Misc directory functions
+
+//OSCAR****************
 char * fs_getcwd(char *pathname, size_t size);
 int fs_setcwd(char *pathname);   //linux chdir
+//*********************
+
+//JACOB********************
 int fs_isFile(char * filename);	//return 1 if file, 0 otherwise
 int fs_isDir(char * pathname);		//return 1 if directory, 0 otherwise
+//*************************
 int fs_delete(char* filename);	//removes a file
 
 
