@@ -23,7 +23,8 @@
 
 //parsed path container
 //OBSOLETE WILL DELETE LATER****************************
-//parsedPath ppath;
+parsedPath* ppath;
+#define MAX_CHAR 8
 //indicator if ppath has been initialized
 int p_init = 0;
 
@@ -54,7 +55,7 @@ parsedPath* parsePath(const char* pathname){
     ppath->absPath = 0;
     ppath->relPath = 0;
     ppath->parPath = 0;
-    //save pointer for strtok_r
+    //save pointer for strtok_r     
     char * tokP;
     //copy of pathname to be passed in strtok_r
     char * copy = malloc(strlen(pathname));

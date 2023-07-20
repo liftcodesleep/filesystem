@@ -58,7 +58,7 @@ int init_dir(int minEntries, direntry *parent)
   // make root
   strcpy(newDir[0].name, ".");
   //NEED TO CHECK IF THIS IS OK**************************************************
-  newDir[0].size = sizeOf(newDir);
+  newDir[0].size = sizeof(newDir);
   strcpy(newDir[1].name, "..");
   extent *e = allocate_blocks(blocksNeeded, blocksNeeded);
   newDir[0].extents[0] = *e;

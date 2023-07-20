@@ -164,8 +164,6 @@ int test_extent_remove_blocks()
   // Remove 3 blocks starting from block number 12
   unsigned int count = extent_remove_blocks(extent, 12, 3);
 
-
-
   // Verify the result
   if (count == 3)
   {
