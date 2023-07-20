@@ -44,7 +44,7 @@ typedef struct blockmap
   size_t size;
 } blockmap;
 
-blockmap map;
+static blockmap map;
 #define WORDSIZE 32
 #define MASK 0x1F
 
@@ -181,7 +181,6 @@ void mark_extent(int start, int length)
 // if found, return its offset
 int next_block(int start, int end, int match)
 {
-  // printf("next_block: searching from block %d to %d for %d\n", start, end, match);
   int begin = 0;
   int found = 0;
   for (begin = start; begin <= end; begin++)
@@ -189,12 +188,10 @@ int next_block(int start, int end, int match)
     int c = check_bit(map.blocks[begin / WORDSIZE], begin % WORDSIZE);
     if ((match && c) || (!match && !c) || begin == end)
     {
-      // printf("next_block: found %d at %d end: %d\n", c, begin, end);
       found = 1;
       break;
     }
   }
-  // printf("next_block: returning %d\n", found ? begin : -1);
   return found ? begin : -1;
 }
 
@@ -205,32 +202,26 @@ int get_extent(int start, int req, int min_size, extent *pextent)
   int begin = start;
   while (1)
   {
-    int foo = (begin + req < map.size * WORDSIZE) ? begin + req : map.size * WORDSIZE;
-    // printf("get_extent: searching from block %d to %d\n", begin, foo);
+    int foo = map.size * WORDSIZE - begin;
     begin = next_block(start, foo, 0);
     if (begin == -1)
     {
       perror("No free block found!\n");
       return -1; // found nothing
     }
-    foo = (begin + req < map.size * WORDSIZE) ? begin + req : map.size * WORDSIZE;
-    // printf("get_extent: searching from block %d to %d\n", begin, foo);
+    foo = (begin + req < (map.size - begin) * WORDSIZE) ? begin + req : (map.size - begin) * WORDSIZE;
     int end = next_block(begin + 1, foo, 1);
     if (end == -1)
     {
-      perror("end error\n"); // this should never happen?
-      return -1;             // no free disk block
+      printf("Failed to find closing block\n"); // this should never happen?
+      return -1;                                // no free disk block
     }
     if (end - begin < min_size)
     {
       begin += end;
-      // printf("get_extent: end = %d begin = %d size = %d\n", end, begin, end - begin);
       continue;
     }
-    // printf("get_extent: end = %d begin = %d size = %d\n", end, begin, end - begin);
 
-    // pextent->start = begin;
-    // pextent->count = end - begin;
     extent_append(pextent, begin, end - begin);
     return end - begin;
   }
@@ -244,6 +235,11 @@ int get_extent(int start, int req, int min_size, extent *pextent)
 // Need to return 3 extents not arbitrary
 extent *allocate_blocks(int blocks_requested, int min_extent_size)
 {
+  if (min_extent_size > blocks_requested)
+  {
+    printf("Don't be silly\n");
+    return NULL;
+  }
   // only need 3 extents
   //  int max_extents = blocks_requested / min_extent_size + !!(blocks_requested % min_extent_size);
   int num_extents = 3;
@@ -259,7 +255,7 @@ extent *allocate_blocks(int blocks_requested, int min_extent_size)
     int success = get_extent(start, blocks_requested, min_extent_size, rc + i);
     if (success == -1)
     {
-      perror("Insufficient disk space!\n");
+      printf("Insufficient disk space!\n");
       free(rc);
       return NULL;
     }
@@ -286,11 +282,12 @@ extent *allocate_blocks(int blocks_requested, int min_extent_size)
 //   init_free_space(256, 512);
 //   // print_map();
 
-//   for (int i = 1; i < 20; i++)
+//   for (int i = 1; i < 3; i++)
 //   {
 //     print_map();
-//     allocate_blocks(i, i);
-//     // print_map();
+//     extent *test = allocate_blocks(1, 1);
+//     printf("start: %d count: %d\n", test->start, test->count);
+//     print_map();
 //   }
 //   return 0;
 // }
