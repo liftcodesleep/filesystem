@@ -1,36 +1,24 @@
 /**************************************************************
  * Class:  CSC-415-01 Summer 2023
- * Names: Matthew Bush, Oscar Galvez, Hyok In Kwon, Jacob Lawrence
- * Student IDs: 921619696, 911813414, 922373878, 922384785
- * GitHub Name: liftcodesleep
+ * Names: Hyok In Kwon
+ * Student IDs: 922373878
+ * GitHub Name: hkwon4
  * Group Name: Coffee On The Rocks
  * Project: Basic File System
  *
- * File: fsInit.c
+ * File: parsePath.c
  *
- * Description: Main driver for file system assignment.
+ * Description: Handler for directory entries. Creates directory entries,
+ *              and other helper functions to facilitate modifications of
+ *              directory entries.
  *
- *
+ * 
  **************************************************************/
 
-#include "mfs.h"
 
-#define TEST_MAX_INDEX 20
+#include "parsePath.h"
 
-//struct to hold each level of the path
-typedef struct parsedPath{
-    //array to hold each level
-    char *pathArray[TEST_MAX_INDEX];
-    //count of how many levels
-    //used for iterative purposes
-    int pathSize;
-    //bool for absolute path
-    int absPath;
-    //bool for relative path 
-    int relPath;
-    //bool for relative to parent
-    int parPath;
-}parsedPath;
+
 
 //parsed path container
 //OBSOLETE WILL DELETE LATER****************************
@@ -114,37 +102,3 @@ void freePath(parsedPath* ppath){
     }
     free(ppath);
 }
-
-//helper function for returning index of directory based on name of directory entry
-int findEntry(direntry startDir, char* token){
-    return 0;
-}
-
-//reads a direntry to memory
-//to be used for various path validations
-void loadDir(char* dir){
-
-}
-
-
-
-
-
-// Key directory functions
-int fs_mkdir(const char *pathname, mode_t mode);
-//ensure that no duplicate directory exists
-int fs_rmdir(const char *pathname);
-
-// Directory iteration functions
-fdDir * fs_opendir(const char *pathname);
-struct fs_diriteminfo *fs_readdir(fdDir *dirp);
-int fs_closedir(fdDir *dirp);
-
-// Misc directory functions
-char * fs_getcwd(char *pathname, size_t size);
-int fs_setcwd(char *pathname);   //linux chdir
-int fs_isFile(char * filename);	//return 1 if file, 0 otherwise
-int fs_isDir(char * pathname);		//return 1 if directory, 0 otherwise
-int fs_delete(char* filename);	//removes a file
-
-int fs_stat(const char *path, struct fs_stat *buf);
