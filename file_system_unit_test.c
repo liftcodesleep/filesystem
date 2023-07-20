@@ -101,8 +101,8 @@ void parse_path_tests()
 	test(test_valid_relative_path,"test_valid_relative_path");
 	test(test_valid_relative_to_parent_path,"test_valid_relative_to_parent_path");
 	test(test_invalid_double_slash,"test_invalid_double_slash");
-	printf("Getting seg fault when passing empty path so commented it out");
-	//test(test_empty_path,"test_empty_path");
+	//printf("Getting seg fault when passing empty path so commented it out");
+	test(test_empty_path,"test_empty_path");
 }
 
 
