@@ -35,6 +35,7 @@ typedef struct direntry
   unsigned long time_created;
   unsigned long time_last_modified;
   unsigned long time_last_accessed;
+  char isFile;
 
 } direntry;
 

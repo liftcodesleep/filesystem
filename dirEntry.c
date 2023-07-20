@@ -54,6 +54,7 @@ int init_dir(int minEntries, direntry *parent)
     newDir[i].time_created = 0;
     newDir[i].time_last_modified = 0;
     newDir[i].time_last_accessed = 0;
+    newDir[i].isFile = 0;
   }
   // make root
   strcpy(newDir[0].name, ".");
