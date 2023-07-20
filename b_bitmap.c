@@ -169,9 +169,9 @@ int get_count(int index)
 }
 
 // set bits corresponding to passed extent
-void mark_extent(int start, int length)
+void mark_extent(int start, int count)
 {
-  for (int i = 0; i < length; i++)
+  for (int i = 0; i < count; i++)
   {
     set_bit(map.blocks + (start + i) / WORDSIZE, (start % WORDSIZE) + i);
   }
@@ -274,6 +274,14 @@ extent *allocate_blocks(int blocks_requested, int min_extent_size)
   LBAwrite(map.blocks, 5, 1);
 
   return rc;
+}
+
+void release_blocks(int start, int count)
+{
+  for (int i = 0; i < count; i++)
+  {
+    clear_bit(map.blocks + (start + i) / WORDSIZE, (start % WORDSIZE) + i);
+  }
 }
 
 // local debug testing
