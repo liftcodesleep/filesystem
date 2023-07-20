@@ -346,7 +346,8 @@ int make_3rd_extent_table(extent* extent, uint last_extent_size)
   pextent p_loc = malloc(sizeof(extent));
   p_loc[0].start = 5000;
   p_loc[0].count = 1;
-  //printf("SAVING THIRD TABLE AT %d", p_loc[0].start );
+
+  //printf("SAVING THIRD TABLE AT %d\n", p_loc[0].start );
 
   uint* new_table = calloc(128,sizeof(uint));
   new_table[0] = extent[last_extent_size].start;

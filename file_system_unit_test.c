@@ -148,6 +148,23 @@ int test_allocation_with_minimum_extent_size() {
     }
 }
 
+int test_multiple_allocs()
+{
+
+	extent* result1 = allocate_blocks(1, 1);
+	extent* result2 = allocate_blocks(1, 1);
+
+	if(result1->start != result2->start)
+	{
+		return 1; // Test passed.
+	}else
+	{
+		return 0; // Test failed. It allocated two diffrent blocks to the same location
+	}
+
+}
+
+
 void test_bit_map()
 {
 
@@ -155,6 +172,7 @@ void test_bit_map()
 	test(test_basic_allocation,"test_basic_allocation");
 	test(test_allocation_with_insufficient_space,"test_allocation_with_insufficient_space");
 	test(test_allocation_with_minimum_extent_size,"test_allocation_with_minimum_extent_size");
+	test(test_multiple_allocs,"test_multiple_allocs");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
