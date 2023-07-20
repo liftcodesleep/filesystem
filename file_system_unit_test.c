@@ -176,9 +176,6 @@ int test_multiple_allocs()
   extent *result1 = allocate_blocks(1, 1);
   extent *result2 = allocate_blocks(1, 1);
 
-  printf("result 1: start: %d count: %d\n", result1->start, result1->count);
-  printf("result 2: start: %d count: %d\n", result2->start, result2->count);
-
   if (result1->start != result2->start)
   {
     return 1; // Test passed.
