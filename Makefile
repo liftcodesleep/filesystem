@@ -43,7 +43,7 @@ CFLAGS= -g -I.
 LIBS =pthread
 DEPS = 
 # Add any additional objects to this list
-ADDOBJ= fsInit.o vcb.o dirEntry.o b_bitmap.o extent.o file_system_unit_test.o extent_unit_tests.o
+ADDOBJ= fsInit.o vcb.o dirEntry.o b_bitmap.o extent.o file_system_unit_test.o extent_unit_tests.o parsePath.o
 ARCH = $(shell uname -m)
 
 ifeq ($(ARCH), aarch64)

@@ -15,6 +15,10 @@
  * 
  **************************************************************/
 
+
+#ifndef PARSEPATH
+#define PARSEPATH
+
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -39,3 +43,7 @@ typedef struct parsedPath{
 
 parsedPath* parsePath(const char* pathname);
 void freePath(parsedPath* ppath);
+
+
+
+#endif
