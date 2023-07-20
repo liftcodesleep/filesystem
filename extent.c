@@ -342,10 +342,7 @@ unsigned int append_second_extent(int extent_loc,  uint block_number, uint count
 int make_3rd_extent_table(extent* extent, uint last_extent_size)
 {
 
-  //pextent p_loc = allocate_blocks(1, 1);
-  pextent p_loc = malloc(sizeof(extent));
-  p_loc[0].start = 5000;
-  p_loc[0].count = 1;
+  pextent p_loc = allocate_blocks(1, 1);
 
   //printf("SAVING THIRD TABLE AT %d\n", p_loc[0].start );
 
@@ -376,10 +373,8 @@ unsigned int append_third_extent(int extent_loc,  uint block_number, uint count)
     if(extent_3[i] == 0)
     {
       //printf("AAAAAAAAAAAAa %d\n", count);
-      //pextent p_loc = allocate_blocks(1,1);
-      pextent p_loc = malloc(sizeof(extent));
-      p_loc[0].start = 7000;
-      p_loc[0].count = 1;
+      pextent p_loc = allocate_blocks(1,1);
+      
 
       pextent new_2_extent = calloc(64,sizeof(extent));
       new_2_extent[0].start = block_number;
