@@ -110,15 +110,7 @@ int test_invalid_double_slash()
 void parse_path_tests()
 {
 
-<<<<<<< HEAD
-	printf("\nTesting Parse Path:\n");
-	test(test_valid_absolute_path,"test_valid_absolute_path");
-	test(test_valid_relative_path,"test_valid_relative_path");
-	test(test_valid_relative_to_parent_path,"test_valid_relative_to_parent_path");
-	test(test_invalid_double_slash,"test_invalid_double_slash");
-	//printf("Getting seg fault when passing empty path so commented it out");
-	test(test_empty_path,"test_empty_path");
-=======
+
   printf("\nTesting Parse Path:\n");
   test(test_valid_absolute_path, "test_valid_absolute_path");
   test(test_valid_relative_path, "test_valid_relative_path");
@@ -126,7 +118,7 @@ void parse_path_tests()
   test(test_invalid_double_slash, "test_invalid_double_slash");
   printf("Getting seg fault when passing empty path so commented it out");
   // test(test_empty_path,"test_empty_path");
->>>>>>> 70aa12c70df11fddcb08ade782835a1534726a05
+
 }
 
 ////////////////////////////////////////////// BIT MAP UNIT TESTS ////////////////////////////
