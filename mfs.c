@@ -16,6 +16,7 @@
 #include "mfs.h"
 
 #define TEST_MAX_INDEX 20
+#define MAX_CHAR 100
 
 //struct to hold each level of the path
 typedef struct parsedPath{

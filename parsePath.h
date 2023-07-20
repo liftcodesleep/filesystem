@@ -29,7 +29,7 @@
 //struct to hold each level of the path
 typedef struct parsedPath{
     //array to hold each level
-    char *pathArray[TEST_MAX_INDEX];
+    char **pathArray;
     //count of how many levels
     //used for iterative purposes
     int pathSize;
