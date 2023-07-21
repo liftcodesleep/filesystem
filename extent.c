@@ -155,12 +155,18 @@ unsigned int extent_block_to_LBA(extent *extent, unsigned int local_block_number
 
   while(current_extent != NULL && current_extent->count != 0)
   {
+    //printf("At extent %d Count: %d \n", current_extent->start, current_extent->count);
+    //printf("blocks in extent: %d \n\n", block_in_extent, current_extent->count);
+
     if(current_extent->count + block_in_extent >= local_block_number)
     {
-      return current_extent->start + block_in_extent + current_extent->count  - local_block_number ;
+      return current_extent->start - block_in_extent  + local_block_number ;
     }
+
     block_in_extent += current_extent->count;
-    current_extent = extent_at_index(extent, i++);
+
+    //free(current_extent);
+    current_extent = extent_at_index(extent, ++i);
   }
   
   return 0;
@@ -171,7 +177,9 @@ unsigned int extent_block_to_LBA(extent *extent, unsigned int local_block_number
 // Removes blocks from the extent
 unsigned int extent_remove_blocks(extent *extent, uint block_number, uint count)
 {
-  // TODO:
+
+  //TODO:
+
   return 0;
 }
 

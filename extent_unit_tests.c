@@ -112,8 +112,6 @@ int test_extent_at_index()
   {
     return 0;
   }
-  
-  
 
   return 0;
 
@@ -124,21 +122,26 @@ int test_extent_block_to_LBA()
   extent *extent = make_test_extent();
 
   
-  for(int i = 0; i < 65; i++)
+  for(int i = 0; i < 70; i++)
   {
-    extent_append(extent, 10+i+1, 1);
+    extent_append(extent, 10+i*4, i%3+1);
   }
-  
-  unsigned int test1 = extent_block_to_LBA(extent, 1);
-  //unsigned int test2 = extent_block_to_LBA(extent, 50);
-
-  //printf("TEST: %d\n", test1);
+  //extent_print(extent);
 
   
-  if( test1  == 12 
-      //&& test2 == 13 
-      //&& test3  == 75 
-    )
+  unsigned int test1 = extent_block_to_LBA(extent, 0);
+  unsigned int true_location1 = 10;
+
+  unsigned int test2 = extent_block_to_LBA(extent, 5);
+  unsigned int true_location2 = 20;
+
+
+  //printf("True: %d Guess: %d\n",  true_location, test1);
+
+  
+  if( test1  == true_location1 
+    //&& test2 == true_location2
+   )
   {
     return 1;
   }else
