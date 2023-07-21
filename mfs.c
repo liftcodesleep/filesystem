@@ -17,6 +17,9 @@
 
 #define TEST_MAX_INDEX 20
 #define MAX_CHAR 100
+#define MAX_PATH 256 // default size
+
+char currentDirectory[MAX_PATH];
 
 //struct to hold each level of the path
 typedef struct parsedPath{
@@ -142,8 +145,49 @@ struct fs_diriteminfo *fs_readdir(fdDir *dirp);
 int fs_closedir(fdDir *dirp);
 
 // Misc directory functions
-char * fs_getcwd(char *pathname, size_t size);
-int fs_setcwd(char *pathname);   //linux chdir
+char * fs_getcwd(char *pathname, size_t size) {
+
+    // Value passed in for size is 4096 (DIRMAX_LEN)
+    //
+    // If NULL is returned, the size of the pointer is too small
+    // to contain the whole path - manpage of getcwd() linux function
+    if (strlen(pathname) > size) {
+        printf("Invalid - path is longer than max path size.\n");
+        return NULL;
+    }
+
+    // If current working directory is assigned in set function, there should
+    // be no need to look at a parsedPath variable or travese the array
+    strcpy(pathname, currentDirectory);
+    return pathname;
+
+}
+int fs_setcwd(char *pathname) {
+
+    //fsInIt - root initalization
+    if (strcmp(pathname, "/.") == 0) {
+        strcpy(currentDirectory,"/.");
+        return 0;
+    }
+
+    // // Check flag
+    // if (example->absPath == 1) {
+
+    // } else if (example->relPath == 1) {
+
+    // } else if (example->parPath == 1) {
+
+    // } else {
+    //     return -1;
+    // }
+    // TODO: Determine how to traverse direntries for files
+
+    // clear previous working directory
+    // strcpy(currentDirectory, "/0");
+    
+    // set new working directory
+    
+}   //linux chdir
 int fs_isFile(char * filename);	//return 1 if file, 0 otherwise
 int fs_isDir(char * pathname);		//return 1 if directory, 0 otherwise
 int fs_delete(char* filename);	//removes a file
