@@ -79,7 +79,7 @@ int init_dir(int minEntries, direntry *parent)
 
 direntry * loadDir(direntry* dir, int index){
     direntry *returnDir = malloc(sizeof(direntry*));
-    LBAread(returnDir, 1, dir[index].extents->start);
+    LBAread(returnDir, dir[index].extents->count, dir[index].extents->start);
     return returnDir;
 }
 
