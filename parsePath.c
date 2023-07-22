@@ -24,6 +24,29 @@
 #define MAX_CHAR 100
 #define TEST_MAX_INDEX 20
 
+//direntry pointers to be loaded in memory
+direntry * rootD;
+direntry * parentD;
+direntry * currentD;
+//check if the root,parent,current directories have been loaded
+int init = 0;
+
+//an init function to allocate memory and load the
+//root directory and make the parent directory and
+//current directory point to root
+//Function will only run the first time a path is validated
+void init_loadedDir(){
+  if (init == 0){
+    rootD = malloc(sizeof(direntry));
+    parentD = malloc(sizeof(direntry));
+    currentD = malloc(sizeof(direntry));
+    rootD = getRoot();
+    parentD = rootD;
+    currentD = rootD;
+    init = 1;
+  }
+}
+
 //returns based on successful parsing
 //returns pointer to parsedPath struct or NULL if it fails
 //if error occurs, all allocated memory of parsedPath is freed
@@ -101,4 +124,42 @@ void freePath(parsedPath* ppath){
     free(ppath->pathArray);
     free(ppath);
     ppath = NULL;
+}
+
+//validator for the parsedPath
+//loads the root directory into memory
+//checks from current directory
+// current and parent will be root if it is the first call
+int validatePath(parsedPath *ppath){
+  init_loadedDir();
+  //the return value that displays the index of the parent
+  //which the path name exists on
+  //value is default set to -1 that shows the path is invalid
+  int indexOfParent = -1;
+  //iterate through the path
+  for (int i = 0; i < ppath->pathSize; i++){
+    //check if each path exists within the directory
+    //starts from 2 as . and .. are the first 2 indexes
+    for(int j = 2; j < currentD->entries; j++){
+      //if the path exists, change the current directory 
+      //that matches the pathname and continue to the 
+      //next path value
+      if(strcmp(ppath->pathArray[i],currentD[j].name)){
+        parentD = currentD;
+        currentD = loadDir(currentD, j);
+        indexOfParent = j;
+        break;
+      }
+    }
+    //loop ends if the path does not exist
+    return indexOfParent;
+  }
+  return indexOfParent;
+}
+
+//helper function to free loadedDirectories
+void freeLoadedDir(void){
+  free(rootD);
+  free(parentD);
+  free(currentD);
 }
