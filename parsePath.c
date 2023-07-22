@@ -70,6 +70,9 @@ parsedPath* parsePath(const char* pathname){
     //check if absolute path
     if (pathname[0] == '/'){
         ppath->absPath = 1;
+        if(strlen(pathname) == 1){
+          return ppath;
+        }
         //check for invalid consecutive /
         if(strlen(pathname) > 1 && pathname[1] == '/'){
         freePath(ppath);
@@ -137,14 +140,20 @@ int validatePath(parsedPath *ppath){
   //value is default set to -1 that shows the path is invalid
   int indexOfParent = -1;
   //iterate through the path
+  if (ppath->absPath == 1 && ppath->pathSize == 0){
+    indexOfParent = 0;
+    parentD = rootD;
+    currentD = rootD;
+    return indexOfParent;
+  }
   for (int i = 0; i < ppath->pathSize; i++){
     //check if each path exists within the directory
     //starts from 2 as . and .. are the first 2 indexes
-    for(int j = 2; j < currentD->entries; j++){
+    for(int j = 0; j < currentD->entries; j++){
       //if the path exists, change the current directory 
       //that matches the pathname and continue to the 
       //next path value
-      if(strcmp(ppath->pathArray[i],currentD[j].name)){
+      if(strcmp(ppath->pathArray[i],currentD[j].name) == 0){
         parentD = currentD;
         currentD = loadDir(currentD, j);
         indexOfParent = j;
