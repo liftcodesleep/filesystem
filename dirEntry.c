@@ -55,11 +55,13 @@ int init_dir(int minEntries, direntry *parent)
     newDir[i].time_last_modified = 0;
     newDir[i].time_last_accessed = 0;
     newDir[i].isFile = 0;
+    newDir[i].entries = 0;
   }
   // make root
   strcpy(newDir[0].name, ".");
   //NEED TO CHECK IF THIS IS OK**************************************************
   newDir[0].size = sizeof(newDir);
+  newDir[0].entries = actualNEntries;
   strcpy(newDir[1].name, "..");
   extent *e = allocate_blocks(blocksNeeded, blocksNeeded);
   newDir[0].extents[0] = *e;
@@ -73,6 +75,18 @@ int init_dir(int minEntries, direntry *parent)
   // write to disc
   LBAwrite(newDir, blocksNeeded, newDir[0].extents[0].start);
   return newDir[0].extents[0].start;
+}
+
+direntry * loadDir(direntry* dir, int index){
+    direntry *returnDir = malloc(sizeof(direntry*));
+    LBAread(returnDir, 1, dir[index].extents->start);
+    return returnDir;
+}
+
+direntry * getRoot(){
+  direntry * root = malloc(sizeof(direntry*));
+  LBAread(root, root->extents->count, root->extents->start);
+  return root;
 }
 
 // function to do quick maths on number of blocks needed for n bytes
