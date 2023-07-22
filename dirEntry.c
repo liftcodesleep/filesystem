@@ -64,7 +64,9 @@ int init_dir(int minEntries, direntry *parent)
   newDir[0].entries = actualNEntries;
   strcpy(newDir[1].name, "..");
   extent *e = allocate_blocks(blocksNeeded, blocksNeeded);
-  newDir[0].extents[0] = *e;
+  newDir[0].extents[0] = e[0];
+  newDir[0].extents[1] = e[1];
+  newDir[0].extents[2] = e[2];
   newDir[1].entries = newDir[0].entries;
   free(e);
   // setup root directory if parent is NULL
@@ -80,7 +82,7 @@ int init_dir(int minEntries, direntry *parent)
 
 direntry * loadDir(direntry* dir, int index){
     direntry *returnDir = malloc(sizeof(direntry*));
-    LBAread(returnDir, dir[index].extents->count, dir[index].extents->start);
+    LBAread(returnDir, dir[index].extents[0].count, dir[index].extents[0].start);
     return returnDir;
 }
 
