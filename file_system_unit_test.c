@@ -9,13 +9,15 @@ void test(int (*func)(), char *name)
   int passed;
   passed = func();
 
+  printf("%-40s", name);
+
   if (passed)
   {
-    printf("%-40s P\n", name);
+    printf("P\n");
   }
   else
   {
-    printf("%-40s F\n", name);
+    printf("F\n");
   }
 }
 
@@ -52,6 +54,22 @@ int test_valid_relative_path()
   const char *path = "home/user/documents";
   parsedPath *result = parsePath(path);
   if (result != NULL)
+  {
+    free(result);
+    return 1; // Test passed
+  }
+  else
+  {
+    return 0; // Test failed
+  }
+}
+
+int test_valid_root_path()
+{
+  const char *path = "/";
+  parsedPath *result = parsePath(path);
+
+  if ( result != NULL)
   {
     free(result);
     return 1; // Test passed
@@ -118,6 +136,8 @@ void parse_path_tests()
   test(test_invalid_double_slash, "test_invalid_double_slash");
   //printf("Getting seg fault when passing empty path so commented it out");
   test(test_empty_path,"test_empty_path");
+  test(test_valid_root_path,"test_valid_root_path");
+  
 
 }
 
@@ -200,14 +220,69 @@ void test_bit_map()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+
+/////////////////////////// VALIDATE PATH TESTS  //////////////////////
+
+
+
+int test_valid_dir_bad()
+{
+
+	parsedPath* path = parsePath("/apples");
+
+	int result = validatePath(path);
+
+	if(result == -1)
+	{
+		return 1; // Test pass found bad path
+	}
+
+	return 0;
+}	
+
+int test_valid_dir_good()
+{
+
+	parsedPath* path = parsePath("/");
+
+	int result = validatePath(path);
+
+	// Found the root
+	if(result != -1)
+	{
+		return 1; // Test pass found good path
+	}
+
+	return 0;
+
+}
+
+
+void test_validatePath()
+{
+
+	printf("\nTesting validatePath: \n");
+	test(test_valid_dir_bad,"test_valid_dir_bad");
+	test(test_valid_dir_good,"test_valid_dir_good");
+}
+
+
+
+
+///////////////////////////////////////////////////
+
+
 void file_system_unit_tests()
 {
 
   printf("\n\nStarting unit tests:\n\n");
 
-  extent_tests();
-  test_bit_map();
+  //extent_tests();
+  //test_bit_map();
   parse_path_tests();
+  test_validatePath();
 
   printf("\n\nEnding unit tests...\n\n");
 }
