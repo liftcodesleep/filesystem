@@ -230,12 +230,15 @@ void test_bit_map()
 int test_valid_dir_bad()
 {
 
-	parsedPath* path = parsePath("/apples");
+	const char* given_path = "/apples";
+
+	parsedPath* path = parsePath(given_path);
 
 	int result = validatePath(path);
 
 	if(result == -1)
 	{
+		free(path);
 		return 1; // Test pass found bad path
 	}
 
@@ -245,13 +248,14 @@ int test_valid_dir_bad()
 int test_valid_dir_good()
 {
 
-	parsedPath* path = parsePath("/");
-
+	const char* given_path = "/";
+	parsedPath* path = parsePath(given_path);
 	int result = validatePath(path);
 
 	// Found the root
 	if(result != -1)
 	{
+		free(path);
 		return 1; // Test pass found good path
 	}
 
