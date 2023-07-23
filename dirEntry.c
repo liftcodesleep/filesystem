@@ -81,13 +81,13 @@ int init_dir(int minEntries, direntry *parent)
 }
 
 direntry * loadDir(direntry* dir, int index){
-    direntry *returnDir = malloc(sizeof(direntry*));
+    direntry *returnDir = malloc(sizeof(direntry));
     LBAread(returnDir, dir[index].extents[0].count, dir[index].extents[0].start);
     return returnDir;
 }
 
 direntry * getRoot(){
-  direntry * root = malloc(sizeof(direntry));
+  direntry * root = malloc(sizeof(direntry) * 12 );
   LBAread(root, 4, 7);
   return root;
 }

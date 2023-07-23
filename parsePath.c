@@ -37,7 +37,6 @@ int init = 0;
 //Function will only run the first time a path is validated
 void init_loadedDir(){
   if (init == 0){
-    rootD = malloc(sizeof(direntry));
     parentD = malloc(sizeof(direntry));
     currentD = malloc(sizeof(direntry));
     rootD = getRoot();
@@ -71,11 +70,15 @@ parsedPath* parsePath(const char* pathname){
     if (pathname[0] == '/'){
         ppath->absPath = 1;
         if(strlen(pathname) == 1){
+          ppath->pathArray[0] = " ";
           return ppath;
         }
         //check for invalid consecutive /
         if(strlen(pathname) > 1 && pathname[1] == '/'){
-        freePath(ppath);
+        if (ppath != NULL){
+          freePath(ppath);
+          ppath = NULL;
+        }
         return NULL;
       }
     }
@@ -84,7 +87,10 @@ parsedPath* parsePath(const char* pathname){
     char* token1 = strtok_r(copy, "/", &tokP);
     //check if invalid consecutive /
     if (*tokP == '/'){
-        freePath(ppath);
+        if (ppath != NULL){
+          freePath(ppath);
+          ppath = NULL;
+        }
         return NULL;
     }
     if (strcmp(token1, ".") == 0){ //check if its relative path
@@ -105,7 +111,10 @@ parsedPath* parsePath(const char* pathname){
     while (token2 != NULL && ppath->pathSize < TEST_MAX_INDEX){
         //check for invalid consecutive iterations of /
         if (*tokP == '/'){
+          if (ppath != NULL){
           freePath(ppath);
+          ppath = NULL;
+          }
           return NULL;
         }
         //add token to pathArray and increment array element counter
@@ -114,7 +123,10 @@ parsedPath* parsePath(const char* pathname){
         ppath->pathSize++;
         token2 = strtok_r(NULL, "/", &tokP);
     }
-    free(copy);
+    if (copy != NULL){
+      free(copy);
+      copy = NULL;
+    }
     return ppath;
 }
 
@@ -124,9 +136,7 @@ void freePath(parsedPath* ppath){
         free(ppath->pathArray[i]);
         ppath->pathArray[i] = NULL;
     }
-    free(ppath->pathArray);
     free(ppath);
-    ppath = NULL;
 }
 
 //validator for the parsedPath
@@ -141,9 +151,15 @@ int validatePath(parsedPath *ppath){
   int indexOfParent = -1;
   //iterate through the path
   if (ppath->absPath == 1 && ppath->pathSize == 0){
+//    //printf("inside / path\n");
     indexOfParent = 0;
     parentD = rootD;
     currentD = rootD;
+    if(ppath != NULL){
+      freePath(ppath);
+      ppath = NULL;
+    }
+    freeLoadedDir();
     return indexOfParent;
   }
   for (int i = 0; i < ppath->pathSize; i++){
@@ -161,14 +177,33 @@ int validatePath(parsedPath *ppath){
       }
     }
     //loop ends if the path does not exist
+    if(ppath != NULL){
+      freePath(ppath);
+      ppath = NULL;
+    }
+    
     return indexOfParent;
+  }
+  if(ppath != NULL){
+      freePath(ppath);
+      ppath = NULL;
   }
   return indexOfParent;
 }
 
 //helper function to free loadedDirectories
 void freeLoadedDir(void){
-  free(rootD);
-  free(parentD);
-  free(currentD);
+  if(rootD != NULL){
+    free(rootD);
+    rootD = NULL;
+  }
+  if (parentD != NULL){
+    free(parentD);
+    parentD = NULL;
+  }
+  if (currentD != NULL){
+    free(currentD);
+    currentD = NULL;
+  }
+  init = 0;
 }

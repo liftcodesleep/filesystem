@@ -37,7 +37,6 @@ typedef struct direntry
   unsigned long time_last_accessed;
   char isFile;
   unsigned int entries;
-
 } direntry;
 
 int init_dir(int minEntries, direntry *parent);
