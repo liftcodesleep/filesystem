@@ -18,8 +18,10 @@
 #define TEST_MAX_INDEX 20
 #define MAX_CHAR 100
 #define MAX_PATH 256 // default size
+#define BLOCK_SIZE 512
 
 char currentDirectory[MAX_PATH];
+char * bufferBlock; // Load blocks of memory to read and traverse
 
 //struct to hold each level of the path
 typedef struct parsedPath{
@@ -165,22 +167,30 @@ char * fs_getcwd(char *pathname, size_t size) {
 int fs_setcwd(char *pathname) {
 
     //fsInIt - root initalization
-    if (strcmp(pathname, "/.") == 0) {
-        strcpy(currentDirectory,"/.");
+    if (strcmp(pathname, "/root") == 0) {
+        strcpy(currentDirectory,"/root");
         return 0;
     }
 
-    // // Check flag
-    // if (example->absPath == 1) {
+    // 4096 is equal to the DIRMAX_LEN value defined in mfs.c - Hardcoded at the moment
+    if (strlen(currentDirectory) + strlen(pathname) < 4096) {
+        strcpy(currentDirectory, "/root"); // Set to root to start traversing
+    }
 
-    // } else if (example->relPath == 1) {
+    int validateResult = -1; // Set to -1 - Needs to be tested first
+    //validatePath(pathname); Considering validatePath returns a valid address
+    if (validateResult == -1) {
+        printf("Path was determined to be invalid. Exiting.\n");
+        return -1;
+    }
 
-    // } else if (example->parPath == 1) {
+    // If pathname was validated, set as current working directory.
+    strcpy(currentDirectory, pathname);
+    return 0;
 
-    // } else {
-    //     return -1;
-    // }
     // TODO: Determine how to traverse direntries for files
+
+    // Load root directory into bufferBlock
 
     // clear previous working directory
     // strcpy(currentDirectory, "/0");
@@ -193,3 +203,8 @@ int fs_isDir(char * pathname);		//return 1 if directory, 0 otherwise
 int fs_delete(char* filename);	//removes a file
 
 int fs_stat(const char *path, struct fs_stat *buf);
+
+// Currently accounting to read root directory which occupies four blocks - For testing
+void allocateBuffer() {
+    bufferBlock = malloc(BLOCK_SIZE * 4);
+}
