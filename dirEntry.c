@@ -74,6 +74,8 @@ int init_dir(int minEntries, direntry *parent)
   {
     newDir[1].size = newDir[0].size;
     newDir[1].extents[0] = newDir[0].extents[0];
+    newDir[1].extents[1] = newDir[0].extents[1];
+    newDir[1].extents[2] = newDir[2].extents[2];
   }
   // write to disc
   LBAwrite(newDir, blocksNeeded, newDir[0].extents[0].start);
@@ -86,8 +88,9 @@ direntry * loadDir(direntry* dir, int index){
     return returnDir;
 }
 
+//***********NEED TO UPDATE TEH MALLOC VALUES***************************************
 direntry * getRoot(){
-  direntry * root = malloc(sizeof(direntry) * 12 );
+  direntry * root = malloc(sizeof(direntry) * 100 );
   LBAread(root, 4, 7);
   return root;
 }
