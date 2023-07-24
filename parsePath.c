@@ -8,10 +8,9 @@
  *
  * File: parsePath.c
  *
- * Description: Handler for directory entries. Creates directory entries,
- *              and other helper functions to facilitate modifications of
- *              directory entries.
- *
+ * Description: helper functions to parse path and keep track of 
+ *              loaded directory entries. Used for most functions
+ *              within mfs.h
  * 
  **************************************************************/
 
@@ -28,8 +27,10 @@
 direntry * rootD;
 direntry * parentD;
 direntry * currentD;
-//direntry pointer that will be loaded only for validatePath
+//direntry pointers that will be used to index 
+//only for validatePath
 direntry * indexD;
+direntry * iparentD;
 //check if the root,parent,current directories have been loaded
 int init = 0;
 
@@ -43,6 +44,7 @@ void init_loadedDir(){
     parentD = rootD;
     currentD = rootD;
     indexD = rootD;
+    iparentD = rootD;
     init = 1;
   }
 }
@@ -162,28 +164,40 @@ int validatePath(parsedPath *ppath){
       freePath(ppath);
       ppath = NULL;
     }
-    //freeLoadedDir();
     return indexOfParent;
   }
-  // if (ppath->absPath == 1){
-  //   for (int i = 0; i < ppath->pathSize; i++){
-  //     for (int j = 0; j < rootD->entries; j++){
-
-  //     }
-  //   }
-
-  // }
+  if (ppath->absPath == 1){
+    indexD = rootD;
+  } else if (ppath->parPath == 1){
+    indexD = parentD;
+  } else {
+    indexD = currentD;
+  }
   for (int i = 0; i < ppath->pathSize; i++){
     //check if each path exists within the directory
     //starts from 2 as . and .. are the first 2 indexes
-    for(int j = 0; j < currentD->entries; j++){
+    for(int j = 0; j < indexD->entries; j++){
       //if the path exists, change the current directory 
       //that matches the pathname and continue to the 
       //next path value
-      if(strcmp(ppath->pathArray[i],currentD[j].name) == 0){
-        parentD = currentD;
-        currentD = loadDir(currentD, j);
+      //updates the parent directory to the current directory
+      //then updates the current directory to the newly found
+      //directory entry
+      if(strcmp(ppath->pathArray[i],indexD[j].name) == 0){
+        //might need to figure out a way to free some of these
+        //may run into malloc problems
+        iparentD = indexD;
+        indexD = loadDir(currentD, j);
         indexOfParent = j;
+        //upon finding the final valid path
+        //function will be complete and update the parent
+        //and current directories
+        //This will prevent the corruption of loaded current
+        //and parent directories when the path is invalid
+        if(i == ppath->pathSize - 1){
+          parentD = iparentD;
+          currentD = indexD;
+        }
         break;
       }
     }
