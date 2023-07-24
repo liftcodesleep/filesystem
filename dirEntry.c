@@ -81,14 +81,14 @@ int init_dir(int minEntries, direntry *parent)
   LBAwrite(newDir, blocksNeeded, newDir[0].extents[0].start);
   return newDir[0].extents[0].start;
 }
-
+//***********NEED TO UPDATE THE MALLOC VALUES***************************************
 direntry * loadDir(direntry* dir, int index){
-    direntry *returnDir = malloc(sizeof(direntry));
+    direntry *returnDir = malloc(sizeof(direntry) * 100);
     LBAread(returnDir, dir[index].extents[0].count, dir[index].extents[0].start);
     return returnDir;
 }
 
-//***********NEED TO UPDATE TEH MALLOC VALUES***************************************
+//***********NEED TO UPDATE THE MALLOC VALUES***************************************
 direntry * getRoot(){
   direntry * root = malloc(sizeof(direntry) * 100 );
   LBAread(root, 4, 7);
