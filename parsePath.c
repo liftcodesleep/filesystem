@@ -28,6 +28,8 @@
 direntry * rootD;
 direntry * parentD;
 direntry * currentD;
+//direntry pointer that will be loaded only for validatePath
+direntry * indexD;
 //check if the root,parent,current directories have been loaded
 int init = 0;
 
@@ -37,11 +39,10 @@ int init = 0;
 //Function will only run the first time a path is validated
 void init_loadedDir(){
   if (init == 0){
-    parentD = malloc(sizeof(direntry));
-    currentD = malloc(sizeof(direntry));
     rootD = getRoot();
     parentD = rootD;
     currentD = rootD;
+    indexD = rootD;
     init = 1;
   }
 }
@@ -132,10 +133,12 @@ parsedPath* parsePath(const char* pathname){
 
 //helper function to free all memory allocated to parsedPath struct
 void freePath(parsedPath* ppath){
+  if (ppath->pathSize > 0){
     for (int i = 0; i < ppath->pathSize; i++){
         free(ppath->pathArray[i]);
         ppath->pathArray[i] = NULL;
     }
+  }
     free(ppath);
 }
 
@@ -149,7 +152,7 @@ int validatePath(parsedPath *ppath){
   //which the path name exists on
   //value is default set to -1 that shows the path is invalid
   int indexOfParent = -1;
-  //iterate through the path
+  //special condition for just root directory
   if (ppath->absPath == 1 && ppath->pathSize == 0){
 //    //printf("inside / path\n");
     indexOfParent = 0;
@@ -159,9 +162,17 @@ int validatePath(parsedPath *ppath){
       freePath(ppath);
       ppath = NULL;
     }
-    freeLoadedDir();
+    //freeLoadedDir();
     return indexOfParent;
   }
+  // if (ppath->absPath == 1){
+  //   for (int i = 0; i < ppath->pathSize; i++){
+  //     for (int j = 0; j < rootD->entries; j++){
+
+  //     }
+  //   }
+
+  // }
   for (int i = 0; i < ppath->pathSize; i++){
     //check if each path exists within the directory
     //starts from 2 as . and .. are the first 2 indexes
@@ -181,13 +192,14 @@ int validatePath(parsedPath *ppath){
       freePath(ppath);
       ppath = NULL;
     }
-    
+    indexOfParent = -1;
     return indexOfParent;
   }
   if(ppath != NULL){
       freePath(ppath);
       ppath = NULL;
   }
+  indexOfParent = -1;
   return indexOfParent;
 }
 

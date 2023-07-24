@@ -238,7 +238,7 @@ int test_valid_dir_bad()
 
 	if(result == -1)
 	{
-		free(path);
+		//free(path);
 		return 1; // Test pass found bad path
 	}
 
@@ -255,7 +255,7 @@ int test_valid_dir_good()
 	// Found the root
 	if(result != -1)
 	{
-		free(path);
+		//free(path);
 		return 1; // Test pass found good path
 	}
 
