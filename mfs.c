@@ -17,6 +17,11 @@
 
 #define TEST_MAX_INDEX 20
 #define MAX_CHAR 100
+#define MAX_PATH 256 // default size
+#define BLOCK_SIZE 512
+
+char currentDirectory[MAX_PATH];
+char * bufferBlock; // Load blocks of memory to read and traverse
 
 //struct to hold each level of the path
 typedef struct parsedPath{
@@ -142,10 +147,111 @@ struct fs_diriteminfo *fs_readdir(fdDir *dirp);
 int fs_closedir(fdDir *dirp);
 
 // Misc directory functions
-char * fs_getcwd(char *pathname, size_t size);
-int fs_setcwd(char *pathname);   //linux chdir
+char * fs_getcwd(char *pathname, size_t size) {
+
+    // Value passed in for size is 4096 (DIRMAX_LEN)
+    //
+    // If NULL is returned, the size of the pointer is too small
+    // to contain the whole path - manpage of getcwd() linux function
+    if (strlen(pathname) > size) {
+        printf("Invalid - path is longer than max path size.\n");
+        return NULL;
+    }
+
+    // If current working directory is assigned in set function, there should
+    // be no need to look at a parsedPath variable or travese the array
+    strcpy(pathname, currentDirectory);
+    return pathname;
+
+}
+int fs_setcwd(char *pathname) {
+
+printf("%s\n", pathname);
+
+     //fsInIt - root initalization
+    if (strcmp(pathname, "/root") == 0) {
+        strcpy(currentDirectory,"/root");
+        return 0;
+    }
+
+    // Checks if path is a valid request - Aborts if not
+    parsedPath * tempPath = parsePath(pathname);
+    if (tempPath == NULL) {
+        printf("Invalid path - Failed parsePath.\n");
+        return -1;
+    }
+    
+    // Validates path to see if it exists - Aborts if not
+    // Will currently always fail test - Account for this later
+    // if (validatePath(tempPath) == -1) {
+    //     printf("Invalid path. Path does not exist.\n");
+    //     return -1;
+    // }
+
+    // If pathname was validated, set as current working directory.
+
+    // Set a working directory to start traversing
+    char workingDirectory[256] = "/root";
+
+    // 4096 is equal to the DIRMAX_LEN value defined in mfs.c - Hardcoded at the moment
+    if (strlen(currentDirectory) + strlen(pathname) < 256) {
+        strcpy(workingDirectory, pathname); // Set to root to start traversing
+    }
+
+    // TODO: Determine how to traverse direntries for files
+    if (tempPath->absPath == 1) {
+
+        int blockHolder;
+        int matchFlag = 0;
+
+        direntry * tempEntry = malloc(BLOCK_SIZE * 4);
+        LBAread(tempEntry, 4, 6);
+
+        char *token = strtok(workingDirectory, "/");
+        token = strtok(NULL, "/");
+        
+        while (token != NULL) {
+            for (int i = 0; i < 12; i++) {
+                if (strcmp(tempEntry[i].name, token) == 0) {
+                    blockHolder = tempEntry[i].extents[0].start;
+                    matchFlag = 1;
+                }
+
+                if (matchFlag == 1) {
+                    LBAread(tempEntry, 4, blockHolder);
+                    token = strtok(NULL, "/");
+
+                    break;
+                }
+            }
+
+            if (matchFlag == 0) {
+                break;
+            }
+
+            matchFlag = 0;
+        }
+
+        free(tempEntry);
+        if (token != NULL) {
+            printf("Failed to match path - setcwd failed. Abort.\n");
+            return -1;
+        }
+    }
+
+    // If pathname was validated, set as current working directory.
+    strcpy(currentDirectory, pathname);
+    return 1;
+
+    
+}   //linux chdir
 int fs_isFile(char * filename);	//return 1 if file, 0 otherwise
 int fs_isDir(char * pathname);		//return 1 if directory, 0 otherwise
 int fs_delete(char* filename);	//removes a file
 
 int fs_stat(const char *path, struct fs_stat *buf);
+
+// Currently accounting to read root directory which occupies four blocks - For testing
+void allocateBuffer() {
+    bufferBlock = malloc(BLOCK_SIZE * 4);
+}

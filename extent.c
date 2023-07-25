@@ -155,12 +155,18 @@ unsigned int extent_block_to_LBA(extent *extent, unsigned int local_block_number
 
   while(current_extent != NULL && current_extent->count != 0)
   {
+    //printf("At extent %d Count: %d \n", current_extent->start, current_extent->count);
+    //printf("blocks in extent: %d \n\n", block_in_extent, current_extent->count);
+
     if(current_extent->count + block_in_extent >= local_block_number)
     {
-      return current_extent->start + block_in_extent + current_extent->count  - local_block_number ;
+      return current_extent->start - block_in_extent  + local_block_number ;
     }
+
     block_in_extent += current_extent->count;
-    current_extent = extent_at_index(extent, i++);
+
+    //free(current_extent);
+    current_extent = extent_at_index(extent, ++i);
   }
   
   return 0;
@@ -171,7 +177,9 @@ unsigned int extent_block_to_LBA(extent *extent, unsigned int local_block_number
 // Removes blocks from the extent
 unsigned int extent_remove_blocks(extent *extent, uint block_number, uint count)
 {
-  // TODO:
+
+  //TODO:
+
   return 0;
 }
 
@@ -342,10 +350,7 @@ unsigned int append_second_extent(int extent_loc,  uint block_number, uint count
 int make_3rd_extent_table(extent* extent, uint last_extent_size)
 {
 
-  //pextent p_loc = allocate_blocks(1, 1);
-  pextent p_loc = malloc(sizeof(extent));
-  p_loc[0].start = 5000;
-  p_loc[0].count = 1;
+  pextent p_loc = allocate_blocks(1, 1);
 
   //printf("SAVING THIRD TABLE AT %d\n", p_loc[0].start );
 
@@ -376,10 +381,8 @@ unsigned int append_third_extent(int extent_loc,  uint block_number, uint count)
     if(extent_3[i] == 0)
     {
       //printf("AAAAAAAAAAAAa %d\n", count);
-      //pextent p_loc = allocate_blocks(1,1);
-      pextent p_loc = malloc(sizeof(extent));
-      p_loc[0].start = 7000;
-      p_loc[0].count = 1;
+      pextent p_loc = allocate_blocks(1,1);
+      
 
       pextent new_2_extent = calloc(64,sizeof(extent));
       new_2_extent[0].start = block_number;

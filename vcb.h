@@ -24,8 +24,12 @@ typedef struct vcb
 {
   long unique_volume_ID; // unique ID / magic number
   unsigned long total_blocks;
+  unsigned long bytes_in_use; // Track number of bytes currently in use - Calculate offset
+  unsigned long blocks_in_use; // Track number of blocks in use - Calculate offset
+  unsigned int direntry_size; // Bytes direntry struct occupies - 160 bytes
   unsigned int free_block_map; // block number of bitmap startin block - Bierman
   unsigned int block_size;     // 512
+  unsigned int dirents_in_use; // Track number of dirent blocks in use
   unsigned int max_file_name_length;
   unsigned int root_location;
   // dirent* res_root; // This is not valid on disk must be init every time
@@ -35,5 +39,8 @@ typedef struct vcb
 
 // Initalize Volume Control Block - Populate variables
 void initVCB(vcb *vcb);
+int calculateOffset();
+unsigned long blockSize();
+void incrementDirent();
 
 #endif

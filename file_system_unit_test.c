@@ -2,6 +2,7 @@
 #include "extent_unit_tests.h"
 #include "parsePath.h"
 #include "b_bitmap.h"
+#include "get_and_set_dir.h"
 
 void test(int (*func)(), char *name)
 {
@@ -9,13 +10,15 @@ void test(int (*func)(), char *name)
   int passed;
   passed = func();
 
+  printf("%-40s", name);
+
   if (passed)
   {
-    printf("%-35s P\n", name);
+    printf("P\n");
   }
   else
   {
-    printf("%-35s F\n", name);
+    printf("F\n");
   }
 }
 
@@ -52,6 +55,22 @@ int test_valid_relative_path()
   const char *path = "home/user/documents";
   parsedPath *result = parsePath(path);
   if (result != NULL)
+  {
+    free(result);
+    return 1; // Test passed
+  }
+  else
+  {
+    return 0; // Test failed
+  }
+}
+
+int test_valid_root_path()
+{
+  const char *path = "/";
+  parsedPath *result = parsePath(path);
+
+  if ( result != NULL)
   {
     free(result);
     return 1; // Test passed
@@ -116,8 +135,10 @@ void parse_path_tests()
   test(test_valid_relative_path, "test_valid_relative_path");
   test(test_valid_relative_to_parent_path, "test_valid_relative_to_parent_path");
   test(test_invalid_double_slash, "test_invalid_double_slash");
-  printf("Getting seg fault when passing empty path so commented it out");
-  // test(test_empty_path,"test_empty_path");
+  //printf("Getting seg fault when passing empty path so commented it out");
+  test(test_empty_path,"test_empty_path");
+  test(test_valid_root_path,"test_valid_root_path");
+  
 
 }
 
@@ -200,6 +221,146 @@ void test_bit_map()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+
+/////////////////////////// VALIDATE PATH TESTS  //////////////////////
+
+
+
+int test_valid_dir_bad()
+{
+
+	const char* given_path = "/apples";
+
+	parsedPath* path = parsePath(given_path);
+
+	int result = validatePath(path);
+
+	if(result == -1)
+	{
+		//free(path);
+		return 1; // Test pass found bad path
+	}
+
+	return 0;
+}	
+
+int test_valid_dir_good()
+{
+
+	const char* given_path = "/";
+	parsedPath* path = parsePath(given_path);
+	int result = validatePath(path);
+
+	// Found the root
+	if(result != -1)
+	{
+		//free(path);
+		return 1; // Test pass found good path
+	}
+
+	return 0;
+
+}
+
+
+void test_validatePath()
+{
+
+	printf("\nTesting validatePath: \n");
+	test(test_valid_dir_bad,"test_valid_dir_bad");
+	test(test_valid_dir_good,"test_valid_dir_good");
+}
+
+void file_test()
+{
+  direntry * newEntry = malloc(MINBLOCKSIZE * 4);
+  LBAread(newEntry, 4, 6);
+
+  // newEntry[0].entries currently doesn't populate correctly - bug with extents
+  for (int i = 0; i < 12; i++) {
+    printf("%s\n", newEntry[i].name);
+
+    if (newEntry[i].isFile == 1) {
+      printf("#%d isFile: %d\n", i, newEntry[i].isFile);
+    }
+  }
+
+  free(newEntry);
+}
+
+void make_testdir()
+{
+  direntry * newEntry = malloc(MINBLOCKSIZE * 4);
+
+  //First level
+  LBAread(newEntry, 4, 6);
+
+  strcpy(newEntry[2].name, "file1");
+  strcpy(newEntry[3].name, "file2");
+  strcpy(newEntry[4].name, "file3");
+  strcpy(newEntry[5].name, "file4");
+  strcpy(newEntry[6].name, "dir1");
+  newEntry[6].isFile = 1;
+  strcpy(newEntry[7].name, "file5");
+  strcpy(newEntry[8].name, "file6");
+  strcpy(newEntry[9].name, "file7");
+  strcpy(newEntry[10].name, "file8");
+  strcpy(newEntry[11].name, "file9");
+
+  // Create second level
+  newEntry[6].extents[0].start = init_dir(10, newEntry + 6);
+  newEntry[6].extents[0].start = 10;
+  //printf("Location: %d\n", newEntry[6].extents[0].start);
+
+  // Write first level to block
+  LBAwrite(newEntry, 4, 6);
+
+
+  LBAread(newEntry, 4, 10);
+  strcpy(newEntry[2].name, "newEntry1");
+  strcpy(newEntry[3].name, "newEntry2");
+  strcpy(newEntry[4].name, "newEntry3");
+  strcpy(newEntry[5].name, "newEntry4");
+  strcpy(newEntry[6].name, "newEntry5");
+  strcpy(newEntry[7].name, "newEntry6");
+  strcpy(newEntry[8].name, "newEntry7");
+  strcpy(newEntry[9].name, "newdir2");
+  newEntry[9].isFile = 1;
+  strcpy(newEntry[10].name, "newEntry9");
+  strcpy(newEntry[11].name, "newEntry10");
+  LBAwrite(newEntry, 4, 10);
+
+  // Create third level
+  init_dir(10, newEntry + 9);
+  newEntry[9].extents[0].start = 14;
+  //printf("Location: %d\n", newEntry[9].extents[0].start);
+
+  // Write second level to block
+  LBAwrite(newEntry, 4, 10);
+
+  LBAread(newEntry, 4, 14);
+  strcpy(newEntry[2].name, "finalEntry1");
+  strcpy(newEntry[3].name, "finalEntry2");
+  strcpy(newEntry[4].name, "finalEntry3");
+  strcpy(newEntry[5].name, "finalEntry4");
+  strcpy(newEntry[6].name, "finalEntry5");
+  strcpy(newEntry[7].name, "finalEntry6");
+  strcpy(newEntry[8].name, "finalEntry7");
+  strcpy(newEntry[9].name, "finalEntry8");
+  strcpy(newEntry[10].name, "finalEntry9");
+  strcpy(newEntry[11].name, "finalEntry10");
+  LBAwrite(newEntry, 4, 14);
+
+
+  free(newEntry);
+}
+
+
+///////////////////////////////////////////////////
+
+
 void file_system_unit_tests()
 {
 
@@ -208,6 +369,9 @@ void file_system_unit_tests()
   extent_tests();
   test_bit_map();
   parse_path_tests();
+  test_validatePath();
+  make_testdir();
+  file_test();
 
   printf("\n\nEnding unit tests...\n\n");
 }

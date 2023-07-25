@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include "dirEntry.h"
 
 #define TEST_MAX_INDEX 20
 
@@ -41,8 +42,11 @@ typedef struct parsedPath{
     int parPath;
 }parsedPath;
 
+
+
 parsedPath* parsePath(const char* pathname);
 void freePath(parsedPath* ppath);
+int validatePath(parsedPath *ppath);
 
 
 

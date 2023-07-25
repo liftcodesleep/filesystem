@@ -26,6 +26,7 @@
 #include <time.h>
 
 #include "b_bitmap.h"
+#define BLOCK_SIZE 512
 
 typedef struct direntry
 {
@@ -36,10 +37,12 @@ typedef struct direntry
   unsigned long time_last_modified;
   unsigned long time_last_accessed;
   char isFile;
-
+  unsigned int entries;
 } direntry;
 
 int init_dir(int minEntries, direntry *parent);
+void loadDir(direntry* dir, int index);
+direntry * getRoot();
 
 
 
