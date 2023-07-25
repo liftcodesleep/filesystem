@@ -25,12 +25,13 @@
 
 //direntry pointers to be loaded in memory
 direntry * rootD;
+//lastPathD's parent directory
 direntry * parentD;
+//the directry that was loaded in the completion of
+//validatePath()
+direntry * lastPathD;
+//actual current directory entry (to be determined by setcwd() function)
 direntry * currentD;
-//direntry pointers that will be used to index 
-//only for validatePath
-direntry * indexD;
-direntry * iparentD;
 //check if the root,parent,current directories have been loaded
 int init = 0;
 
@@ -41,10 +42,10 @@ int init = 0;
 void init_loadedDir(){
   if (init == 0){
     rootD = getRoot();
+    parentD = malloc(BLOCK_SIZE * 12);
     parentD = rootD;
-    currentD = rootD;
-    indexD = rootD;
-    iparentD = rootD;
+    lastPathD = malloc(BLOCK_SIZE * 12);
+    lastPathD = rootD;
     init = 1;
   }
 }
@@ -150,6 +151,11 @@ void freePath(parsedPath* ppath){
 // current and parent will be root if it is the first call
 int validatePath(parsedPath *ppath){
   init_loadedDir();
+  //direntry pointers that will be used to index through
+  //directory entries found within the path
+  direntry * indexD = malloc(BLOCK_SIZE * 12);
+  //saves the index's parent
+  direntry * iparentD = malloc(BLOCK_SIZE * 12);;
   //the return value that displays the index of the parent
   //which the path name exists on
   //value is default set to -1 that shows the path is invalid
@@ -159,7 +165,7 @@ int validatePath(parsedPath *ppath){
 //    //printf("inside / path\n");
     indexOfParent = 0;
     parentD = rootD;
-    currentD = rootD;
+    lastPathD = rootD;
     if(ppath != NULL){
       freePath(ppath);
       ppath = NULL;
@@ -171,7 +177,7 @@ int validatePath(parsedPath *ppath){
   } else if (ppath->parPath == 1){
     indexD = parentD;
   } else {
-    indexD = currentD;
+    indexD = lastPathD;
   }
   for (int i = 0; i < ppath->pathSize; i++){
     //check if each path exists within the directory
@@ -184,10 +190,10 @@ int validatePath(parsedPath *ppath){
       //then updates the current directory to the newly found
       //directory entry
       if(strcmp(ppath->pathArray[i],indexD[j].name) == 0){
-        //might need to figure out a way to free some of these
+        //might need to figure out a way to free some of these****************************************************
         //may run into malloc problems
         iparentD = indexD;
-        indexD = loadDir(currentD, j);
+        loadDir(indexD, j);
         indexOfParent = j;
         //upon finding the final valid path
         //function will be complete and update the parent
@@ -196,7 +202,9 @@ int validatePath(parsedPath *ppath){
         //and parent directories when the path is invalid
         if(i == ppath->pathSize - 1){
           parentD = iparentD;
-          currentD = indexD;
+          lastPathD = indexD;
+          free(indexD);
+          free(iparentD);
         }
         break;
       }
@@ -206,12 +214,31 @@ int validatePath(parsedPath *ppath){
       freePath(ppath);
       ppath = NULL;
     }
+    if (indexD != NULL){
+      free(indexD);
+      indexD = NULL;
+    }
+    if (iparentD != NULL){
+      free(iparentD);
+      iparentD = NULL;
+    }
+    
     indexOfParent = -1;
     return indexOfParent;
-  }
+  } //end of first for loop
+  //last path has been checked, last path is not valid
+  //free all values and return negative
   if(ppath != NULL){
       freePath(ppath);
       ppath = NULL;
+  }
+  if (indexD != NULL){
+    free(indexD);
+    indexD = NULL;
+  }
+  if (iparentD != NULL){
+    free(iparentD);
+    iparentD = NULL;
   }
   indexOfParent = -1;
   return indexOfParent;
