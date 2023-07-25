@@ -2,6 +2,7 @@
 #include "extent_unit_tests.h"
 #include "parsePath.h"
 #include "b_bitmap.h"
+#include "get_and_set_dir.h"
 
 void test(int (*func)(), char *name)
 {
@@ -308,12 +309,13 @@ void make_testdir()
   strcpy(newEntry[10].name, "file8");
   strcpy(newEntry[11].name, "file9");
 
-  LBAwrite(newEntry, 4, 6);
-
-  // Second level
+  // Create second level
   newEntry[6].extents[0].start = init_dir(10, newEntry + 6);
   newEntry[6].extents[0].start = 10;
   //printf("Location: %d\n", newEntry[6].extents[0].start);
+
+  // Write first level to block
+  LBAwrite(newEntry, 4, 6);
 
 
   LBAread(newEntry, 4, 10);
@@ -330,10 +332,13 @@ void make_testdir()
   strcpy(newEntry[11].name, "newEntry10");
   LBAwrite(newEntry, 4, 10);
 
-  // Third level
+  // Create third level
   init_dir(10, newEntry + 9);
   newEntry[9].extents[0].start = 14;
   //printf("Location: %d\n", newEntry[9].extents[0].start);
+
+  // Write second level to block
+  LBAwrite(newEntry, 4, 10);
 
   LBAread(newEntry, 4, 14);
   strcpy(newEntry[2].name, "finalEntry1");
@@ -364,9 +369,9 @@ void file_system_unit_tests()
   extent_tests();
   test_bit_map();
   parse_path_tests();
-  // test_validatePath();
+  test_validatePath();
   make_testdir();
-  // file_test();
+  file_test();
 
   printf("\n\nEnding unit tests...\n\n");
 }

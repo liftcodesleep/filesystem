@@ -166,36 +166,83 @@ char * fs_getcwd(char *pathname, size_t size) {
 }
 int fs_setcwd(char *pathname) {
 
-    //fsInIt - root initalization
+printf("%s\n", pathname);
+
+     //fsInIt - root initalization
     if (strcmp(pathname, "/root") == 0) {
         strcpy(currentDirectory,"/root");
         return 0;
     }
 
+    // Checks if path is a valid request - Aborts if not
+    parsedPath * tempPath = parsePath(pathname);
+    if (tempPath == NULL) {
+        printf("Invalid path - Failed parsePath.\n");
+        return -1;
+    }
+    
+    // Validates path to see if it exists - Aborts if not
+    // Will currently always fail test - Account for this later
+    // if (validatePath(tempPath) == -1) {
+    //     printf("Invalid path. Path does not exist.\n");
+    //     return -1;
+    // }
+
+    // If pathname was validated, set as current working directory.
+
+    // Set a working directory to start traversing
+    char workingDirectory[256] = "/root";
+
     // 4096 is equal to the DIRMAX_LEN value defined in mfs.c - Hardcoded at the moment
-    if (strlen(currentDirectory) + strlen(pathname) < 4096) {
-        strcpy(currentDirectory, "/root"); // Set to root to start traversing
+    if (strlen(currentDirectory) + strlen(pathname) < 256) {
+        strcpy(workingDirectory, pathname); // Set to root to start traversing
     }
 
-    int validateResult = -1; // Set to -1 - Needs to be tested first
-    //validatePath(pathname); Considering validatePath returns a valid address
-    if (validateResult == -1) {
-        printf("Path was determined to be invalid. Exiting.\n");
-        return -1;
+    // TODO: Determine how to traverse direntries for files
+    if (tempPath->absPath == 1) {
+
+        int blockHolder;
+        int matchFlag = 0;
+
+        direntry * tempEntry = malloc(BLOCK_SIZE * 4);
+        LBAread(tempEntry, 4, 6);
+
+        char *token = strtok(workingDirectory, "/");
+        token = strtok(NULL, "/");
+        
+        while (token != NULL) {
+            for (int i = 0; i < 12; i++) {
+                if (strcmp(tempEntry[i].name, token) == 0) {
+                    blockHolder = tempEntry[i].extents[0].start;
+                    matchFlag = 1;
+                }
+
+                if (matchFlag == 1) {
+                    LBAread(tempEntry, 4, blockHolder);
+                    token = strtok(NULL, "/");
+
+                    break;
+                }
+            }
+
+            if (matchFlag == 0) {
+                break;
+            }
+
+            matchFlag = 0;
+        }
+
+        free(tempEntry);
+        if (token != NULL) {
+            printf("Failed to match path - setcwd failed. Abort.\n");
+            return -1;
+        }
     }
 
     // If pathname was validated, set as current working directory.
     strcpy(currentDirectory, pathname);
-    return 0;
+    return 1;
 
-    // TODO: Determine how to traverse direntries for files
-
-    // Load root directory into bufferBlock
-
-    // clear previous working directory
-    // strcpy(currentDirectory, "/0");
-    
-    // set new working directory
     
 }   //linux chdir
 int fs_isFile(char * filename);	//return 1 if file, 0 otherwise
