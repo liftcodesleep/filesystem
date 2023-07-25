@@ -25,7 +25,7 @@
 #include "extent.h"
 #include "fsLow.h"
 
-#define BLOCK_SIZE 512
+
 
 // a helper function to get the proper block count
 int blockCount(int n, int divider);
@@ -82,15 +82,14 @@ int init_dir(int minEntries, direntry *parent)
   return newDir[0].extents[0].start;
 }
 //***********NEED TO UPDATE THE MALLOC VALUES***************************************
-direntry * loadDir(direntry* dir, int index){
-    direntry *returnDir = malloc(sizeof(direntry) * 100);
-    LBAread(returnDir, dir[index].extents[0].count, dir[index].extents[0].start);
-    return returnDir;
+void loadDir(direntry* dir, int index){
+    LBAread(dir, dir[index].extents[0].count, dir[index].extents[0].start);
 }
 
 //***********NEED TO UPDATE THE MALLOC VALUES***************************************
 direntry * getRoot(){
-  direntry * root = malloc(sizeof(direntry) * 100 );
+  direntry * root = malloc(BLOCK_SIZE * 12);
+  printf("size of root: %d\n", sizeof(direntry));
   LBAread(root, 4, 7);
   return root;
 }

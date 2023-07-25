@@ -26,6 +26,7 @@
 #include <time.h>
 
 #include "b_bitmap.h"
+#define BLOCK_SIZE 512
 
 typedef struct direntry
 {
@@ -40,7 +41,7 @@ typedef struct direntry
 } direntry;
 
 int init_dir(int minEntries, direntry *parent);
-direntry * loadDir(direntry* dir, int index);
+void loadDir(direntry* dir, int index);
 direntry * getRoot();
 
 
