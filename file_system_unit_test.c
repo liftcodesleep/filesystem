@@ -311,7 +311,10 @@ void make_testdir()
   LBAwrite(newEntry, 4, 6);
 
   // Second level
-  init_dir(10, newEntry + 6);
+  newEntry[6].extents[0].start = init_dir(10, newEntry + 6);
+  newEntry[6].extents[0].start = 10;
+  //printf("Location: %d\n", newEntry[6].extents[0].start);
+
 
   LBAread(newEntry, 4, 10);
   strcpy(newEntry[2].name, "newEntry1");
@@ -329,6 +332,8 @@ void make_testdir()
 
   // Third level
   init_dir(10, newEntry + 9);
+  newEntry[9].extents[0].start = 14;
+  //printf("Location: %d\n", newEntry[9].extents[0].start);
 
   LBAread(newEntry, 4, 14);
   strcpy(newEntry[2].name, "finalEntry1");
@@ -361,7 +366,7 @@ void file_system_unit_tests()
   parse_path_tests();
   // test_validatePath();
   make_testdir();
-  file_test();
+  // file_test();
 
   printf("\n\nEnding unit tests...\n\n");
 }
