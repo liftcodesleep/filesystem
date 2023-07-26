@@ -29,11 +29,13 @@ direntry * rootD;
 direntry * parentD;
 //the directry that was loaded in the completion of
 //validatePath()
-direntry * lastPathD;
+//direntry * lastPathD;
 //actual current directory entry (to be determined by setcwd() function)
 direntry * currentD;
 //check if the root,parent,current directories have been loaded
 int init = 0;
+
+
 
 //an init function to allocate memory and load the
 //root directory and make the parent directory and
@@ -44,16 +46,30 @@ void init_loadedDir(){
     rootD = getRoot();
     parentD = malloc(BLOCK_SIZE * 12);
     parentD = rootD;
-    lastPathD = malloc(BLOCK_SIZE * 12);
-    lastPathD = rootD;
+//    lastPathD = malloc(BLOCK_SIZE * 12);
+//    lastPathD = rootD;
     init = 1;
   }
+}
+
+//COMBINATION FUNCTION FOR COMPLETE PARSEPATH
+//THIS WILL BE THE ONLY FUNCTION CALLED
+//struct contains the loaded parent directory of a valid path
+//and index number of the parent direntry that the last path
+//direntry exists within the parent
+//index is -1 if not found
+//parent will be rootDir if it is not found
+validPath * parsePath(const char* pathname){
+  validPath * vP = malloc(sizeof(validPath));
+  vP->index = validatePath(pathStruct_create(pathname));
+  vP->parent = parentD;
+  return vP; 
 }
 
 //returns based on successful parsing
 //returns pointer to parsedPath struct or NULL if it fails
 //if error occurs, all allocated memory of parsedPath is freed
-parsedPath* parsePath(const char* pathname){
+parsedPath* pathStruct_create(const char* pathname){
     //check if pathname is an emptry string
     //return NULL
     if (strlen(pathname) == 0){
@@ -165,7 +181,7 @@ int validatePath(parsedPath *ppath){
 //    //printf("inside / path\n");
     indexOfParent = 0;
     parentD = rootD;
-    lastPathD = rootD;
+//    lastPathD = rootD;
     if(ppath != NULL){
       freePath(ppath);
       ppath = NULL;
@@ -177,7 +193,7 @@ int validatePath(parsedPath *ppath){
   } else if (ppath->parPath == 1){
     indexD = parentD;
   } else {
-    indexD = lastPathD;
+    indexD = currentD;
   }
   for (int i = 0; i < ppath->pathSize; i++){
     //check if each path exists within the directory
@@ -202,7 +218,7 @@ int validatePath(parsedPath *ppath){
         //and parent directories when the path is invalid
         if(i == ppath->pathSize - 1){
           parentD = iparentD;
-          lastPathD = indexD;
+//          lastPathD = indexD;
           free(indexD);
           free(iparentD);
         }

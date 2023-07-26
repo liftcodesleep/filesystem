@@ -42,9 +42,14 @@ typedef struct parsedPath{
     int parPath;
 }parsedPath;
 
+typedef struct validPath{
+    direntry * parent;
+    int index;
+}validPath;
 
+validPath * parsePath(const char *pathname);
 
-parsedPath* parsePath(const char* pathname);
+parsedPath* pathStruct_create(const char* pathname);
 void freePath(parsedPath* ppath);
 int validatePath(parsedPath *ppath);
 
