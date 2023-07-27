@@ -228,12 +228,10 @@ void test_bit_map()
   test(test_multiple_allocs, "test_multiple_allocs");
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////// EXAMPLE FILES UNIT TESTS ////////////////////////////
 
-
-
-
-void file_test()
+// Prints requested directory block. Needs to be changed as needed
+void print_test_directory()
 {
   direntry * newEntry = malloc(MINBLOCKSIZE * 4);
   LBAread(newEntry, 4, 6);
@@ -250,8 +248,10 @@ void file_test()
   free(newEntry);
 }
 
+// Creates four levels of direntries to perform basic tests against
 void make_testdir()
 {
+  printf("\nTest directory system initalized.\n");
   direntry * newEntry = malloc(MINBLOCKSIZE * 4);
 
   //First level
@@ -269,16 +269,19 @@ void make_testdir()
   strcpy(newEntry[10].name, "file8");
   strcpy(newEntry[11].name, "file9");
 
-  // Create second level
+  // Create second level - Made in block 10 if extent unit tests aren't active
+  // init_dir does not store the block number that the new file was created into.
+  // Catching that value in extent[0] of the designated directory.
   newEntry[6].extents[0].start = init_dir(10, newEntry + 6);
-  newEntry[6].extents[0].start = 10;
-  //printf("Location: %d\n", newEntry[6].extents[0].start);
+  // printf("Location: %d\n", newEntry[6].extents[0].start);
 
-  // Write first level to block
-  LBAwrite(newEntry, 4, 6);
+  // Write first level to block - Writing to block 6
+  LBAwrite(newEntry, 4, newEntry[0].extents[0].start);
 
-
-  LBAread(newEntry, 4, 10);
+  // Loads into block 10 if extent unit tests aren't active
+  LBAread(newEntry, 4, newEntry[6].extents[0].start);
+  // Confirm . and .. are in entries 0 and 1
+  // printf("%s and %s\n", newEntry[0].name, newEntry[1].name);
   strcpy(newEntry[2].name, "newEntry1");
   strcpy(newEntry[3].name, "newEntry2");
   strcpy(newEntry[4].name, "newEntry3");
@@ -290,35 +293,93 @@ void make_testdir()
   newEntry[9].isFile = 1;
   strcpy(newEntry[10].name, "newEntry9");
   strcpy(newEntry[11].name, "newEntry10");
-  LBAwrite(newEntry, 4, 10);
 
-  // Create third level
-  init_dir(10, newEntry + 9);
-  newEntry[9].extents[0].start = 14;
-  //printf("Location: %d\n", newEntry[9].extents[0].start);
+  // Create third level - Made in block 14 if extent unit tests aren't active
+  newEntry[9].extents[0].start = init_dir(10, newEntry + 9);
+  // printf("Location: %d\n", newEntry[9].extents[0].start);
 
-  // Write second level to block
-  LBAwrite(newEntry, 4, 10);
+  // Write second level to block - Writing to block 10
+  // printf("Writing to block: %d\n", newEntry[0].extents[0].start);
+  LBAwrite(newEntry, 4, newEntry[0].extents[0].start);
 
-  LBAread(newEntry, 4, 14);
-  strcpy(newEntry[2].name, "finalEntry1");
-  strcpy(newEntry[3].name, "finalEntry2");
-  strcpy(newEntry[4].name, "finalEntry3");
-  strcpy(newEntry[5].name, "finalEntry4");
-  strcpy(newEntry[6].name, "finalEntry5");
-  strcpy(newEntry[7].name, "finalEntry6");
-  strcpy(newEntry[8].name, "finalEntry7");
-  strcpy(newEntry[9].name, "finalEntry8");
-  strcpy(newEntry[10].name, "finalEntry9");
-  strcpy(newEntry[11].name, "finalEntry10");
-  LBAwrite(newEntry, 4, 14);
+  // Loads from block 14
+  LBAread(newEntry, 4, newEntry[9].extents[0].start);
+  // printf("%s and %s\n", newEntry[0].name, newEntry[1].name);
+  strcpy(newEntry[2].name, "otherEntry1");
+  strcpy(newEntry[3].name, "otherdir2");
+  newEntry[3].isFile = 1;
+  strcpy(newEntry[4].name, "otherEntry3");
+  strcpy(newEntry[5].name, "otherEntry4");
+  strcpy(newEntry[6].name, "otherEntry5");
+  strcpy(newEntry[7].name, "otherEntry6");
+  strcpy(newEntry[8].name, "otherEntry7");
+  strcpy(newEntry[9].name, "otherEntry8");
+  strcpy(newEntry[10].name, "otherEntry9");
+  strcpy(newEntry[11].name, "otherEntry10");
 
+  // Create fourth level - Made in block 18
+  newEntry[3].extents[0].start = init_dir(10, newEntry + 3);
+  // printf("Location: %d\n", newEntry[3].extents[0].start);
+
+  // Writing to block 14
+  // printf("Writing to block: %d\n", newEntry[0].extents[0].start);
+  LBAwrite(newEntry, 4, newEntry[0].extents[0].start);
+
+  // Loads from block 18
+  LBAread(newEntry, 4, newEntry[3].extents[0].start);
+  // printf("%s and %s\n", newEntry[0].name, newEntry[1].name);
+  strcpy(newEntry[2].name, "testEntry1");
+  strcpy(newEntry[3].name, "testEntry2");
+  strcpy(newEntry[4].name, "testEntry3");
+  strcpy(newEntry[5].name, "testEntry4");
+  strcpy(newEntry[6].name, "testEntry5");
+  strcpy(newEntry[7].name, "testEntry6");
+  strcpy(newEntry[8].name, "testEntry7");
+  strcpy(newEntry[9].name, "testEntry8");
+  strcpy(newEntry[10].name, "testEntry9");
+  strcpy(newEntry[11].name, "testDir10");
+  newEntry[11].isFile = 1;
+
+  // Create fifth level - Made in block 22
+  newEntry[11].extents[0].start = init_dir(10, newEntry + 11);
+  // printf("Location: %d\n", newEntry[11].extents[0].start);
+
+  // Writing to block 18
+  // printf("Writing to block: %d\n", newEntry[0].extents[0].start);
+  LBAwrite(newEntry, 4, newEntry[0].extents[0].start);
+
+  // Loads from block 22 - All files
+  LBAread(newEntry, 4, newEntry[11].extents[0].start);
+  // printf("%s and %s\n", newEntry[0].name, newEntry[1].name);
+  strcpy(newEntry[2].name, "fEntry1");
+  strcpy(newEntry[3].name, "fEntry2");
+  strcpy(newEntry[4].name, "fEntry3");
+  strcpy(newEntry[5].name, "fEntry4");
+  strcpy(newEntry[6].name, "fEntry5");
+  strcpy(newEntry[7].name, "fEntry6");
+  strcpy(newEntry[8].name, "fEntry7");
+  strcpy(newEntry[9].name, "fEntry8");
+  strcpy(newEntry[10].name, "fEntry9");
+  strcpy(newEntry[11].name, "fEntry10");
+
+  // Writing to block 22
+  // printf("Writing to block: %d\n", newEntry[0].extents[0].start);
+  LBAwrite(newEntry, 4, newEntry[0].extents[0].start);
 
   free(newEntry);
 }
 
+// void setdir_test()
+// {
+//   char name[6] = "/root";
+//   fs_testgetcwd(name, 10);
+//   char newName[30] = "/root/dir1/newdir2/finalEntry1";
+//   int test = fs_testsetcwd(newName);
+//   printf("Test result: %d\n", test);
+// }
 
-///////////////////////////////////////////////////
+
+////////////////////////////////////////////////
 
 
 void file_system_unit_tests()
@@ -331,9 +392,7 @@ void file_system_unit_tests()
   parse_path_tests();
 
   make_testdir();
-  file_test();
-
-  //printf("Size of dir : %d",sizeof(direntry) );
+  // print_test_directory();
 
   printf("\n\nEnding unit tests...\n\n");
 }
