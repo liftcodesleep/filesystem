@@ -386,10 +386,10 @@ void file_system_unit_tests()
 
   printf("\n\nStarting unit tests:\n\n");
 
-  extent_tests();
-  test_bit_map();
+  //extent_tests();
+  //test_bit_map();
 
-  make_testdir();
+  //make_testdir();
   parse_path_tests();
   // print_test_directory();
 

@@ -38,9 +38,6 @@ int blockCount(int n, int divider);
 int init_dir(int minEntries, direntry *parent)
 {
 
-  
-
-
   // minimum bytes needed to fit amount of directory entries
   int minBytes = minEntries * sizeof(direntry);
   // minimum bytes needed to allocate memory
@@ -62,20 +59,26 @@ int init_dir(int minEntries, direntry *parent)
     newDir[i].entries = 0;
   }
   // make root
-  strcpy(newDir[0].name, ".");
+  //strcpy(newDir[0].name, ".");
   //NEED TO CHECK IF THIS IS OK**************************************************
   newDir[0].size = sizeof(direntry);
   newDir[0].entries = actualNEntries;
-  strcpy(newDir[1].name, "..");
+  //strcpy(newDir[1].name, "..");
   extent *e = allocate_blocks(blocksNeeded, blocksNeeded);
   newDir[0].extents[0] = e[0];
   newDir[0].extents[1] = e[1];
   newDir[0].extents[2] = e[2];
   newDir[1].entries = newDir[0].entries;
   free(e);
+
+
+  int free_entry = 0;
   // setup root directory if parent is NULL
   if (parent == NULL)
   {
+    strcpy(newDir[0].name, "/");
+    strcpy(newDir[1].name, "/");
+
     newDir[1].size = newDir[0].size;
     newDir[1].extents[0] = newDir[0].extents[0];
     newDir[1].extents[1] = newDir[0].extents[1];
@@ -84,17 +87,19 @@ int init_dir(int minEntries, direntry *parent)
   {
 
     // Find a free entry and save its position
-    int free_entry;
+    
     for(free_entry = 2; free_entry < parent->entries; free_entry++)
     {
-
       if(strcmp(parent[free_entry].name, "\0") == 0)
       {
         break;
       }
-
     }
 
+    //strcpy(newDir[0].name, "NEW Value");
+    //strcpy(newDir[1].name, parent->name);
+    strcpy(newDir[0].name, ".");
+    strcpy(newDir[1].name, "..");
     parent[free_entry] = newDir[0];
     LBAwrite(parent, blocksNeeded, parent[0].extents[0].start);
   }
@@ -103,7 +108,7 @@ int init_dir(int minEntries, direntry *parent)
   LBAwrite(newDir, blocksNeeded, newDir[0].extents[0].start);
 
 
-  return newDir[0].extents[0].start;
+  return free_entry;
 }
 //***********NEED TO UPDATE THE MALLOC VALUES***************************************
 void loadDir(direntry* dir, int index){

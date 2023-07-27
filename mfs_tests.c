@@ -7,6 +7,23 @@
 
 int test_mkdir()
 {
+
+	fs_setcwd("/");
+
+	int result = fs_mkdir("/Desktop",0);
+
+	int set_result = fs_setcwd("/Desktop");
+	
+	if(result == 1 && set_result == 0)
+	{
+		return 1;
+	}else
+	{
+		return 0;
+	}
+
+
+
 	return 1;
 }
 

@@ -156,9 +156,6 @@ void loadDir(char* dir){
 dir_and_index* parsePath(const char* givenpathname)
 {
     
-    // printf("Looking at path: %s \n", givenpathname);
-    
-    
     if( strlen(givenpathname) == 0)
     {
         return NULL;
@@ -168,22 +165,22 @@ dir_and_index* parsePath(const char* givenpathname)
     strcpy(pathname, givenpathname);
 
 
-    // Setup
+    // Token Setup
     char* token; // = malloc( 100 ); // Get 100 for the vcb
     dir_and_index* result = malloc(sizeof(dir_and_index) );
-
-
     char * saveptr;
     token = strtok_r(pathname, "/", &saveptr );
 
 
+
     direntry * tempEntry = malloc(BLOCK_SIZE * 4);
     
-
-    if(token == NULL)
+    // Check for where the path starts
+    if(pathname != NULL && pathname[0] == '/')
     {
         // Start at root and loads it in
         LBAread(tempEntry, 4, 6);
+
     }else if(strcmp(token, "..") == 0 )
     {
         LBAread(tempEntry, 4, current_working_dir[1].extents[0].start);
@@ -191,27 +188,60 @@ dir_and_index* parsePath(const char* givenpathname)
     }else if(strcmp(token, ".") == 0 )
     {
         LBAread(tempEntry, 4, current_working_dir[0].extents[0].start);
+
     } else {
         // Catch case - Loads buffer if token is detected
-        LBAread(tempEntry, 4, 6);
+        //LBAread(tempEntry, 4, 6);
+
+        LBAread(tempEntry, 4, current_working_dir[0].extents[0].start);
     }
     
 
     result->dir = tempEntry;
-
-    
 
 
     // parse path was root
     if(  token == NULL && pathname[0] == '/' )
     {
         result->index = 0;
-        result->dir = tempEntry;
-
         free(pathname);
         return result; 
     }
+
+
+    // Go threw all values in the path
+    int i;
+    while(token != NULL)
+    {
+        result->index = -1;
+        for(i = 0; i < tempEntry[0].entries; i++ )
+        {
+            if( strcmp( tempEntry[i].name, token ) == 0 )
+            {
+                result->index = i;
+                break;
+            }
+        }
+
+        // End if not found
+        if(result->index == -1)
+        {
+            break;
+        }
+
+
+        // Update values
+        LBAread(tempEntry, 4, tempEntry[i].extents[0].start);
+        result->dir = tempEntry;
+        token = strtok_r(NULL, "/", &saveptr );
+    }
+
+    //free(tempEntry);
+    free(pathname);
+    return result;
     
+
+    /*
     find_next_entry: 
     for(int i = 0; i < tempEntry[0].entries; i++ )
     {
@@ -241,10 +271,12 @@ dir_and_index* parsePath(const char* givenpathname)
 
     bad_path:    
 
-
+    result->index = -1;
     free(tempEntry);
     free(pathname);
-    return NULL;
+    return result;
+
+    */
 
 }
 
@@ -255,7 +287,43 @@ int fs_mkdir(const char *pathname, mode_t mode)
 
     dir_and_index* path = parsePath(pathname);
 
-    init_dir(10, &path->dir[0]);
+    int index;
+
+    // check path with an empty value
+    if(path != NULL && path->dir != NULL && path->index == -1)
+    {
+
+        index = init_dir(10, path->dir);
+
+        // Setup to find name
+        char* token;
+        char* last_token = malloc(100);
+        char * saveptr;
+        
+        // Setup for getting the name of the file
+        char * copy_pathname = malloc(strlen(pathname));
+        strcpy(copy_pathname, pathname);
+        token = strtok_r(copy_pathname, "/", &saveptr );
+
+        // get last value in path
+        while( token != NULL  )
+        {
+            strcpy(last_token, token);
+            token = strtok_r(NULL, "/", &saveptr);
+        }
+        
+        // Write the new name of the file to disk
+        strcpy(path->dir[index].name, last_token);
+        LBAwrite(path->dir, path->dir[0].extents[0].count ,path->dir[0].extents[0].start );
+
+        free(last_token);
+        
+        return 1;
+    }
+
+
+    return -1;
+    
 
 
 }
