@@ -60,6 +60,7 @@ void init_loadedDir(){
 //index is -1 if not found
 //parent will be rootDir if it is not found
 validPath * parsePath(const char* pathname){
+  printf("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
   validPath * vP = malloc(sizeof(validPath));
   vP->index = validatePath(pathStruct_create(pathname));
   vP->parent = parentD;

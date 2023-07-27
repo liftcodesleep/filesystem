@@ -88,8 +88,8 @@ void loadDir(direntry* dir, int index){
 
 //***********NEED TO UPDATE THE MALLOC VALUES***************************************
 direntry * getRoot(){
-  direntry * root = malloc(BLOCK_SIZE * 12);
-  printf("size of root: %d\n", sizeof(direntry));
+  direntry * root = malloc(BLOCK_SIZE * 4);
+  //printf("size of root: %d\n", sizeof(direntry));
   LBAread(root, 4, 7);
   return root;
 }
