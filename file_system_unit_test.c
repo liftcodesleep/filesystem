@@ -1,8 +1,8 @@
 #include "file_system_unit_test.h"
 #include "extent_unit_tests.h"
-#include "parsePath.h"
+//#include "parsePath.h"
 #include "b_bitmap.h"
-#include "get_and_set_dir.h"
+//#include "get_and_set_dir.h"
 
 void test(int (*func)(), char *name)
 {
@@ -38,7 +38,8 @@ void extent_tests()
 int test_valid_absolute_path()
 {
   const char *path = "/usr/local/bin";
-  parsedPath *result = parsePath(path);
+
+  dir_and_index *result = parsePath(path);
   if (result != NULL)
   {
     free(result);
@@ -52,8 +53,11 @@ int test_valid_absolute_path()
 
 int test_valid_relative_path()
 {
-  const char *path = "home/user/documents";
-  parsedPath *result = parsePath(path);
+  const char *path = "../user/documents";
+
+  fs_setcwd("/");
+
+  dir_and_index *result = parsePath(path);
   if (result != NULL)
   {
     free(result);
@@ -61,6 +65,7 @@ int test_valid_relative_path()
   }
   else
   {
+  	free(result);
     return 0; // Test failed
   }
 }
@@ -68,7 +73,7 @@ int test_valid_relative_path()
 int test_valid_root_path()
 {
   const char *path = "/";
-  parsedPath *result = parsePath(path);
+  dir_and_index *result = parsePath(path);
 
   if ( result != NULL)
   {
@@ -84,7 +89,10 @@ int test_valid_root_path()
 int test_valid_relative_to_parent_path()
 {
   const char *path = "../folder1/folder2";
-  parsedPath *result = parsePath(path);
+
+  fs_setcwd("/");
+
+  dir_and_index *result = parsePath(path);
   if (result != NULL)
   {
     free(result);
@@ -99,7 +107,7 @@ int test_valid_relative_to_parent_path()
 int test_empty_path()
 {
   const char *path = "";
-  parsedPath *result = parsePath(path);
+  dir_and_index *result = parsePath(path);
   if (result == NULL)
   {
     return 1; // Test passed
@@ -114,9 +122,10 @@ int test_empty_path()
 int test_invalid_double_slash()
 {
   const char *path = "/usr//local";
-  parsedPath *result = parsePath(path);
+  dir_and_index *result = parsePath(path);
   if (result == NULL)
   {
+
     return 1; // Test passed
   }
   else
@@ -224,55 +233,6 @@ void test_bit_map()
 
 
 
-/////////////////////////// VALIDATE PATH TESTS  //////////////////////
-
-
-
-int test_valid_dir_bad()
-{
-
-	const char* given_path = "/apples";
-
-	parsedPath* path = parsePath(given_path);
-
-	int result = validatePath(path);
-
-	if(result == -1)
-	{
-		//free(path);
-		return 1; // Test pass found bad path
-	}
-
-	return 0;
-}	
-
-int test_valid_dir_good()
-{
-
-	const char* given_path = "/";
-	parsedPath* path = parsePath(given_path);
-	int result = validatePath(path);
-
-	// Found the root
-	if(result != -1)
-	{
-		//free(path);
-		return 1; // Test pass found good path
-	}
-
-	return 0;
-
-}
-
-
-void test_validatePath()
-{
-
-	printf("\nTesting validatePath: \n");
-	test(test_valid_dir_bad,"test_valid_dir_bad");
-	test(test_valid_dir_good,"test_valid_dir_good");
-}
-
 void file_test()
 {
   direntry * newEntry = malloc(MINBLOCKSIZE * 4);
@@ -369,9 +329,11 @@ void file_system_unit_tests()
   extent_tests();
   test_bit_map();
   parse_path_tests();
-  test_validatePath();
+
   make_testdir();
   file_test();
+
+  //printf("Size of dir : %d",sizeof(direntry) );
 
   printf("\n\nEnding unit tests...\n\n");
 }

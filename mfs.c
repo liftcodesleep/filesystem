@@ -12,7 +12,7 @@
  *
  *
  **************************************************************/
-
+#include <stdlib.h>
 #include "mfs.h"
 
 #define TEST_MAX_INDEX 20
@@ -20,8 +20,13 @@
 #define MAX_PATH 256 // default size
 #define BLOCK_SIZE 512
 
+direntry* current_working_dir;
+
 char currentDirectory[MAX_PATH];
 char * bufferBlock; // Load blocks of memory to read and traverse
+
+
+/*
 
 //struct to hold each level of the path
 typedef struct parsedPath{
@@ -37,6 +42,8 @@ typedef struct parsedPath{
     //bool for relative to parent
     int parPath;
 }parsedPath;
+
+
 
 //parsed path container
 //OBSOLETE WILL DELETE LATER****************************
@@ -131,9 +138,113 @@ int findEntry(direntry startDir, char* token){
 void loadDir(char* dir){
 
 }
+*/
 
 
 
+
+
+
+
+
+// /user/Desktop/file.txt
+
+
+
+dir_and_index* parsePath(const char* givenpathname)
+{
+    
+    //printf("Looking at path: %s \n", givenpathname);
+    
+    
+    if( strlen(givenpathname) == 0)
+    {
+        return NULL;
+    }
+
+    char * pathname = malloc(strlen(givenpathname));
+    strcpy(pathname, givenpathname);
+
+
+    // Setup
+    char* token; // = malloc( 100 ); // Get 100 for the vcb
+    dir_and_index* result = malloc(sizeof(dir_and_index) );
+
+
+    char * saveptr;
+    token = strtok_r(pathname, "/", &saveptr );
+
+
+    direntry * tempEntry = malloc(BLOCK_SIZE * 4);
+    
+
+    if(token == NULL)
+    {
+        // Start at root and loads it in
+        LBAread(tempEntry, 4, 6);
+    }else if(strcmp(token, "..") == 0 )
+    {
+        LBAread(tempEntry, 4, current_working_dir[1].extents[0].start);
+
+    }else if(strcmp(token, ".") == 0 )
+    {
+        LBAread(tempEntry, 4, current_working_dir[0].extents[0].start);
+    }
+    
+
+    result->dir = tempEntry;
+
+    
+
+
+    // parse path was root
+    if(  token == NULL && pathname[0] == '/' )
+    {
+        result->index = 0;
+        result->dir = tempEntry;
+
+        free(pathname);
+        return result; 
+    }
+
+
+    
+    find_next_entry: 
+    for(int i = 0; i < tempEntry[0].entries; i++ )
+    {
+
+        // Found the subdir
+        if( strcmp( tempEntry[i].name, token ) == 0 )
+        {
+
+            token = strtok_r(NULL, "/", &saveptr );
+
+            // End of the path name
+            if(token == NULL)
+            {
+
+                result->index = i;
+
+                free(pathname);
+                return result;
+            }
+            result->dir = tempEntry;
+            LBAread(tempEntry, 4, tempEntry[i].extents[0].start);
+
+            goto find_next_entry;
+        }
+
+    }
+
+
+    bad_path:    
+
+
+    free(tempEntry);
+    free(pathname);
+    return NULL;
+
+}
 
 
 // Key directory functions
@@ -166,6 +277,16 @@ char * fs_getcwd(char *pathname, size_t size) {
 }
 int fs_setcwd(char *pathname) {
 
+
+    dir_and_index* di = parsePath(pathname);
+
+    if(di->index != -1)
+    {
+        current_working_dir = &di->dir[di->index];
+        return 0;
+    }
+    return -1;
+/*
 printf("%s\n", pathname);
 
      //fsInIt - root initalization
@@ -243,7 +364,7 @@ printf("%s\n", pathname);
     strcpy(currentDirectory, pathname);
     return 1;
 
-    
+    */
 }   //linux chdir
 int fs_isFile(char * filename);	//return 1 if file, 0 otherwise
 int fs_isDir(char * pathname);		//return 1 if directory, 0 otherwise

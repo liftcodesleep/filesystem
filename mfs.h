@@ -18,6 +18,8 @@
 #include <unistd.h>
 #include <time.h>
 
+
+#include "fsLow.h"
 #include "b_io.h"
 #include "dirEntry.h"
 
@@ -57,6 +59,15 @@ typedef struct
 	} fdDir;
 
 // Key directory functions
+
+typedef struct dir_and_index
+{
+    direntry* dir;
+    int index;
+
+}dir_and_index;
+
+dir_and_index* parsePath(const char* pathname);
 
 //JOHNNY***********
 int fs_mkdir(const char *pathname, mode_t mode);
