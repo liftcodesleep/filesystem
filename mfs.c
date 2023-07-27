@@ -250,7 +250,16 @@ dir_and_index* parsePath(const char* givenpathname)
 
 
 // Key directory functions
-int fs_mkdir(const char *pathname, mode_t mode);
+int fs_mkdir(const char *pathname, mode_t mode)
+{
+
+    dir_and_index* path = parsePath(pathname);
+
+    init_dir(10, &path->dir[0]);
+
+
+}
+
 //ensure that no duplicate directory exists
 int fs_rmdir(const char *pathname);
 

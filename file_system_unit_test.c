@@ -1,5 +1,6 @@
 #include "file_system_unit_test.h"
 #include "extent_unit_tests.h"
+#include "mfs_tests.h"
 //#include "parsePath.h"
 #include "b_bitmap.h"
 //#include "get_and_set_dir.h"
@@ -391,6 +392,8 @@ void file_system_unit_tests()
   make_testdir();
   parse_path_tests();
   // print_test_directory();
+
+  test_mfs();
 
   printf("\n\nEnding unit tests...\n\n");
 }

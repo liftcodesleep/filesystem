@@ -37,6 +37,10 @@ int blockCount(int n, int divider);
 //returns the value of the first block of the first extent
 int init_dir(int minEntries, direntry *parent)
 {
+
+  
+
+
   // minimum bytes needed to fit amount of directory entries
   int minBytes = minEntries * sizeof(direntry);
   // minimum bytes needed to allocate memory
@@ -76,9 +80,29 @@ int init_dir(int minEntries, direntry *parent)
     newDir[1].extents[0] = newDir[0].extents[0];
     newDir[1].extents[1] = newDir[0].extents[1];
     newDir[1].extents[2] = newDir[2].extents[2];
+  }else
+  {
+
+    // Find a free entry and save its position
+    int free_entry;
+    for(free_entry = 2; free_entry < parent->entries; free_entry++)
+    {
+
+      if(strcmp(parent[free_entry].name, "\0") == 0)
+      {
+        break;
+      }
+
+    }
+
+    parent[free_entry] = newDir[0];
+    LBAwrite(parent, blocksNeeded, parent[0].extents[0].start);
   }
+
   // write to disc
   LBAwrite(newDir, blocksNeeded, newDir[0].extents[0].start);
+
+
   return newDir[0].extents[0].start;
 }
 //***********NEED TO UPDATE THE MALLOC VALUES***************************************
