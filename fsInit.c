@@ -64,6 +64,10 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
   {
     
   	printf("Magic Number validated.\n");
+
+    // Initalize current working directory to root - Cleanup function in exitFileSystem();
+    setInitialDirectory();
+
   	return 0;
   }
 
@@ -79,11 +83,17 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
   // LBAwrite the VCB to block 0 - Hexdump will validate
   LBAwrite(vcbPointer, 1, 0);
 
+  // Initalize current working directory to root - Cleanup function in exitFileSystem();
+  setInitialDirectory();
+
 
   if(TEST_RUN)
   {
     file_system_unit_tests();
   }
+
+  // // Initalize current working directory to root - Cleanup function in exitFileSystem();
+  setInitialDirectory();
 
   return 0;
 }
@@ -91,4 +101,7 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
 void exitFileSystem()
 {
   printf("System exiting\n");
+
+  // Cleanup
+  freeDirectory();
 }

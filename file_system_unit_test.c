@@ -37,7 +37,7 @@ void extent_tests()
 
 int test_valid_absolute_path()
 {
-  const char *path = "/usr/local/bin";
+  const char *path = "dir1/newdir2/otherEntry5";
 
   dir_and_index *result = parsePath(path);
   if (result != NULL)
@@ -53,7 +53,7 @@ int test_valid_absolute_path()
 
 int test_valid_relative_path()
 {
-  const char *path = "../user/documents";
+  const char *path = "../dir1/newdir2/otherdir2/testEntry2";
 
   fs_setcwd("/");
 
@@ -89,9 +89,6 @@ int test_valid_root_path()
 int test_valid_relative_to_parent_path()
 {
   const char *path = "../folder1/folder2";
-
-  fs_setcwd("/");
-
   dir_and_index *result = parsePath(path);
   if (result != NULL)
   {
@@ -233,6 +230,7 @@ void test_bit_map()
 // Prints requested directory block. Needs to be changed as needed
 void print_test_directory()
 {
+  printf("\n");
   direntry * newEntry = malloc(MINBLOCKSIZE * 4);
   LBAread(newEntry, 4, 6);
 
@@ -389,9 +387,9 @@ void file_system_unit_tests()
 
   extent_tests();
   test_bit_map();
-  parse_path_tests();
 
   make_testdir();
+  parse_path_tests();
   // print_test_directory();
 
   printf("\n\nEnding unit tests...\n\n");

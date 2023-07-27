@@ -22,8 +22,10 @@
 
 direntry* current_working_dir;
 
+// Text field to store absolute paths
 char currentDirectory[MAX_PATH];
-char * bufferBlock; // Load blocks of memory to read and traverse
+// Text field to store paths worked on in parsePath
+char workingDirectory[MAX_PATH];
 
 
 /*
@@ -154,7 +156,7 @@ void loadDir(char* dir){
 dir_and_index* parsePath(const char* givenpathname)
 {
     
-    //printf("Looking at path: %s \n", givenpathname);
+    // printf("Looking at path: %s \n", givenpathname);
     
     
     if( strlen(givenpathname) == 0)
@@ -189,6 +191,9 @@ dir_and_index* parsePath(const char* givenpathname)
     }else if(strcmp(token, ".") == 0 )
     {
         LBAread(tempEntry, 4, current_working_dir[0].extents[0].start);
+    } else {
+        // Catch case - Loads buffer if token is detected
+        LBAread(tempEntry, 4, 6);
     }
     
 
@@ -206,8 +211,6 @@ dir_and_index* parsePath(const char* givenpathname)
         free(pathname);
         return result; 
     }
-
-
     
     find_next_entry: 
     for(int i = 0; i < tempEntry[0].entries; i++ )
@@ -216,7 +219,6 @@ dir_and_index* parsePath(const char* givenpathname)
         // Found the subdir
         if( strcmp( tempEntry[i].name, token ) == 0 )
         {
-
             token = strtok_r(NULL, "/", &saveptr );
 
             // End of the path name
@@ -260,12 +262,15 @@ int fs_closedir(fdDir *dirp);
 // Misc directory functions
 char * fs_getcwd(char *pathname, size_t size) {
 
-    // Value passed in for size is 4096 (DIRMAX_LEN)
-    //
-    // If NULL is returned, the size of the pointer is too small
-    // to contain the whole path - manpage of getcwd() linux function
-    if (strlen(pathname) > size) {
-        printf("Invalid - path is longer than max path size.\n");
+    if (currentDirectory == NULL){
+        printf("currentDirectory is empty. Fill it.\n");
+        return NULL;
+    }
+
+    // If the length of the absolute pathname of the current working directory,
+    // including the terminating null byte, exceeds 'size' bytes, NULL is returned.
+    if (strlen(currentDirectory) > size) {
+        perror("Error: The length of the pathname is larger than your buffer (size).");
         return NULL;
     }
 
@@ -277,8 +282,29 @@ char * fs_getcwd(char *pathname, size_t size) {
 }
 int fs_setcwd(char *pathname) {
 
+    // If no path is given, and the home environment is not empty,
+    // cd utility will navigate to home (root)
+    if (strcmp(pathname, "") == 0) {
+        printf("No input detected. Navigating to root.\n");
+        current_working_dir = parsePath(pathname);
+        strcpy(currentDirectory, current_working_dir[0].name);
+        return 0;
+    }
+
+    // Absolute path - set working directory to path
+    if (pathname[0] == '/') {
+        strcpy(workingDirectory, pathname);
+    } else if (pathname[0] == '.') {
+
+    }
 
     dir_and_index* di = parsePath(pathname);
+
+    // parsePath detected an invalid path. Error handling.
+    if (di == NULL) {
+        printf("cd: %s: No such file or directory\n", pathname);
+        return -1;
+    }
 
     if(di->index != -1)
     {
@@ -286,85 +312,7 @@ int fs_setcwd(char *pathname) {
         return 0;
     }
     return -1;
-/*
-printf("%s\n", pathname);
 
-     //fsInIt - root initalization
-    if (strcmp(pathname, "/root") == 0) {
-        strcpy(currentDirectory,"/root");
-        return 0;
-    }
-
-    // Checks if path is a valid request - Aborts if not
-    parsedPath * tempPath = parsePath(pathname);
-    if (tempPath == NULL) {
-        printf("Invalid path - Failed parsePath.\n");
-        return -1;
-    }
-    
-    // Validates path to see if it exists - Aborts if not
-    // Will currently always fail test - Account for this later
-    // if (validatePath(tempPath) == -1) {
-    //     printf("Invalid path. Path does not exist.\n");
-    //     return -1;
-    // }
-
-    // If pathname was validated, set as current working directory.
-
-    // Set a working directory to start traversing
-    char workingDirectory[256] = "/root";
-
-    // 4096 is equal to the DIRMAX_LEN value defined in mfs.c - Hardcoded at the moment
-    if (strlen(currentDirectory) + strlen(pathname) < 256) {
-        strcpy(workingDirectory, pathname); // Set to root to start traversing
-    }
-
-    // TODO: Determine how to traverse direntries for files
-    if (tempPath->absPath == 1) {
-
-        int blockHolder;
-        int matchFlag = 0;
-
-        direntry * tempEntry = malloc(BLOCK_SIZE * 4);
-        LBAread(tempEntry, 4, 6);
-
-        char *token = strtok(workingDirectory, "/");
-        token = strtok(NULL, "/");
-        
-        while (token != NULL) {
-            for (int i = 0; i < 12; i++) {
-                if (strcmp(tempEntry[i].name, token) == 0) {
-                    blockHolder = tempEntry[i].extents[0].start;
-                    matchFlag = 1;
-                }
-
-                if (matchFlag == 1) {
-                    LBAread(tempEntry, 4, blockHolder);
-                    token = strtok(NULL, "/");
-
-                    break;
-                }
-            }
-
-            if (matchFlag == 0) {
-                break;
-            }
-
-            matchFlag = 0;
-        }
-
-        free(tempEntry);
-        if (token != NULL) {
-            printf("Failed to match path - setcwd failed. Abort.\n");
-            return -1;
-        }
-    }
-
-    // If pathname was validated, set as current working directory.
-    strcpy(currentDirectory, pathname);
-    return 1;
-
-    */
 }   //linux chdir
 int fs_isFile(char * filename);	//return 1 if file, 0 otherwise
 int fs_isDir(char * pathname);		//return 1 if directory, 0 otherwise
@@ -372,7 +320,18 @@ int fs_delete(char* filename);	//removes a file
 
 int fs_stat(const char *path, struct fs_stat *buf);
 
-// Currently accounting to read root directory which occupies four blocks - For testing
-void allocateBuffer() {
-    bufferBlock = malloc(BLOCK_SIZE * 4);
+// Populate current_working_dir global variable to root upon initalization
+void setInitialDirectory() {
+    direntry *buffer = malloc(BLOCK_SIZE * 4);
+    LBAread(buffer, 4, 6);
+    
+    // Global variable in mfs.c intialized in startup routine
+    current_working_dir = buffer;
+    strcpy(currentDirectory, current_working_dir[0].name);
+}
+
+// Clean up method - free global variable current_working_directory
+void freeDirectory() {
+    free(current_working_dir);
+    current_working_dir = NULL;
 }

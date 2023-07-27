@@ -100,6 +100,8 @@ int fs_delete(char* filename);	//removes a file
 
 // NEW
 void allocateBuffer(); // Allocate memory to load 4 blocks to traverse - For testing
+void setInitialDirectory(); // Set current working directory to root
+void freeDirectory(); // Free current_working_directory memory
 
 
 // This is the strucutre that is filled in from a call to fs_stat
