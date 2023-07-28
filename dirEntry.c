@@ -107,13 +107,13 @@ int init_dir(int minEntries, direntry *parent)
 
   return free_entry;
 }
-//***********NEED TO UPDATE THE MALLOC VALUES***************************************
+//function to load new directories
+//must have one initialized in advance
 void loadDir(direntry *dir, int index)
 {
   LBAread(dir, dir[index].extents[0].count, dir[index].extents[0].start);
 }
-
-//***********NEED TO UPDATE THE MALLOC VALUES***************************************
+//function to initialize the root directory
 direntry *getRoot()
 {
   direntry *root = malloc(BLOCK_SIZE * 4);
