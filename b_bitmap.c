@@ -130,6 +130,15 @@ int init_free_space(int block_count, int block_size)
 
 int load_free_space(int block_count, int block_size)
 {
+  map.size = (block_count - 1) / WORDSIZE + 1;
+  // no idea why what init did didn't work for malloc size will rework if time
+  map.blocks = (uint32_t *)malloc(block_size * 5);
+
+  if (map.blocks == NULL)
+  {
+    perror("init_bit_map: map.blocks malloc failed\n");
+    return -1;
+  }
   LBAread(map.blocks, 5, 1);
   return 2;
 }
@@ -286,7 +295,7 @@ void release_blocks(int start, int count)
 {
   for (int i = 0; i < count; i++)
   {
-    clear_bit(map.blocks + (start + i) / WORDSIZE, (start % WORDSIZE) + i);
+    clear_bit(*(map.blocks + (start + i) / WORDSIZE), (start % WORDSIZE) + i);
   }
 }
 
