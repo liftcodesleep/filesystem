@@ -424,8 +424,11 @@ int set_initial_directory()
 }
 
 // Clean up method - free global variable current_working_directory
-void freeDirectory()
+void free_directory()
 {
-  free(current_working_dir);
-  current_working_dir = NULL;
+  if (current_working_dir != NULL)
+  {
+    free(current_working_dir);
+    current_working_dir = NULL;
+  }
 }
