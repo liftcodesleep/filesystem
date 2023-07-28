@@ -29,7 +29,6 @@
 #define BLOCK_SIZE 512
 #define MAGIC_NUMBER 1920213058
 
-
 #define TEST_RUN 1
 
 int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
@@ -62,13 +61,13 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
   // Determine where magicNumber will be if already initalized
   if (vcbPointer->unique_volume_ID == MAGIC_NUMBER && !TEST_RUN)
   {
-    
-  	printf("Magic Number validated.\n");
+
+    printf("Magic Number validated.\n");
 
     // Initalize current working directory to root - Cleanup function in exitFileSystem();
-    setInitialDirectory();
+    set_initial_directory();
 
-  	return 0;
+    return 0;
   }
 
   // Initalize the values in your VCB - per specs
@@ -84,16 +83,15 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
   LBAwrite(vcbPointer, 1, 0);
 
   // Initalize current working directory to root - Cleanup function in exitFileSystem();
-  setInitialDirectory();
+  set_initial_directory();
 
-
-  if(TEST_RUN)
+  if (TEST_RUN)
   {
     file_system_unit_tests();
   }
 
   // // Initalize current working directory to root - Cleanup function in exitFileSystem();
-  setInitialDirectory();
+  set_initial_directory();
 
   return 0;
 }

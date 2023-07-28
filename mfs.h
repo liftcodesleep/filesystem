@@ -100,9 +100,9 @@ int fs_isDir(char *pathname);  // return 1 if directory, 0 otherwise
 int fs_delete(char *filename); // removes a file
 
 // NEW
-void allocateBuffer();      // Allocate memory to load 4 blocks to traverse - For testing
-void setInitialDirectory(); // Set current working directory to root
-void freeDirectory();       // Free current_working_directory memory
+int allocateBuffer();        // Allocate memory to load 4 blocks to traverse - For testing
+int set_initial_directory(); // Set current working directory to root
+void freeDirectory();        // Free current_working_directory memory
 
 // This is the strucutre that is filled in from a call to fs_stat
 struct fs_stat
