@@ -170,11 +170,41 @@ int fs_rmdir(const char *pathname);
 
 // Directory iteration functions
 fdDir * fs_opendir(const char *pathname){
-    dir_and_index * di = parsePath(pathname);
-    
+    dir_and_index * dai = parsePath(pathname);
+    //directory to load the current directory from dir_and_index
+    direntry * cD = malloc(BLOCK_SIZE * 4);
+    cD = dai->dir;
+    //move to the current directory using the parent and index
+    loadDir(cD,dai->index);
+    fdDir * fD = malloc(sizeof(fdDir));
+    //fill the diriteminfo of each entry within current directory
+    fD->di = malloc(sizeof(struct fs_diriteminfo) * dai->dir[dai->index].entries);
+    fD->d_reclen = dai->dir[dai->index].entries;
+    fD->dirEntryPosition = dai->index;
+    for (int i = 0; i < cD->entries; i++){
+        strcpy(fD->di[i].d_name, cD[i].name);
+        fD->di[i].d_reclen = cD[i].entries;
+        fD->di[i].fileType = cD[i].isFile;
+        fD->di[i].location = cD[i].extents;
+    }
+    if (cD != NULL){
+        free(cD);
+        cD = NULL;
+    }
+    return fD;
 }
+
 struct fs_diriteminfo *fs_readdir(fdDir *dirp);
-int fs_closedir(fdDir *dirp);
+int fs_closedir(fdDir *dirp){
+    if (dirp != NULL){
+        if(dirp->di != NULL){
+            free(dirp->di);
+            dirp->di = NULL;
+        }
+        free(dirp);
+        dirp = NULL;
+    }
+}
 
 // Misc directory functions
 char * fs_getcwd(char *pathname, size_t size) {
