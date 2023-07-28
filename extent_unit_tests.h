@@ -15,5 +15,6 @@ int test_extent_block_to_LBA();
 
 int test_extent_remove_blocks();
 
+int test_extent_size();
 
 #endif

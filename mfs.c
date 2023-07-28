@@ -143,12 +143,6 @@ void loadDir(char* dir){
 */
 
 
-
-
-
-
-
-
 // /user/Desktop/file.txt
 
 
@@ -209,7 +203,7 @@ dir_and_index* parsePath(const char* givenpathname)
     }
 
 
-    // Go threw all values in the path
+    // Go through all values in the path
     int i;
     while(token != NULL)
     {
@@ -234,6 +228,11 @@ dir_and_index* parsePath(const char* givenpathname)
         LBAread(tempEntry, 4, tempEntry[i].extents[0].start);
         result->dir = tempEntry;
         token = strtok_r(NULL, "/", &saveptr );
+    }
+
+    if(token != NULL && result->index == -1)
+    {
+        return NULL;
     }
 
     //free(tempEntry);
@@ -333,8 +332,27 @@ int fs_rmdir(const char *pathname);
 
 // Directory iteration functions
 fdDir * fs_opendir(const char *pathname);
-struct fs_diriteminfo *fs_readdir(fdDir *dirp);
-int fs_closedir(fdDir *dirp);
+
+
+struct fs_diriteminfo *fs_readdir(fdDir *dirp)
+{
+    if(dirp->dirEntryPosition >= dirp->d_reclen )
+    {
+        return NULL;
+    }
+    dirp->dirEntryPosition++;
+    return dirp->di + dirp->dirEntryPosition;
+}
+int fs_closedir(fdDir *dirp)
+{
+    dirp->dirEntryPosition = 0;
+}
+
+
+
+
+
+
 
 // Misc directory functions
 char * fs_getcwd(char *pathname, size_t size) {

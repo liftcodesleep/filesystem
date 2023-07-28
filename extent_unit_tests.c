@@ -127,7 +127,6 @@ int test_extent_block_to_LBA()
     extent_append(extent, 10+i*4, i%3+1);
   }
   //extent_print(extent);
-
   
   unsigned int test1 = extent_block_to_LBA(extent, 0);
   unsigned int true_location1 = 10;
@@ -135,9 +134,7 @@ int test_extent_block_to_LBA()
   unsigned int test2 = extent_block_to_LBA(extent, 5);
   unsigned int true_location2 = 20;
 
-
   //printf("True: %d Guess: %d\n",  true_location, test1);
-
   
   if( test1  == true_location1 
     //&& test2 == true_location2
@@ -148,11 +145,8 @@ int test_extent_block_to_LBA()
   {
     return 0;
   }
-  
-  
 
   return 0;
-
 }
 
 
@@ -164,11 +158,34 @@ int test_extent_remove_blocks()
   // Append 5 blocks starting from block number 10
   extent_append(extent, 10, 5);
 
-  // Remove 3 blocks starting from block number 12
   unsigned int count = extent_remove_blocks(extent, 12, 3);
 
   // Verify the result
-  if (count == 3)
+  if (extent[0].start == 0 && extent[0].count == 0)
+  {
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+
+int test_extent_size()
+{
+  extent extent[EXTENT_SIZE];
+  extent_init(extent);
+
+  // Append 5 blocks starting from block number 10
+  extent_append(extent, 10, 1);
+  extent_append(extent, 100, 3);
+  extent_append(extent, 150, 5);
+
+  unsigned int size = extent_size(extent);
+
+  // Verify the result
+  if (size == 9)
   {
     return 1;
   }
