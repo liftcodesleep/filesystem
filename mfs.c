@@ -157,12 +157,8 @@ int fs_mkdir(const char *pathname, mode_t mode)
         
         return 1;
     }
-
-
-    return -1;
     
-
-
+    return -1;
 }
 
 //ensure that no duplicate directory exists
