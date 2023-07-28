@@ -71,53 +71,38 @@ b_io_fd b_open(char *filename, int flags)
   // KEEP AN EYE FOR ALLOCS
   b_io_fd fd;
 
-  if (flags == O_CREAT)
-  {
-  }
-  if (flags == O_RDONLY)
-  {
-    fdDir *opened = opendir(filename);
-    struct fs_diriteminfo *info = readdir(opened);
-    if (info == NULL)
-    {
-      closedir(opened);
-      perror("diriteminfo failed");
-      return NULL;
-    }
-
-    if (startup == 0)
-      b_init(); // Initialize our system
-
-    int fd = b_get_FCB();
-    if (fd == -1)
-    {
-      closedir(opened);
-      perror("FCB array is full.");
-      return -1;
-    }
-    fcb_array[fd].info = info;
-    fcb_array[fd].index = 0;
-    fcb_array[fd].buf = malloc(B_CHUNK_SIZE);
-    if (fcb_array[fd].buf == NULL)
-    {
-      closedir(opened);
-      close(fd);
-      perror("fcb buffer malloc failed\n");
-      return -1;
-    }
-  }
-  if (flags == O_WRONLY)
-  {
-  }
-  if (flags == O_RDWR)
-  {
-  }
-  if (flags == O_TRUNC)
-  {
-  }
   //*** TODO ***:  Modify to save or set any information needed
   //
   //
+  fdDir *opened = opendir(filename);
+  struct fs_diriteminfo *info = readdir(opened);
+  if (info == NULL)
+  {
+    closedir(opened);
+    perror("diriteminfo failed");
+    return NULL;
+  }
+
+  if (startup == 0)
+    b_init(); // Initialize our system
+
+  int fd = b_get_FCB();
+  if (fd == -1)
+  {
+    closedir(opened);
+    perror("FCB array is full.");
+    return -1;
+  }
+  fcb_array[fd].info = info;
+  fcb_array[fd].index = 0;
+  fcb_array[fd].buf = malloc(B_CHUNK_SIZE);
+  if (fcb_array[fd].buf == NULL)
+  {
+    closedir(opened);
+    close(fd);
+    perror("fcb buffer malloc failed\n");
+    return -1;
+  }
   return (fd); // all set
 }
 
@@ -191,8 +176,19 @@ int b_read(b_io_fd fd, char *buffer, int count)
   int bytes_read = 0;
   int to_copy = 0;
   int file_remaining = p_fcb->info->d_reclen - p_fcb->index;
+  /*
+  TL;DR pages through the file
+  treat the file as a series of chunks
+  track the read pointer progress in the chunk
+  copy data from the read pointer forward looking to copy count bytes
+  if end of chunk is reached, get the next chunk
+  loop copying and getting chunks and copying
+  until end of file or count bytes requested are copied
+  if end of file is reached return immediately
+  */
   do
   {
+    // thread safe given one file per thread
     if (p_fcb->index % B_CHUNK_SIZE == 0)
     {
       LBAread(p_fcb->buf, 1,
