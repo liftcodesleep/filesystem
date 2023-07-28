@@ -84,7 +84,7 @@ int init_dir(int minEntries, direntry *parent)
   else
   {
 
-    // Find a free entry and save its position
+    // Find a free entry and save its position - Never enters the loop
 
     for (free_entry = 2; free_entry < parent->entries; free_entry++)
     {
@@ -99,6 +99,10 @@ int init_dir(int minEntries, direntry *parent)
     strcpy(newDir[0].name, ".");
     strcpy(newDir[1].name, "..");
     parent[free_entry] = newDir[0];
+
+    // Write parent block location in extent - TESTING
+    newDir[1].extents[0].start = parent[0].extents[0].start;
+
     LBAwrite(parent, blocksNeeded, parent[0].extents[0].start);
   }
 
@@ -107,13 +111,13 @@ int init_dir(int minEntries, direntry *parent)
 
   return free_entry;
 }
-//***********NEED TO UPDATE THE MALLOC VALUES***************************************
+//function to load new directories
+//must have one initialized in advance
 void loadDir(direntry *dir, int index)
 {
   LBAread(dir, dir[index].extents[0].count, dir[index].extents[0].start);
 }
-
-//***********NEED TO UPDATE THE MALLOC VALUES***************************************
+//function to initialize the root directory
 direntry *getRoot()
 {
   direntry *root = malloc(BLOCK_SIZE * 4);
