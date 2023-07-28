@@ -179,7 +179,7 @@ fdDir * fs_opendir(const char *pathname){
     fdDir * fD = malloc(sizeof(fdDir));
     //fill the diriteminfo of each entry within current directory
     fD->di = malloc(sizeof(struct fs_diriteminfo) * dai->dir[dai->index].entries);
-    fD->d_reclen = dai->dir[dai->index].entries;
+    fD->d_reclen = cD->entries;
     fD->dirEntryPosition = dai->index;
     for (int i = 0; i < cD->entries; i++){
         strcpy(fD->di[i].d_name, cD[i].name);
