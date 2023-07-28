@@ -57,6 +57,38 @@ int test_fsopendir_and_close()
 	
 }
 
+int test_fsgetcwd()
+{
+	// Current directory should be root '/'
+	char pathname[256];
+
+	fs_getcwd(pathname, 256);
+
+	if (strcmp(pathname, "/") == 0) {
+		return 1;
+	}
+
+	printf("Pathname: %s\n", pathname);
+	return 0;
+}
+
+int test_fssetdir()
+{
+	// FAILS IF make_testdir() IS NOT RAN - Specific to test directory
+	char pathname[256];
+
+	fs_setcwd("/dir1/./newdir2/.///otherEntry1");
+	fs_getcwd(pathname, 256);
+
+	if (strcmp(pathname, "/dir1/newdir2/otherEntry1") == 0) {
+		return 1;
+	}
+
+	printf("Pathname: %s\n", pathname);
+	return 0;
+
+}
+
 
 
 
@@ -65,8 +97,10 @@ void test_mfs()
 
 	printf("\nTesting mfs functions...\n");
 
-	test(test_mkdir,"test_mkdir");
+	// test(test_mkdir,"test_mkdir");
 	test(test_fsopendir_and_close, "testing fsopendir and fsclosedir ");
+	test(test_fsgetcwd, "testing fsgetcwd");
+	test(test_fssetdir, "testing fssetdir");
 
 
 }

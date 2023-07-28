@@ -114,7 +114,8 @@ dir_and_index* parsePath(const char* givenpathname)
     //free(tempEntry);
     free(pathname);
     return result;
-    
+
+
 }
 
 
@@ -151,6 +152,7 @@ int fs_mkdir(const char *pathname, mode_t mode)
         
         // Write the new name of the file to disk
         strcpy(path->dir[index].name, last_token);
+        printf("in mkdir: %d\n", path->dir[0].extents[0].start);
         LBAwrite(path->dir, path->dir[0].extents[0].count ,path->dir[0].extents[0].start );
 
         free(last_token);
@@ -234,20 +236,37 @@ int fs_setcwd(char *pathname) {
     // If no path is given, and the home environment is not empty,
     // cd utility will navigate to home (root)
     if (strcmp(pathname, "") == 0) {
+
+        // Debating not calling parsePath for redundancy of code
         printf("No input detected. Navigating to root.\n");
-        current_working_dir = parsePath(pathname);
+        LBAread(current_working_dir, 4, 6);
         strcpy(currentDirectory, current_working_dir[0].name);
         return 0;
     }
 
     // Absolute path - set working directory to path
+    // Path starting with '/' must begin at root to be valid
     if (pathname[0] == '/') {
         strcpy(workingDirectory, pathname);
     } else if (pathname[0] == '.') {
+        strcpy(workingDirectory, currentDirectory);
 
+        // If pathname does not begin with a /, set workingDirectory to
+        // the string formed by the concatentation of the value currentDirectory +
+        // a '/' character if it does not end with a slash + and pathname
+        if (currentDirectory[0] != '/') {
+            if (currentDirectory[strlen(currentDirectory)] != '/') {
+                strcat(workingDirectory, "/");
+            }
+
+            strcat(workingDirectory, pathname);
+        } else {
+            strcpy(currentDirectory, workingDirectory);
+            strcat(workingDirectory, pathname);
+        }
     }
 
-    dir_and_index* di = parsePath(pathname);
+    dir_and_index* di = parsePath(workingDirectory);
 
     // parsePath detected an invalid path. Error handling.
     if (di == NULL) {
@@ -257,9 +276,36 @@ int fs_setcwd(char *pathname) {
 
     if(di->index != -1)
     {
-        current_working_dir = &di->dir[di->index];
+        // Load the new working directory into the global variable buffer
+        current_working_dir = di->dir;
+        loadDir(current_working_dir, di->index);
+
+        // 8) For each dot-dot component - If there is a preceding component
+        // that is neither root not dot-dot, then:
+        // The preceding component, all slash characters seperating the preceding
+        // component from dot-dot, dot-dot, and all slash characters seperating dot-dot
+        // from the following component (if any) shall be deleted.
+        // - From Linux manpage for cd
+
+        char tempDirectory[256] = "";
+        char previousToken[20] = "";
+        char* tok = strtok(workingDirectory, "/.");
+
+        while (tok != NULL) {
+            if (strcmp(previousToken, tok) != 0) {
+                strcat(tempDirectory, "/");
+                strcat(tempDirectory, tok);
+                strcpy(previousToken, tok);
+                tok = strtok(NULL, "/.");
+            } else {
+                tok = strtok(NULL, "/.");
+            }
+        }
+
+        strcpy(currentDirectory, tempDirectory);
         return 0;
     }
+
     return -1;
 
 }   //linux chdir

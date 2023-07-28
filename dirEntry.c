@@ -84,7 +84,7 @@ int init_dir(int minEntries, direntry *parent)
   else
   {
 
-    // Find a free entry and save its position
+    // Find a free entry and save its position - Never enters the loop
 
     for (free_entry = 2; free_entry < parent->entries; free_entry++)
     {
@@ -99,6 +99,10 @@ int init_dir(int minEntries, direntry *parent)
     strcpy(newDir[0].name, ".");
     strcpy(newDir[1].name, "..");
     parent[free_entry] = newDir[0];
+
+    // Write parent block location in extent - TESTING
+    newDir[1].extents[0].start = parent[0].extents[0].start;
+
     LBAwrite(parent, blocksNeeded, parent[0].extents[0].start);
   }
 
