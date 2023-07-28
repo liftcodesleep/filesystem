@@ -71,6 +71,12 @@ pextent extent_at_index(pextent extent, uint i);
 unsigned int extent_remove_blocks(extent *extent, uint block_number, uint count);
 
 
+/*
+ * Returns the blocks in the extent
+ */
+unsigned int extent_size(extent *extent);
+
+
 
 /*
  * merges the second extent into the first extent

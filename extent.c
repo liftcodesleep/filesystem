@@ -105,6 +105,10 @@ pextent extent_at_index(pextent extent, uint i)
   // first 2 extents
   if(i < EXTENT_SIZE - 1)
   {
+    if( (extent + i)->count == 0 )
+    {
+      return NULL;
+    }
     return extent + i;
 
   // make sure there is no 2nd or 3d extent table
@@ -112,6 +116,10 @@ pextent extent_at_index(pextent extent, uint i)
     && extent[2].count != SENTINAL_SECOND_EXTENT
     && extent[2].count != SENTINAL_THIRD_EXTENT)
   {
+    if( (extent + i)->count == 0 )
+    {
+      return NULL;
+    }
     return extent + i;
 
   // if there is a second extent table
@@ -121,7 +129,10 @@ pextent extent_at_index(pextent extent, uint i)
     pextent second_extent = malloc(MINBLOCKSIZE);
     LBAread(second_extent, 1, extent[2].start );
 
-    
+    if( (second_extent + i - 2)->count == 0 )
+    {
+      return NULL;
+    }
     return second_extent + i - 2;
 
   // if there is a third extent table
@@ -135,6 +146,11 @@ pextent extent_at_index(pextent extent, uint i)
     LBAread(second_extent, 1, third_extent[ (i-2) / 64] );
 
     free(third_extent);
+
+    if( (second_extent + (i-2) % 64)->count == 0 )
+    {
+      return NULL;
+    }
     return second_extent + (i-2) % 64;
 
   }
@@ -178,9 +194,50 @@ unsigned int extent_block_to_LBA(extent *extent, unsigned int local_block_number
 unsigned int extent_remove_blocks(extent *extent, uint block_number, uint count)
 {
 
-  //TODO:
 
+  pextent current_extent = malloc(sizeof(extent));
+
+  current_extent = extent_at_index(extent, 0);
+
+  int i = 0;
+  while(current_extent != NULL)
+  {
+    release_blocks(current_extent->start, current_extent->count);
+    current_extent = extent_at_index(extent, i);
+    i++;
+  }
+
+  for(i = 0; i < EXTENT_SIZE; i++)
+  {
+    extent[i].start = 0;
+    extent[i].count = 0;
+  }
+
+
+  free(current_extent);
   return 0;
+}
+
+unsigned int extent_size(extent *extent)
+{
+
+  pextent current_extent = malloc(sizeof(extent));
+
+  current_extent = extent_at_index(extent, 0);
+
+  unsigned int total_blocks = 0;
+  int i = 0;
+  while(current_extent != NULL)
+  {
+    
+    total_blocks += current_extent->count;
+
+    i++;
+    current_extent = extent_at_index(extent, i);
+
+  }
+
+  return total_blocks;
 }
 
 

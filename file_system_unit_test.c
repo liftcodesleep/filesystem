@@ -32,6 +32,8 @@ void extent_tests()
 
   test(test_extent_block_to_LBA, "test_extent_block_to_LBA");
   test(test_extent_remove_blocks, "test_extent_remove_blocks");
+
+  test( test_extent_size,"test_extent_size" );
 }
 
 //////////////////////////////////////// PARSE PATH TESTS /////////////////////////////////
@@ -386,7 +388,7 @@ void file_system_unit_tests()
 
   printf("\n\nStarting unit tests:\n\n");
 
-  //extent_tests();
+  extent_tests();
   //test_bit_map();
 
   //make_testdir();
