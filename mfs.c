@@ -186,16 +186,9 @@ fdDir *fs_opendir(const char *pathname)
 {
 
   dir_and_index *dai = parsePath(pathname);
-  // directory to load the current directory from dir_and_index
-  direntry *cD = malloc(BLOCK_SIZE * 4);
-  if (cD == NULL)
-  {
-    printf("cD malloc failed\n");
-    return NULL;
-  }
-  cD = dai->dir;
+
   // move to the current directory using the parent and index
-  loadDir(cD, dai->index);
+  //loadDir(dai->dir, dai->index);
   fdDir *fD = malloc(sizeof(fdDir));
   if (fD == NULL)
   {
@@ -203,25 +196,22 @@ fdDir *fs_opendir(const char *pathname)
     return NULL;
   }
   // fill the diriteminfo of each entry within current directory
-  fD->di = malloc(sizeof(struct fs_diriteminfo) * dai->dir[dai->index].entries);
+  fD->di = malloc(sizeof(struct fs_diriteminfo) * dai->dir->entries);
   if (fD->di == NULL)
   {
     printf("fD->di malloc failed\n");
     return NULL;
   }
-  fD->d_reclen = cD->entries;
+  fD->d_reclen = dai->dir->entries;
   fD->dirEntryPosition = 0;
-  for (int i = 0; i < cD->entries; i++)
+  for (int i = 0; i < dai->dir->entries; i++)
   {
-    strcpy(fD->di[i].d_name, cD[i].name);
-    fD->di[i].d_reclen = cD[i].entries;
-    fD->di[i].fileType = cD[i].isFile;
-    fD->di[i].location = cD[i].extents;
+    
+    strcpy(fD->di[i].d_name, dai->dir[i].name);
+    fD->di[i].d_reclen = dai->dir[i].entries;
+    fD->di[i].fileType = dai->dir[i].isFile;
+    fD->di[i].location = dai->dir[i].extents;
   }
-  // if (cD != NULL){
-  //     free(cD);
-  //     cD = NULL;
-  // }
 
   return fD;
 }
