@@ -203,7 +203,9 @@ int fs_closedir(fdDir *dirp){
         }
         free(dirp);
         dirp = NULL;
+        return 1;
     }
+    return 0;
 }
 
 // Misc directory functions
