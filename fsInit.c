@@ -57,16 +57,14 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
     return -1;
   }
 
-  // If signatures match, vcb already initalized - Don't initalize again
+  // If signatures match, file system already initalized - Don't initalize again
   // Determine where magicNumber will be if already initalized
   if (vcbPointer->unique_volume_ID == MAGIC_NUMBER && !TEST_RUN)
   {
-
     printf("Magic Number validated.\n");
-
     // Initalize current working directory to root - Cleanup function in exitFileSystem();
     set_initial_directory();
-
+    vcbPointer->free_block_map = load_free_space(19531, BLOCK_SIZE);
     return 0;
   }
 
