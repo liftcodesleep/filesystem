@@ -41,7 +41,7 @@ dir_and_index* parsePath(const char* givenpathname)
 
 
     // Token Setup
-    char* token; // = malloc( 100 ); // Get 100 for the vcb
+    char* token; 
     dir_and_index* result = malloc(sizeof(dir_and_index) );
     char * saveptr;
     token = strtok_r(pathname, "/", &saveptr );
@@ -152,7 +152,7 @@ int fs_mkdir(const char *pathname, mode_t mode)
         
         // Write the new name of the file to disk
         strcpy(path->dir[index].name, last_token);
-        printf("in mkdir: %d\n", path->dir[0].extents[0].start);
+        //printf("in mkdir: %d\n", path->dir[0].extents[0].start);
         LBAwrite(path->dir, path->dir[0].extents[0].count ,path->dir[0].extents[0].start );
 
         free(last_token);
@@ -168,6 +168,7 @@ int fs_rmdir(const char *pathname);
 
 // Directory iteration functions
 fdDir * fs_opendir(const char *pathname){
+    
     dir_and_index * dai = parsePath(pathname);
     //directory to load the current directory from dir_and_index
     direntry * cD = malloc(BLOCK_SIZE * 4);
@@ -178,21 +179,36 @@ fdDir * fs_opendir(const char *pathname){
     //fill the diriteminfo of each entry within current directory
     fD->di = malloc(sizeof(struct fs_diriteminfo) * dai->dir[dai->index].entries);
     fD->d_reclen = cD->entries;
-    fD->dirEntryPosition = dai->index;
+    fD->dirEntryPosition = 0;
     for (int i = 0; i < cD->entries; i++){
         strcpy(fD->di[i].d_name, cD[i].name);
         fD->di[i].d_reclen = cD[i].entries;
         fD->di[i].fileType = cD[i].isFile;
         fD->di[i].location = cD[i].extents;
     }
-    if (cD != NULL){
-        free(cD);
-        cD = NULL;
-    }
+    //if (cD != NULL){
+    //    free(cD);
+    //    cD = NULL;
+    //}
+    
     return fD;
 }
 
-struct fs_diriteminfo *fs_readdir(fdDir *dirp);
+struct fs_diriteminfo *fs_readdir(fdDir *dirp)
+{
+    
+    while(dirp->dirEntryPosition < dirp->d_reclen)
+    {
+        dirp->dirEntryPosition++;
+        if( ((dirp->di) + (dirp->dirEntryPosition-1))->d_name[0] != '\0' )
+        {
+            return (dirp->di) + (dirp->dirEntryPosition-1);
+        }
+    }
+
+    return NULL;
+}
+
 int fs_closedir(fdDir *dirp){
     if (dirp != NULL){
         if(dirp->di != NULL){
@@ -305,19 +321,34 @@ int fs_setcwd(char *pathname) {
     return -1;
 
 }   //linux chdir
-int fs_isFile(char * filename);	//return 1 if file, 0 otherwise
-int fs_isDir(char * pathname);		//return 1 if directory, 0 otherwise
+
+//return 1 if file, 0 otherwise
+int fs_isFile(char * filename)
+{
+    dir_and_index* di = parsePath(filename);
+    return di->dir[di->index].isFile;
+}
+
+//return 1 if directory, 0 otherwise
+int fs_isDir(char * pathname)
+{
+    return !fs_isFile(pathname);
+}		
 int fs_delete(char* filename);	//removes a file
 
-int fs_stat(const char *path, struct fs_stat *buf);
+int fs_stat(const char *path, struct fs_stat *buf)
+{
+
+
+}
 
 // Populate current_working_dir global variable to root upon initalization
 void setInitialDirectory() {
-    direntry *buffer = malloc(BLOCK_SIZE * 4);
-    LBAread(buffer, 4, 6);
+    current_working_dir = malloc(BLOCK_SIZE * 4);
+    LBAread(current_working_dir, 4, 6);
     
     // Global variable in mfs.c intialized in startup routine
-    current_working_dir = buffer;
+    //current_working_dir = buffer;
     strcpy(currentDirectory, current_working_dir[0].name);
 }
 

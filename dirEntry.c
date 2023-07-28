@@ -73,8 +73,8 @@ int init_dir(int minEntries, direntry *parent)
   // setup root directory if parent is NULL
   if (parent == NULL)
   {
-    strcpy(newDir[0].name, "/");
-    strcpy(newDir[1].name, "/");
+    strcpy(newDir[0].name, ".");
+    strcpy(newDir[1].name, "..");
 
     newDir[1].size = newDir[0].size;
     newDir[1].extents[0] = newDir[0].extents[0];
@@ -94,6 +94,12 @@ int init_dir(int minEntries, direntry *parent)
       }
     }
 
+    if(free_entry == parent->entries)
+    {
+      printf("found no free direntries");
+      return(-1);
+    }
+
     // strcpy(newDir[0].name, "NEW Value");
     // strcpy(newDir[1].name, parent->name);
     strcpy(newDir[0].name, ".");
@@ -102,8 +108,9 @@ int init_dir(int minEntries, direntry *parent)
 
     // Write parent block location in extent - TESTING
     newDir[1].extents[0].start = parent[0].extents[0].start;
+    newDir[1].extents[0].count = parent[0].extents[0].count;
 
-    LBAwrite(parent, blocksNeeded, parent[0].extents[0].start);
+    LBAwrite(parent, parent[0].extents[0].count, parent[0].extents[0].start);
   }
 
   // write to disc
