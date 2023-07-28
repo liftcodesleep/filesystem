@@ -98,6 +98,7 @@ b_io_fd b_open(char *filename, int flags)
   fcb_array[fd].buf = malloc(B_CHUNK_SIZE);
   if (fcb_array[fd].buf == NULL)
   {
+    closedir(opened);
     close(fd);
     perror("fcb buffer malloc failed\n");
     return -1;
