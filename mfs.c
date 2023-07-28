@@ -24,10 +24,10 @@ direntry *current_working_dir;
 
 // Text field to store absolute paths
 char currentDirectory[MAX_PATH];
-// Text field to store paths worked on in parsePath
+// Text field to store paths worked on in parse_path
 char workingDirectory[MAX_PATH];
 
-dir_and_index *parsePath(const char *given_pathname)
+dir_and_index *parse_path(const char *given_pathname)
 {
 
   if (strlen(given_pathname) == 0)
@@ -120,7 +120,11 @@ dir_and_index *parsePath(const char *given_pathname)
   }
 
   // free(temp_entry);
-  free(pathname);
+  if (pathname != NULL)
+  {
+    free(pathname);
+    pathname = NULL;
+  }
   return result;
 }
 
@@ -128,7 +132,7 @@ dir_and_index *parsePath(const char *given_pathname)
 int fs_mkdir(const char *pathname, mode_t mode)
 {
 
-  dir_and_index *path = parsePath(pathname);
+  dir_and_index *path = parse_path(pathname);
 
   int index;
 
@@ -170,7 +174,11 @@ int fs_mkdir(const char *pathname, mode_t mode)
     // printf("in mkdir: %d\n", path->dir[0].extents[0].start);
     LBAwrite(path->dir, path->dir[0].extents[0].count, path->dir[0].extents[0].start);
 
-    free(last_token);
+    if (last_token != NULL)
+    {
+      free(last_token);
+      last_token = NULL;
+    }
 
     return 1;
   }
@@ -185,10 +193,10 @@ int fs_rmdir(const char *pathname);
 fdDir *fs_opendir(const char *pathname)
 {
 
-  dir_and_index *dai = parsePath(pathname);
+  dir_and_index *dai = parse_path(pathname);
 
   // move to the current directory using the parent and index
-  //loadDir(dai->dir, dai->index);
+  // loadDir(dai->dir, dai->index);
   fdDir *fD = malloc(sizeof(fdDir));
   if (fD == NULL)
   {
@@ -206,7 +214,7 @@ fdDir *fs_opendir(const char *pathname)
   fD->dirEntryPosition = 0;
   for (int i = 0; i < dai->dir->entries; i++)
   {
-    
+
     strcpy(fD->di[i].d_name, dai->dir[i].name);
     fD->di[i].d_reclen = dai->dir[i].entries;
     fD->di[i].fileType = dai->dir[i].isFile;
@@ -278,7 +286,7 @@ int fs_setcwd(char *pathname)
   if (strcmp(pathname, "") == 0)
   {
 
-    // Debating not calling parsePath for redundancy of code
+    // Debating not calling parse_path for redundancy of code
     printf("No input detected. Navigating to root.\n");
     LBAread(current_working_dir, 4, 6);
     strcpy(currentDirectory, current_working_dir[0].name);
@@ -314,9 +322,9 @@ int fs_setcwd(char *pathname)
     }
   }
 
-  dir_and_index *di = parsePath(workingDirectory);
+  dir_and_index *di = parse_path(workingDirectory);
 
-  // parsePath detected an invalid path. Error handling.
+  // parse_path detected an invalid path. Error handling.
   if (di == NULL)
   {
     printf("cd: %s: No such file or directory\n", pathname);
@@ -364,21 +372,39 @@ int fs_setcwd(char *pathname)
 } // linux chdir
 
 // return 1 if file, 0 otherwise
-int fs_isFile(char *filename)
+int fs_is_file(char *filename)
 {
-  dir_and_index *di = parsePath(filename);
+  dir_and_index *di = parse_path(filename);
   return di->dir[di->index].isFile;
 }
 
 // return 1 if directory, 0 otherwise
-int fs_isDir(char *pathname)
+int fs_is_dir(char *pathname)
 {
-  return !fs_isFile(pathname);
+  return !fs_is_file(pathname);
 }
 int fs_delete(char *filename); // removes a file
 
 int fs_stat(const char *path, struct fs_stat *buf)
 {
+  dir_and_index *di = parse_path(path);
+  buf->st_size = di->dir->size;
+  buf->st_createtime = di->dir->time_created;
+  buf->st_accesstime = di->dir->time_last_accessed;
+  buf->st_modtime = di->dir->time_last_modified;
+  buf->st_blocks = extent_size(di->dir->extents);
+  buf->st_blksize = MINBLOCKSIZE;
+  if (di->dir != NULL)
+  {
+    free(di->dir);
+    di->dir = NULL;
+  }
+  if (di != NULL)
+  {
+    free(di);
+    di = NULL;
+  }
+  return 1;
 }
 
 // Populate current_working_dir global variable to root upon initalization

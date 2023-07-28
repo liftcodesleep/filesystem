@@ -68,7 +68,7 @@ typedef struct dir_and_index
 
 } dir_and_index;
 
-dir_and_index *parsePath(const char *pathname);
+dir_and_index *parse_path(const char *pathname);
 
 // JOHNNY***********
 int fs_mkdir(const char *pathname, mode_t mode);
@@ -94,15 +94,15 @@ int fs_setcwd(char *pathname); // linux chdir
 //*********************
 
 // JACOB********************
-int fs_isFile(char *filename); // return 1 if file, 0 otherwise
-int fs_isDir(char *pathname);  // return 1 if directory, 0 otherwise
+int fs_is_file(char *filename); // return 1 if file, 0 otherwise
+int fs_is_dir(char *pathname);  // return 1 if directory, 0 otherwise
 //*************************
 int fs_delete(char *filename); // removes a file
 
 // NEW
 int allocateBuffer();        // Allocate memory to load 4 blocks to traverse - For testing
 int set_initial_directory(); // Set current working directory to root
-void freeDirectory();        // Free current_working_directory memory
+void free_directory();       // Free current_working_directory memory
 
 // This is the strucutre that is filled in from a call to fs_stat
 struct fs_stat

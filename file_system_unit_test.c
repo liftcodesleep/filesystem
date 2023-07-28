@@ -42,7 +42,7 @@ int test_valid_absolute_path()
 {
   const char *path = "dir1/newdir2/otherEntry5";
 
-  dir_and_index *result = parsePath(path);
+  dir_and_index *result = parse_path(path);
   if (result != NULL)
   {
     free(result);
@@ -58,7 +58,7 @@ int test_valid_relative_path()
 {
   const char *path = "../dir1/newdir2/otherdir2/testEntry2";
 
-  dir_and_index *result = parsePath(path);
+  dir_and_index *result = parse_path(path);
   printf("testcase: %s\n", result->dir[0].name);
   if (result != NULL)
   {
@@ -75,7 +75,7 @@ int test_valid_relative_path()
 int test_valid_root_path()
 {
   const char *path = "/";
-  dir_and_index *result = parsePath(path);
+  dir_and_index *result = parse_path(path);
 
   if ( result != NULL)
   {
@@ -91,7 +91,7 @@ int test_valid_root_path()
 int test_valid_relative_to_parent_path()
 {
   const char *path = "../folder1/folder2";
-  dir_and_index *result = parsePath(path);
+  dir_and_index *result = parse_path(path);
   if (result != NULL)
   {
     free(result);
@@ -106,7 +106,7 @@ int test_valid_relative_to_parent_path()
 int test_empty_path()
 {
   const char *path = "";
-  dir_and_index *result = parsePath(path);
+  dir_and_index *result = parse_path(path);
   if (result == NULL)
   {
     return 1; // Test passed
@@ -121,7 +121,7 @@ int test_empty_path()
 int test_invalid_double_slash()
 {
   const char *path = "/usr//local";
-  dir_and_index *result = parsePath(path);
+  dir_and_index *result = parse_path(path);
   if (result == NULL)
   {
 

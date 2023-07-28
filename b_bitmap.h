@@ -7,7 +7,7 @@
  *
  * File: b_bitmap.h
  *
- * Description: This file allows its user to initialize and interact with 
+ * Description: This file allows its user to initialize and interact with
  * a bitmap to manage the free space of their system. It provides functions
  * to load, allocate, and free blocks.
  **************************************************************/

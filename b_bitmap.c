@@ -128,6 +128,12 @@ int init_free_space(int block_count, int block_size)
   return 2;
 }
 
+int load_free_space(int block_count, int block_size)
+{
+  LBAread(map.blocks, 5, 1);
+  return 2;
+}
+
 // a cool idea that didn't pan out
 int get_count(int index)
 {

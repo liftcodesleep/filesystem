@@ -101,5 +101,5 @@ void exitFileSystem()
   printf("System exiting\n");
 
   // Cleanup
-  freeDirectory();
+  free_directory();
 }
