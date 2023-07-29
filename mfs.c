@@ -129,19 +129,16 @@ dir_and_index *parse_path(const char *given_pathname)
 }
 
 // Key directory functions
-int fs_mkdir(const char *pathname, mode_t mode)
+int fs_mk_internal(const char *pathname, mode_t mode, int type)
 {
-
+  printf("mk_internal: type: %d\n", type);
   dir_and_index *path = parse_path(pathname);
-
   int index;
-
+  int subdirs = type ? 1 : 10;
   // check path with an empty value
   if (path != NULL && path->dir != NULL && path->index == -1)
   {
-
-    index = init_dir(10, path->dir);
-
+    index = init_dir(subdirs, path->dir);
     // Setup to find name
     char *token;
     char *last_token = malloc(100);
@@ -151,7 +148,6 @@ int fs_mkdir(const char *pathname, mode_t mode)
       return -1;
     }
     char *saveptr;
-
     // Setup for getting the name of the file
     char *copy_pathname = strdup(pathname);
     if (copy_pathname == NULL)
@@ -160,7 +156,6 @@ int fs_mkdir(const char *pathname, mode_t mode)
       return -1;
     }
     token = strtok_r(copy_pathname, "/", &saveptr);
-
     // get last value in path
     while (token != NULL)
     {
@@ -168,26 +163,28 @@ int fs_mkdir(const char *pathname, mode_t mode)
       // strcpy(last_token, token);
       token = strtok_r(NULL, "/", &saveptr);
     }
-
+    path->dir->isFile = type;
     // Write the new name of the file to disk
     // printf("in mkdir: %d\n", path->dir[0].extents[0].start);
     LBAwrite(path->dir, path->dir[0].extents[0].count, path->dir[0].extents[0].start);
-
-    if (last_token != NULL)
-    {
-      free(last_token);
-      last_token = NULL;
-    }
-    if (copy_pathname != NULL)
-    {
-      free(copy_pathname);
-      copy_pathname = NULL;
-    }
+    FREE(last_token);
+    FREE(copy_pathname);
 
     return 1;
   }
 
   return -1;
+}
+
+int fs_mkdir(const char *pathname, mode_t mode)
+{
+  return fs_mk_internal(pathname, mode, 0);
+}
+
+int fs_mkfil(const char *pathname, mode_t mode)
+{
+  printf("makefile: \n");
+  return fs_mk_internal(pathname, mode, 1);
 }
 
 // ensure that no duplicate directory exists
@@ -400,13 +397,14 @@ int fs_setcwd(char *pathname)
 int fs_is_file(char *filename)
 {
   dir_and_index *di = parse_path(filename);
-  return di->dir[di->index].isFile;
+  return di->dir[di->index].isFile == 1;
 }
 
 // return 1 if directory, 0 otherwise
 int fs_is_dir(char *pathname)
 {
-  return !fs_is_file(pathname);
+  dir_and_index *di = parse_path(pathname);
+  return di->dir[di->index].isFile == 0;
 }
 int fs_delete(char *filename); // removes a file
 

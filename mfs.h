@@ -72,6 +72,7 @@ dir_and_index *parse_path(const char *pathname);
 
 // JOHNNY***********
 int fs_mkdir(const char *pathname, mode_t mode);
+int fs_mkfil(const char *pathname, mode_t mode);
 int fs_rmdir(const char *pathname);
 //*****************
 

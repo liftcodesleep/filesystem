@@ -74,22 +74,47 @@ b_io_fd b_open(char *filename, int flags)
   //*** TODO ***:  Modify to save or set any information needed
   //
   //
-  fdDir *opened = opendir(filename);
-  struct fs_diriteminfo *info = readdir(opened);
+  if (flags & O_CREAT)
+  {
+    dir_and_index *di = parse_path(filename);
+    if (di->index == -1)
+    {
+      fs_mkfil(filename, 0777);
+    }
+    else
+    {
+      printf("Create invalid, file already exists.\n");
+      return -1;
+    }
+  }
+  if (flags == O_RDONLY)
+  {
+  }
+  if (flags == O_WRONLY)
+  {
+  }
+  if (flags == O_RDWR)
+  {
+  }
+  if (flags == O_TRUNC)
+  {
+  }
+  fdDir *opened = fs_opendir(filename);
+  struct fs_diriteminfo *info = fs_readdir(opened);
   if (info == NULL)
   {
-    closedir(opened);
+    fs_closedir(opened);
     perror("diriteminfo failed");
-    return NULL;
+    return -1;
   }
 
   if (startup == 0)
     b_init(); // Initialize our system
 
-  int fd = b_get_FCB();
+  fd = b_getFCB();
   if (fd == -1)
   {
-    closedir(opened);
+    fs_closedir(opened);
     perror("FCB array is full.");
     return -1;
   }
@@ -98,7 +123,7 @@ b_io_fd b_open(char *filename, int flags)
   fcb_array[fd].buf = malloc(B_CHUNK_SIZE);
   if (fcb_array[fd].buf == NULL)
   {
-    closedir(opened);
+    fs_closedir(opened);
     close(fd);
     perror("fcb buffer malloc failed\n");
     return -1;
@@ -217,4 +242,5 @@ int b_read(b_io_fd fd, char *buffer, int count)
 // Interface to Close the file
 int b_close(b_io_fd fd)
 {
+  return 1;
 }

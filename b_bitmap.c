@@ -271,7 +271,7 @@ extent *allocate_blocks(int blocks_requested, int min_extent_size)
     if (success == -1)
     {
       printf("Insufficient disk space!\n");
-      free(rc);
+      FREE(rc);
       return NULL;
     }
 
