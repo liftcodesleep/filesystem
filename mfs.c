@@ -191,7 +191,28 @@ int fs_mkdir(const char *pathname, mode_t mode)
 }
 
 // ensure that no duplicate directory exists
-int fs_rmdir(const char *pathname);
+int fs_rmdir(const char *pathname)
+{
+
+  dir_and_index *dai = parse_path(pathname);
+  if (dai == NULL || dai->dir == NULL || dai->index == -1)
+  {
+    return -1;
+  }
+
+  LBAread(dai->dir, dai->dir[1].extents[0].count, dai->dir[1].extents[0].start);
+
+  strcpy(dai->dir[dai->index].name, "\0");
+  extent_remove_blocks ( dai->dir[dai->index].extents, 0,0 ); /// 0,0 are place holders
+  
+
+  LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start );
+
+
+  // Free memory
+  free(dai->dir);
+  free(dai);
+}
 
 // Directory iteration functions
 fdDir *fs_opendir(const char *pathname)
@@ -435,4 +456,9 @@ void free_directory()
     free(current_working_dir);
     current_working_dir = NULL;
   }
+}
+
+int fs_delete(char *filename)
+{
+  return -1;
 }
