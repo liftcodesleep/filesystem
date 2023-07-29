@@ -94,10 +94,10 @@ int init_dir(int minEntries, direntry *parent)
       }
     }
 
-    if(free_entry == parent->entries)
+    if (free_entry == parent->entries)
     {
       printf("found no free direntries");
-      return(-1);
+      return (-1);
     }
 
     // strcpy(newDir[0].name, "NEW Value");
@@ -118,13 +118,13 @@ int init_dir(int minEntries, direntry *parent)
 
   return free_entry;
 }
-//function to load new directories
-//must have one initialized in advance
+// function to load new directories
+// must have one initialized in advance
 void loadDir(direntry *dir, int index)
 {
   LBAread(dir, dir[index].extents[0].count, dir[index].extents[0].start);
 }
-//function to initialize the root directory
+// function to initialize the root directory
 direntry *getRoot()
 {
   direntry *root = malloc(BLOCK_SIZE * 4);

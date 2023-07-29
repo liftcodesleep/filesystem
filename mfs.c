@@ -134,7 +134,7 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
   printf("mk_internal: type: %d\n", type);
   dir_and_index *path = parse_path(pathname);
   int index;
-  int subdirs = type ? 1 : 10;
+  int subdirs = type ? 0 : 10;
   // check path with an empty value
   if (path != NULL && path->dir != NULL && path->index == -1)
   {
@@ -200,11 +200,9 @@ int fs_rmdir(const char *pathname)
   LBAread(dai->dir, dai->dir[1].extents[0].count, dai->dir[1].extents[0].start);
 
   strcpy(dai->dir[dai->index].name, "\0");
-  extent_remove_blocks ( dai->dir[dai->index].extents, 0,0 ); /// 0,0 are place holders
-  
+  extent_remove_blocks(dai->dir[dai->index].extents, 0, 0); /// 0,0 are place holders
 
-  LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start );
-
+  LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
 
   // Free memory
   free(dai->dir);

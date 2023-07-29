@@ -25,6 +25,8 @@
 #define MAXFCBS 20
 #define B_CHUNK_SIZE 512
 
+// if we read then write in the middle of the block
+
 typedef struct b_fcb
 {
   /** TODO add al the information you need in the file control block **/
@@ -70,13 +72,13 @@ b_io_fd b_open(char *filename, int flags)
 {
   // KEEP AN EYE FOR ALLOCS
   b_io_fd fd;
+  dir_and_index *di = parse_path(filename);
 
   //*** TODO ***:  Modify to save or set any information needed
   //
   //
   if (flags & O_CREAT)
   {
-    dir_and_index *di = parse_path(filename);
     if (di->index == -1)
     {
       fs_mkfil(filename, 0777);
@@ -98,6 +100,10 @@ b_io_fd b_open(char *filename, int flags)
   }
   if (flags == O_TRUNC)
   {
+    di->dir->size = 0;
+    extent_remove_blocks(di->dir->extents, 0, 0);
+    di->dir->time_last_modified = (unsigned long)time(NULL);
+    // probably need to write
   }
   fdDir *opened = fs_opendir(filename);
   struct fs_diriteminfo *info = fs_readdir(opened);
@@ -147,6 +153,8 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
 }
 
 // Interface to write function
+// write needs to check if/wehn to update buffer
+// if write writes a block in the fcb buffer, the buffer needs an update
 int b_write(b_io_fd fd, char *buffer, int count)
 {
   if (startup == 0)
