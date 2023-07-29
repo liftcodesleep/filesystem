@@ -8,7 +8,7 @@
  *
  * File: mfs.c
  *
- * Description: file system interface functions for taking paths 
+ * Description: file system interface functions for taking paths
  *              and handling information needed from shell
  *              commands
  *
@@ -133,12 +133,28 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
 {
   printf("mk_internal: type: %d\n", type);
   dir_and_index *path = parse_path(pathname);
-  int index;
-  int subdirs = type ? 0 : 10;
+  int index = 0;
   // check path with an empty value
   if (path != NULL && path->dir != NULL && path->index == -1)
   {
-    index = init_dir(subdirs, path->dir);
+    if (type == 1) // is_file
+    {
+      for (int i = 2; i < path->dir[0].entries; i++)
+      {
+        if (path->dir[i].name == "\0")
+        {
+          printf("mkfile: index: %d\n\n", index);
+          index = i;
+          printf("mkfile: index: %d\n\n", index);
+          printf("mkfile: breakin\n");
+          break;
+        }
+      }
+    }
+    else
+    {
+      index = init_dir(10, path->dir);
+    }
     // Setup to find name
     char *token;
     char *last_token = malloc(100);
@@ -159,10 +175,12 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
     // get last value in path
     while (token != NULL)
     {
+      printf("mkfile: index: %d\n\n", index);
       strcpy(path->dir[index].name, token);
       // strcpy(last_token, token);
       token = strtok_r(NULL, "/", &saveptr);
     }
+    printf("mkfile: line\n\n");
     path->dir->isFile = type;
     // Write the new name of the file to disk
     // printf("in mkdir: %d\n", path->dir[0].extents[0].start);
@@ -278,14 +296,16 @@ int fs_closedir(fdDir *dirp)
 // Misc directory functions
 char *fs_getcwd(char *pathname, size_t size)
 {
-    printf("Getcwd: Testing for: %s\n", currentDirectory);   
+  printf("Getcwd: Testing for: %s\n", currentDirectory);
   if (currentDirectory == NULL)
   {
     printf("currentDirectory is empty. Fill it.\n");
     return NULL;
-  } else if (strcmp(currentDirectory , ".") == 0) {
+  }
+  else if (strcmp(currentDirectory, ".") == 0)
+  {
     return "/";
-  } 
+  }
 
   // If the length of the absolute pathname of the current working directory,
   // including the terminating null byte, exceeds 'size' bytes, NULL is returned.
@@ -302,16 +322,18 @@ char *fs_getcwd(char *pathname, size_t size)
 }
 int fs_setcwd(char *pathname)
 {
-    // If no path is given or root is entered, and the home environment is not empty,
-    // cd utility will navigate to home (root)
-    if ((strcmp(pathname, "") == 0) || (pathname[0] == '/' && strlen(pathname) == 1)) {
+  // If no path is given or root is entered, and the home environment is not empty,
+  // cd utility will navigate to home (root)
+  if ((strcmp(pathname, "") == 0) || (pathname[0] == '/' && strlen(pathname) == 1))
+  {
     LBAread(current_working_dir, 4, 6);
     strcpy(currentDirectory, current_working_dir[0].name);
     return 0;
   }
 
   // cd '.' - No futher action required
-  if (strcmp(pathname, ".") == 0) {
+  if (strcmp(pathname, ".") == 0)
+  {
     return 0;
   }
 
@@ -338,7 +360,9 @@ int fs_setcwd(char *pathname)
 
       strcat(workingDirectory, pathname);
     }
-  } else {
+  }
+  else
+  {
     strcpy(workingDirectory, currentDirectory);
     strcat(workingDirectory, "/");
     strcat(workingDirectory, pathname);
@@ -372,42 +396,54 @@ int fs_setcwd(char *pathname)
     strcpy(previousToken, tok);
     tok = strtok(NULL, "/");
 
-    while (tok != NULL) {
+    while (tok != NULL)
+    {
 
-        if (strcmp(tok, "..") == 0) {
-            strcpy(previousToken, tok);
-            strtok(NULL, "/");
-            break;
-            // If token is '.' and root has not already been copied in
-        } else if (strcmp(previousToken, ".") == 0 && strlen(tempDirectory) == 0) {
-            strcat(tempDirectory, "/");
-            strcpy(previousToken, tok);
-            strtok(NULL, "/");
-            break;
-        }
-
-        if (strlen(tempDirectory) == 0) {
-            strcat(tempDirectory, "/");
-        }
-        strcat(tempDirectory, previousToken);
+      if (strcmp(tok, "..") == 0)
+      {
+        strcpy(previousToken, tok);
+        strtok(NULL, "/");
+        break;
+        // If token is '.' and root has not already been copied in
+      }
+      else if (strcmp(previousToken, ".") == 0 && strlen(tempDirectory) == 0)
+      {
         strcat(tempDirectory, "/");
         strcpy(previousToken, tok);
-        tok = strtok(NULL, "/");
+        strtok(NULL, "/");
+        break;
+      }
+
+      if (strlen(tempDirectory) == 0)
+      {
+        strcat(tempDirectory, "/");
+      }
+      strcat(tempDirectory, previousToken);
+      strcat(tempDirectory, "/");
+      strcpy(previousToken, tok);
+      tok = strtok(NULL, "/");
     }
 
-    if (strcmp(previousToken, ".") != 0 && strcmp(previousToken, "..") != 0) {
-        if (strlen(tempDirectory) == 1) {
-            strcat(tempDirectory, previousToken);
-        } else {
-            strcat(tempDirectory, previousToken);
-            strcat(tempDirectory, "/");
-        }
+    if (strcmp(previousToken, ".") != 0 && strcmp(previousToken, "..") != 0)
+    {
+      if (strlen(tempDirectory) == 1)
+      {
+        strcat(tempDirectory, previousToken);
+      }
+      else
+      {
+        strcat(tempDirectory, previousToken);
+        strcat(tempDirectory, "/");
+      }
     }
 
-    if (strcmp(tempDirectory, "") == 0) {
-        strcpy(currentDirectory, "/");
-    } else {
-        strcpy(currentDirectory, tempDirectory);
+    if (strcmp(tempDirectory, "") == 0)
+    {
+      strcpy(currentDirectory, "/");
+    }
+    else
+    {
+      strcpy(currentDirectory, tempDirectory);
     }
 
     return 0;
