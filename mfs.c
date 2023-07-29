@@ -153,24 +153,23 @@ int fs_mkdir(const char *pathname, mode_t mode)
     char *saveptr;
 
     // Setup for getting the name of the file
-    char *copy_pathname = malloc(strlen(pathname));
+    char *copy_pathname = strdup(pathname);
     if (copy_pathname == NULL)
     {
       printf("copy_pathname malloc failed\n");
       return -1;
     }
-    strcpy(copy_pathname, pathname);
     token = strtok_r(copy_pathname, "/", &saveptr);
 
     // get last value in path
     while (token != NULL)
     {
-      strcpy(last_token, token);
+      strcpy(path->dir[index].name, token);
+      // strcpy(last_token, token);
       token = strtok_r(NULL, "/", &saveptr);
     }
 
     // Write the new name of the file to disk
-    strcpy(path->dir[index].name, last_token);
     // printf("in mkdir: %d\n", path->dir[0].extents[0].start);
     LBAwrite(path->dir, path->dir[0].extents[0].count, path->dir[0].extents[0].start);
 
@@ -178,6 +177,11 @@ int fs_mkdir(const char *pathname, mode_t mode)
     {
       free(last_token);
       last_token = NULL;
+    }
+    if (copy_pathname != NULL)
+    {
+      free(copy_pathname);
+      copy_pathname = NULL;
     }
 
     return 1;
