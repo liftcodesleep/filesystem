@@ -79,7 +79,6 @@ dir_and_index *parse_path(const char *given_pathname)
   {
     // Catch case - Loads buffer if token is detected
     // LBAread(temp_entry, 4, 6);
-
     LBAread(temp_entry, 4, current_working_dir[0].extents[0].start);
   }
 
@@ -278,12 +277,14 @@ int fs_closedir(fdDir *dirp)
 // Misc directory functions
 char *fs_getcwd(char *pathname, size_t size)
 {
-
+    printf("Getcwd: Testing for: %s\n", currentDirectory);   
   if (currentDirectory == NULL)
   {
     printf("currentDirectory is empty. Fill it.\n");
     return NULL;
-  }
+  } else if (strcmp(currentDirectory , ".") == 0) {
+    return "/";
+  } 
 
   // If the length of the absolute pathname of the current working directory,
   // including the terminating null byte, exceeds 'size' bytes, NULL is returned.
@@ -300,16 +301,16 @@ char *fs_getcwd(char *pathname, size_t size)
 }
 int fs_setcwd(char *pathname)
 {
-
-  // If no path is given, and the home environment is not empty,
-  // cd utility will navigate to home (root)
-  if (strcmp(pathname, "") == 0)
-  {
-
-    // Debating not calling parse_path for redundancy of code
-    printf("No input detected. Navigating to root.\n");
+    // If no path is given or root is entered, and the home environment is not empty,
+    // cd utility will navigate to home (root)
+    if ((strcmp(pathname, "") == 0) || (pathname[0] == '/' && strlen(pathname) == 1)) {
     LBAread(current_working_dir, 4, 6);
     strcpy(currentDirectory, current_working_dir[0].name);
+    return 0;
+  }
+
+  // cd '.' - No futher action required
+  if (strcmp(pathname, ".") == 0) {
     return 0;
   }
 
@@ -321,25 +322,25 @@ int fs_setcwd(char *pathname)
   }
   else if (pathname[0] == '.')
   {
-    strcpy(workingDirectory, currentDirectory);
-
+    strcpy(workingDirectory, pathname);
     // If pathname does not begin with a /, set workingDirectory to
     // the string formed by the concatentation of the value currentDirectory +
     // a '/' character if it does not end with a slash + and pathname
-    if (currentDirectory[0] != '/')
+    if (workingDirectory[0] != '/')
     {
-      if (currentDirectory[strlen(currentDirectory)] != '/')
+      strcpy(workingDirectory, currentDirectory);
+
+      if (currentDirectory[strlen(currentDirectory) - 1] != '/')
       {
         strcat(workingDirectory, "/");
       }
 
       strcat(workingDirectory, pathname);
     }
-    else
-    {
-      strcpy(currentDirectory, workingDirectory);
-      strcat(workingDirectory, pathname);
-    }
+  } else {
+    strcpy(workingDirectory, currentDirectory);
+    strcat(workingDirectory, "/");
+    strcat(workingDirectory, pathname);
   }
 
   dir_and_index *di = parse_path(workingDirectory);
@@ -347,7 +348,6 @@ int fs_setcwd(char *pathname)
   // parse_path detected an invalid path. Error handling.
   if (di == NULL)
   {
-    printf("cd: %s: No such file or directory\n", pathname);
     return -1;
   }
 
@@ -365,25 +365,50 @@ int fs_setcwd(char *pathname)
     // - From Linux manpage for cd
 
     char tempDirectory[256] = "";
-    char previousToken[20] = "";
-    char *tok = strtok(workingDirectory, "/.");
+    char previousToken[30] = "";
 
-    while (tok != NULL)
-    {
-      if (strcmp(previousToken, tok) != 0)
-      {
+    char *tok = strtok(workingDirectory, "/");
+    strcpy(previousToken, tok);
+    tok = strtok(NULL, "/");
+
+    while (tok != NULL) {
+
+        if (strcmp(tok, "..") == 0) {
+            strcpy(previousToken, tok);
+            strtok(NULL, "/");
+            break;
+            // If token is '.' and root has not already been copied in
+        } else if (strcmp(previousToken, ".") == 0 && strlen(tempDirectory) == 0) {
+            strcat(tempDirectory, "/");
+            strcpy(previousToken, tok);
+            strtok(NULL, "/");
+            break;
+        }
+
+        if (strlen(tempDirectory) == 0) {
+            strcat(tempDirectory, "/");
+        }
+        strcat(tempDirectory, previousToken);
         strcat(tempDirectory, "/");
-        strcat(tempDirectory, tok);
         strcpy(previousToken, tok);
-        tok = strtok(NULL, "/.");
-      }
-      else
-      {
-        tok = strtok(NULL, "/.");
-      }
+        tok = strtok(NULL, "/");
     }
 
-    strcpy(currentDirectory, tempDirectory);
+    if (strcmp(previousToken, ".") != 0 && strcmp(previousToken, "..") != 0) {
+        if (strlen(tempDirectory) == 1) {
+            strcat(tempDirectory, previousToken);
+        } else {
+            strcat(tempDirectory, previousToken);
+            strcat(tempDirectory, "/");
+        }
+    }
+
+    if (strcmp(tempDirectory, "") == 0) {
+        strcpy(currentDirectory, "/");
+    } else {
+        strcpy(currentDirectory, tempDirectory);
+    }
+
     return 0;
   }
 
