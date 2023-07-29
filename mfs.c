@@ -6,10 +6,11 @@
  * Group Name: Coffee On The Rocks
  * Project: Basic File System
  *
- * File: fsInit.c
+ * File: mfs.c
  *
- * Description: Main driver for file system assignment.
- *
+ * Description: file system interface functions for taking paths 
+ *              and handling information needed from shell
+ *              commands
  *
  **************************************************************/
 #include <stdlib.h>
