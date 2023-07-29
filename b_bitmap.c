@@ -133,7 +133,6 @@ int load_free_space(int block_count, int block_size)
   map.size = (block_count - 1) / WORDSIZE + 1;
   // no idea why what init did didn't work for malloc size will rework if time
   map.blocks = (uint32_t *)malloc(block_size * 5);
-
   if (map.blocks == NULL)
   {
     perror("init_bit_map: map.blocks malloc failed\n");
@@ -236,7 +235,6 @@ int get_extent(int start, int req, int min_size, extent *pextent)
       begin += end;
       continue;
     }
-
     extent_append(pextent, begin, end - begin);
     return end - begin;
   }
@@ -274,7 +272,6 @@ extent *allocate_blocks(int blocks_requested, int min_extent_size)
       FREE(rc);
       return NULL;
     }
-
     blocks_requested -= rc[i].count;
     start = rc[i].start + rc[i].count;
     if (blocks_requested == 0)
@@ -287,7 +284,6 @@ extent *allocate_blocks(int blocks_requested, int min_extent_size)
     mark_extent(rc[i].start, rc[i].count);
   }
   LBAwrite(map.blocks, 5, 1);
-
   return rc;
 }
 

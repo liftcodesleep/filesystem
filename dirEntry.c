@@ -45,6 +45,11 @@ int init_dir(int minEntries, direntry *parent)
   int actualNEntries = bytesAlloc / sizeof(direntry);
   // allocate bytes for new directory
   direntry *newDir = malloc(bytesAlloc);
+  if (newDir == NULL)
+  {
+    printf("newDir malloc failed\n");
+    return -1;
+  }
   // entry 0 is . and entry 1 is ..
   for (int i = 2; i < actualNEntries; i++)
   {
@@ -67,7 +72,7 @@ int init_dir(int minEntries, direntry *parent)
   newDir[0].extents[1] = e[1];
   newDir[0].extents[2] = e[2];
   newDir[1].entries = newDir[0].entries;
-  free(e);
+  FREE(e);
 
   int free_entry = 0;
   // setup root directory if parent is NULL
@@ -128,6 +133,11 @@ void loadDir(direntry *dir, int index)
 direntry *getRoot()
 {
   direntry *root = malloc(BLOCK_SIZE * 4);
+  if (root == NULL)
+  {
+    printf("Root malloc failed\n");
+    return NULL;
+  }
   // printf("size of root: %d\n", sizeof(direntry));
   LBAread(root, 4, 7);
   return root;

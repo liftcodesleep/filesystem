@@ -89,7 +89,7 @@ dir_and_index *parse_path(const char *given_pathname)
   if (token == NULL && pathname[0] == '/')
   {
     result->index = 0;
-    free(pathname);
+    FREE(pathname);
     return result;
   }
 
@@ -119,19 +119,13 @@ dir_and_index *parse_path(const char *given_pathname)
     token = strtok_r(NULL, "/", &saveptr);
   }
 
-  // free(temp_entry);
-  if (pathname != NULL)
-  {
-    free(pathname);
-    pathname = NULL;
-  }
+  FREE(pathname);
   return result;
 }
 
 // Key directory functions
 int fs_mk_internal(const char *pathname, mode_t mode, int type)
 {
-  printf("mk_internal: type: %d\n", type);
   dir_and_index *path = parse_path(pathname);
   int index = 0;
   // check path with an empty value
@@ -143,10 +137,7 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
       {
         if (path->dir[i].name == "\0")
         {
-          printf("mkfile: index: %d\n\n", index);
           index = i;
-          printf("mkfile: index: %d\n\n", index);
-          printf("mkfile: breakin\n");
           break;
         }
       }
@@ -175,12 +166,10 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
     // get last value in path
     while (token != NULL)
     {
-      printf("mkfile: index: %d\n\n", index);
       strcpy(path->dir[index].name, token);
       // strcpy(last_token, token);
       token = strtok_r(NULL, "/", &saveptr);
     }
-    printf("mkfile: line\n\n");
     path->dir->isFile = type;
     // Write the new name of the file to disk
     // printf("in mkdir: %d\n", path->dir[0].extents[0].start);
@@ -201,7 +190,6 @@ int fs_mkdir(const char *pathname, mode_t mode)
 
 int fs_mkfil(const char *pathname, mode_t mode)
 {
-  printf("makefile: \n");
   return fs_mk_internal(pathname, mode, 1);
 }
 
@@ -223,8 +211,8 @@ int fs_rmdir(const char *pathname)
   LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
 
   // Free memory
-  free(dai->dir);
-  free(dai);
+  FREE(dai->dir);
+  FREE(dai);
 }
 
 // Directory iteration functions
@@ -279,17 +267,8 @@ struct fs_diriteminfo *fs_readdir(fdDir *dirp)
 
 int fs_closedir(fdDir *dirp)
 {
-  if (dirp != NULL)
-  {
-    if (dirp->di != NULL)
-    {
-      free(dirp->di);
-      dirp->di = NULL;
-    }
-    free(dirp);
-    dirp = NULL;
-    return 1;
-  }
+  FREE(dirp->di);
+  FREE(dirp);
   return 0;
 }
 
@@ -477,16 +456,8 @@ int fs_stat(const char *path, struct fs_stat *buf)
   buf->st_modtime = di->dir->time_last_modified;
   buf->st_blocks = extent_size(di->dir->extents);
   buf->st_blksize = MINBLOCKSIZE;
-  if (di->dir != NULL)
-  {
-    free(di->dir);
-    di->dir = NULL;
-  }
-  if (di != NULL)
-  {
-    free(di);
-    di = NULL;
-  }
+  FREE(di->dir);
+  FREE(di);
   return 1;
 }
 
@@ -509,11 +480,7 @@ int set_initial_directory()
 // Clean up method - free global variable current_working_directory
 void free_directory()
 {
-  if (current_working_dir != NULL)
-  {
-    free(current_working_dir);
-    current_working_dir = NULL;
-  }
+  FREE(current_working_dir);
 }
 
 int fs_delete(char *filename)

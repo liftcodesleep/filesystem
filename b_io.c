@@ -31,10 +31,11 @@ typedef struct b_fcb
 {
   /** TODO add al the information you need in the file control block **/
   struct fs_diriteminfo *info;
-  int index;  // holds the current position in the buffer
-  int buflen; // holds how many valid bytes are in the buffer
-  char *buf;  // holds the open file buffer
-  char perm;  // 0 = O_RDONLY 1 = O_WRONLY 2 = O_RDWR
+  int buffer_index; // holds the current position in the buffer
+  int file_index;   // holds the current position in the file
+  int buflen;       // holds how many valid bytes are in the buffer
+  char *buf;        // holds the open file buffer
+  char perm;        // 0 = O_RDONLY 1 = O_WRONLY 2 = O_RDWR
 } b_fcb;
 
 b_fcb fcb_array[MAXFCBS];
@@ -132,7 +133,7 @@ b_io_fd b_open(char *filename, int flags)
     return -1;
   }
   fcb_array[fd].info = info;
-  fcb_array[fd].index = 0;
+  fcb_array[fd].buffer_index = 0;
   fcb_array[fd].buf = malloc(B_CHUNK_SIZE);
   if (fcb_array[fd].buf == NULL)
   {
@@ -155,8 +156,8 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
   {
     return (-1); // invalid file descriptor
   }
-  fcb_array[fd].index = whence + offset;
-  return (fcb_array[fd].index); // Change this
+  fcb_array[fd].buffer_index = whence + offset;
+  return (fcb_array[fd].buffer_index); // Change this
 }
 
 // Interface to write function
@@ -178,6 +179,7 @@ int b_write(b_io_fd fd, char *buffer, int count)
     printf("No write access fuckouttahere\n");
     return -1;
   }
+
   return (0); // Change this
 }
 
@@ -202,16 +204,13 @@ int b_write(b_io_fd fd, char *buffer, int count)
 //  +-------------+------------------------------------------------+--------+
 int b_read(b_io_fd fd, char *buffer, int count)
 {
-
   if (startup == 0)
     b_init(); // Initialize our system
-
   // check that fd is between 0 and (MAXFCBS-1)
   if ((fd < 0) || (fd >= MAXFCBS))
   {
     return (-1); // invalid file descriptor
   }
-
   if (count <= 0)
   {
     return 0;
@@ -221,10 +220,12 @@ int b_read(b_io_fd fd, char *buffer, int count)
     printf("No read access fuckouttahere\n");
     return -1;
   }
+
   b_fcb *p_fcb = &fcb_array[fd];
   int bytes_read = 0;
   int to_copy = 0;
-  int file_remaining = p_fcb->info->d_reclen - p_fcb->index;
+  // TODO index is a location in buffer not in file
+  int file_remaining = p_fcb->info->d_reclen - p_fcb->buffer_index;
   /*
   TL;DR pages through the file
   treat the file as a series of chunks
@@ -238,26 +239,25 @@ int b_read(b_io_fd fd, char *buffer, int count)
   do
   {
     // thread safe given one file per thread
-    if (p_fcb->index % B_CHUNK_SIZE == 0)
+    if (p_fcb->buffer_index % B_CHUNK_SIZE == 0)
     {
       LBAread(p_fcb->buf, 1,
-              p_fcb->index / B_CHUNK_SIZE);
+              p_fcb->buffer_index / B_CHUNK_SIZE);
     }
-    int left_in_chunk = B_CHUNK_SIZE - p_fcb->index % B_CHUNK_SIZE;
+    int left_in_chunk = B_CHUNK_SIZE - p_fcb->buffer_index % B_CHUNK_SIZE;
     to_copy = count < (left_in_chunk) ? to_copy : left_in_chunk;
-
+    // TODO bytes read is index?
     memcpy(buffer + bytes_read,
-           p_fcb->buf + p_fcb->index % B_CHUNK_SIZE,
+           p_fcb->buf + p_fcb->buffer_index % B_CHUNK_SIZE,
            to_copy);
-
-    p_fcb->index += to_copy;
+    p_fcb->buffer_index += to_copy;
     bytes_read += to_copy;
     count -= to_copy;
     file_remaining -= to_copy;
-    while (file_remaining >= B_CHUNK_SIZE)
+    if (count >= B_CHUNK_SIZE)
     {
-      LBAread(buffer, 1,
-              p_fcb->index / B_CHUNK_SIZE);
+      LBAread(buffer, count / B_CHUNK_SIZE,
+              p_fcb->buffer_index / B_CHUNK_SIZE);
     }
   } while (count > 0 && file_remaining > 0);
   return bytes_read;
