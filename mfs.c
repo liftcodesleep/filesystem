@@ -133,14 +133,24 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
   {
     if (type == 1) // is_file
     {
-      for (int i = 2; i < path->dir[0].entries; i++)
+      int i;
+      for (i = 2; i < path->dir[0].entries; i++)
       {
-        if (path->dir[i].name == "\0")
+        
+        if (strcmp(path->dir[i].name , "\0") == 0)
         {
           index = i;
           break;
         }
+
       }
+
+      if(i == path->dir[0].entries)
+      {
+        printf("File is full!\n");
+        return -1;
+      }
+
     }
     else
     {
