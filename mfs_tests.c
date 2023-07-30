@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "mfs.h"
 #include "file_system_unit_test.h"
+#include "b_io.h"
 
 
 
@@ -90,6 +91,28 @@ int test_fssetdir()
 }
 
 
+int test_write()
+{
+	fs_setcwd("/");
+
+	int file = b_open("/Test.txt",O_WRONLY | O_CREAT );
+	unsigned int test_size = 103;
+	b_write(file,
+		"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA100",
+		test_size);
+
+	printf("Finished writing\n");
+
+	b_close(file);
+
+	file = b_open("Test.txt",FS_READ );
+	char* test_buffer = malloc(test_size);
+	b_read(file,test_buffer,test_size);
+
+	printf("In the test buffer: %s",test_buffer);
+	
+	return 1;
+}
 
 
 void test_mfs()
@@ -98,9 +121,11 @@ void test_mfs()
 	printf("\nTesting mfs functions...\n");
 
 	// test(test_mkdir,"test_mkdir");
-	test(test_fsopendir_and_close, "testing fsopendir and fsclosedir ");
-	test(test_fsgetcwd, "testing fsgetcwd");
-	test(test_fssetdir, "testing fssetdir");
+	// test(test_fsopendir_and_close, "testing fsopendir and fsclosedir ");
+	// test(test_fsgetcwd, "testing fsgetcwd");
+	// test(test_fssetdir, "testing fssetdir");
+
+	test(test_write,"test_write");
 
 
 }

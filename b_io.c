@@ -69,6 +69,9 @@ b_io_fd b_getFCB()
   }
   return (-1); // all in use
 }
+
+
+
 // Interface to open a buffered file
 // Modification of interface for this assignment, flags match the Linux flags for open
 // O_RDONLY, O_WRONLY, or O_RDWR
@@ -105,7 +108,8 @@ b_io_fd b_open(char *filename, int flags)
     // I don't know what this mode is, I just copied his mkfile call
     // it is rdwr perms for usr/grp/oth
     fs_mkfil(filename, 0777);
-    LBAread(di->dir, 4, 6);
+    di = parse_path(filename);
+    //LBAread(di->dir, 4, 6);
   }
   fd = b_getFCB();
   if (flags & O_WRONLY)
@@ -133,8 +137,24 @@ b_io_fd b_open(char *filename, int flags)
     di->dir[di->index].time_last_modified = (unsigned long)time(NULL);
     LBAwrite(di->dir, di->dir->extents->count, di->dir->extents->start);
   }
+
+
+  
+
   fdDir *opened = fs_opendir(filename);
-  struct fs_diriteminfo *info = fs_readdir(opened);
+
+  struct fs_diriteminfo *info;
+  //printf("Name of path: %s\n", filename);
+  //printf("Index of opening: %d\n", di->index);
+  //printf("TEST: %s\n", di->dir[2].name);
+
+  for(int i = 0; i <= di->index; i++)
+  {
+    info  = fs_readdir(opened);
+  }
+  //printf("?\n");
+  //printf("Name of file reading: %s\n", info->d_name);
+
   if (info == NULL)
   {
     b_close(fd);
@@ -157,8 +177,11 @@ b_io_fd b_open(char *filename, int flags)
     fs_closedir(opened);
     return -1;
   }
+
+
   return (fd); // all set
 }
+
 // Interface to seek function
 int b_seek(b_io_fd fd, off_t offset, int whence)
 {
@@ -174,6 +197,7 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
   fcb_array[fd].file_index = whence + offset;
   return (fcb_array[fd].file_index); // Change this
 }
+
 // Interface to write function
 // write needs to check if/when to update buffer
 // if write writes a block in the fcb buffer, the buffer needs an update
@@ -181,21 +205,102 @@ int b_write(b_io_fd fd, char *buffer, int count)
 {
   if (startup == 0)
     b_init(); // Initialize our system
+
   // check that fd is between 0 and (MAXFCBS-1)
   if ((fd < 0) || (fd >= MAXFCBS))
   {
     return (-1); // invalid file descriptor
   }
+
   if (fcb_array[fd].perm == 0)
   {
-    printf("No write access to file permitted\n");
+    printf("No write access fuckouttahere\n");
     return -1;
   }
-  if (fcb_array[fd].file_index % B_CHUNK_SIZE == 0)
+
+
+  pextent file_extent = fcb_array[fd].info->location;
+
+  int file_block_size = extent_size(file_extent);
+
+  ////////////// ALLOC AS NEEDED /////////////////
+  int blocks_needed = (count+fcb_array[fd].info->d_reclen) / B_CHUNK_SIZE + 1;
+
+  //printf("Amount of blocks needed: %d\n", blocks_needed);
+
+  pextent current_new_extent = NULL;
+  if(blocks_needed > file_block_size)
   {
-    LBAwrite(buffer, count, fcb_array[fd].file_index);
+    pextent new_extent = allocate_blocks( blocks_needed - file_block_size, 1 );
+
+    current_new_extent = extent_at_index(new_extent, 0);
+    int i = 0;
+    while(current_new_extent !=  NULL)
+    {
+      printf("In old extent loop\n");
+      extent_append( file_extent, current_new_extent->start, current_new_extent->count);
+      current_new_extent = extent_at_index(new_extent, ++i);
+    }
   }
-  return (0); // Change this
+  /////////////////////////////////////////////////////
+
+  //printf("WRITING TO: %d %d\n", file_extent->start, file_extent->count);
+  int wrote_bytes = 0;
+  
+
+  // Write to the middle of a block when start
+  if( fcb_array[fd].file_index % B_CHUNK_SIZE != 0 )
+  {
+    current_new_extent = extent_at_index(file_extent, fcb_array[fd].file_index / B_CHUNK_SIZE);
+    // Read the first block on disk so we don't override 
+    LBAread(fcb_array[fd].buf, 1, current_new_extent->start);
+    strcpy(fcb_array[fd].buf+ fcb_array[fd].file_index%B_CHUNK_SIZE  , buffer );
+    LBAwrite(fcb_array[fd].buf, 1, current_new_extent->start );
+    wrote_bytes += fcb_array[fd].file_index%B_CHUNK_SIZE;
+    fcb_array[fd].file_index +=fcb_array[fd].file_index%B_CHUNK_SIZE;
+  }
+  
+
+
+  // THIS STILL NEEDS WORK
+  // Write all the middle blocks
+  if( (count + fcb_array[fd].file_index%B_CHUNK_SIZE-1) / B_CHUNK_SIZE + 1 > 2 )
+  {
+    current_new_extent = extent_at_index(file_extent, fcb_array[fd].file_index / B_CHUNK_SIZE);
+    pextent end_check;
+
+    int i = 0;
+    while(current_new_extent !=  NULL)
+    {
+
+      printf("In loop %d, %d\n",current_new_extent->start,current_new_extent->count );
+      //extent_append( file_extent, current_new_extent->start, current_new_extent->count);
+      //LBAwrite(buffer+((i+current_new_extent->count)*B_CHUNK_SIZE), current_new_extent->count, current_new_extent->start );
+      LBAwrite(buffer, current_new_extent->count, current_new_extent->start );
+      wrote_bytes += current_new_extent->count*B_CHUNK_SIZE;
+      current_new_extent = extent_at_index(file_extent, ++i);
+    }
+  }
+  
+  
+
+
+  // Ending in the middle of a block
+  if( (fcb_array[fd].file_index+count) % B_CHUNK_SIZE != 0 )
+  {
+    current_new_extent = extent_at_index(file_extent, fcb_array[fd].file_index/B_CHUNK_SIZE);
+
+    // Read the first block on disk so we don't override 
+    LBAread(fcb_array[fd].buf, 1, current_new_extent->start);
+    strcpy(fcb_array[fd].buf, buffer+wrote_bytes );
+    LBAwrite(fcb_array[fd].buf, 1, current_new_extent->start );
+    wrote_bytes += fcb_array[fd].file_index%B_CHUNK_SIZE;
+    fcb_array[fd].file_index += fcb_array[fd].file_index%B_CHUNK_SIZE;
+  }
+
+
+  return wrote_bytes; 
+
 }
 // Interface to read a buffer
 // Filling the callers request is broken into three parts

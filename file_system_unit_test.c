@@ -320,6 +320,6 @@ void file_system_unit_tests()
   // make_testdir();
   // parse_path_tests();
   // print_test_directory();
-  // test_mfs();
+  test_mfs();
   printf("\n\nEnding unit tests...\n\n");
 }
