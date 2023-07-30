@@ -11,11 +11,7 @@
  * Description: Handler for directory entries. Creates directory entries,
  *              and other helper functions to facilitate modifications of
  *              directory entries.
- *
- * 
  **************************************************************/
-
-
 #ifndef DIRENTRY
 #define DIRENTRY
 
@@ -24,7 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
 #include "b_bitmap.h"
 #define BLOCK_SIZE 512
 
@@ -41,9 +36,6 @@ typedef struct direntry
 } direntry;
 
 int init_dir(int minEntries, direntry *parent);
-void loadDir(direntry* dir, int index);
-direntry * getRoot();
-
-
-
+void loadDir(direntry *dir, int index);
+direntry *getRoot();
 #endif

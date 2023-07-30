@@ -1,18 +1,15 @@
 #include "file_system_unit_test.h"
 #include "extent_unit_tests.h"
 #include "mfs_tests.h"
-//#include "parsePath.h"
+// #include "parsePath.h"
 #include "b_bitmap.h"
-//#include "get_and_set_dir.h"
+// #include "get_and_set_dir.h"
 
 void test(int (*func)(), char *name)
 {
-
   int passed;
   passed = func();
-
   printf("%-40s", name);
-
   if (passed)
   {
     printf("P\n");
@@ -29,63 +26,47 @@ void extent_tests()
   test(test_extent_init, "test_extent_init");
   test(test_extent_append, "test_extent_append");
   test(test_extent_at_index, "test_extent_at_index");
-
   test(test_extent_block_to_LBA, "test_extent_block_to_LBA");
   test(test_extent_remove_blocks, "test_extent_remove_blocks");
-
-  test( test_extent_size,"test_extent_size" );
+  test(test_extent_size, "test_extent_size");
 }
-
 //////////////////////////////////////// PARSE PATH TESTS /////////////////////////////////
-
 int test_valid_absolute_path()
 {
   const char *path = "dir1/newdir2/otherEntry5";
-
   dir_and_index *result = parse_path(path);
   if (result != NULL)
   {
-    free(result);
+    FREE(result);
     return 1; // Test passed
   }
-  else
-  {
-    return 0; // Test failed
-  }
+  return 0; // Test failed
 }
 
 int test_valid_relative_path()
 {
   const char *path = "../dir1/newdir2/otherdir2/testEntry2";
-
   dir_and_index *result = parse_path(path);
   printf("testcase: %s\n", result->dir[0].name);
   if (result != NULL)
   {
-    free(result);
+    FREE(result);
     return 1; // Test passed
   }
-  else
-  {
-  	free(result);
-    return 0; // Test failed
-  }
+  FREE(result);
+  return 0; // Test failed
 }
 
 int test_valid_root_path()
 {
   const char *path = "/";
   dir_and_index *result = parse_path(path);
-
-  if ( result != NULL)
+  if (result != NULL)
   {
-    free(result);
+    FREE(result);
     return 1; // Test passed
   }
-  else
-  {
-    return 0; // Test failed
-  }
+  return 0; // Test failed
 }
 
 int test_valid_relative_to_parent_path()
@@ -94,13 +75,10 @@ int test_valid_relative_to_parent_path()
   dir_and_index *result = parse_path(path);
   if (result != NULL)
   {
-    free(result);
+    FREE(result);
     return 1; // Test passed
   }
-  else
-  {
-    return 0; // Test failed
-  }
+  return 0; // Test failed
 }
 
 int test_empty_path()
@@ -111,11 +89,8 @@ int test_empty_path()
   {
     return 1; // Test passed
   }
-  else
-  {
-    free(result);
-    return 0; // Test failed
-  }
+  FREE(result);
+  return 0; // Test failed
 }
 
 int test_invalid_double_slash()
@@ -124,49 +99,36 @@ int test_invalid_double_slash()
   dir_and_index *result = parse_path(path);
   if (result == NULL)
   {
-
     return 1; // Test passed
   }
-  else
-  {
-    free(result);
-    return 0; // Test failed
-  }
+  FREE(result);
+  return 0; // Test failed
 }
 
 void parse_path_tests()
 {
-
-
   printf("\nTesting Parse Path:\n");
   test(test_valid_absolute_path, "test_valid_absolute_path");
   test(test_valid_relative_path, "test_valid_relative_path");
   test(test_valid_relative_to_parent_path, "test_valid_relative_to_parent_path");
   test(test_invalid_double_slash, "test_invalid_double_slash");
-  //printf("Getting seg fault when passing empty path so commented it out");
-  test(test_empty_path,"test_empty_path");
-  test(test_valid_root_path,"test_valid_root_path");
-  
-
+  // printf("Getting seg fault when passing empty path so commented it out");
+  test(test_empty_path, "test_empty_path");
+  test(test_valid_root_path, "test_valid_root_path");
 }
 
 ////////////////////////////////////////////// BIT MAP UNIT TESTS ////////////////////////////
-
 int test_basic_allocation()
 {
   int num_blocks = 100;
   int min_extent_size = 10;
-
   extent *result = allocate_blocks(num_blocks, min_extent_size);
   if (result != NULL)
   {
-    free(result);
+    FREE(result);
     return 1; // Test passed
   }
-  else
-  {
-    return 0; // Test failed
-  }
+  return 0; // Test failed
 }
 
 int test_allocation_with_insufficient_space()
@@ -178,48 +140,35 @@ int test_allocation_with_insufficient_space()
   {
     return 1; // Test passed
   }
-  else
-  {
-    free(result);
-    return 0; // Test failed
-  }
+  FREE(result);
+  return 0; // Test failed
 }
 
 int test_allocation_with_minimum_extent_size()
 {
   int num_blocks = 100;
-
   extent *result = allocate_blocks(num_blocks, 1);
   if (result != NULL)
   {
-    free(result);
+    FREE(result);
     return 1; // Test passed
   }
-  else
-  {
-    return 0; // Test failed
-  }
+  return 0; // Test failed
 }
 
 int test_multiple_allocs()
 {
-
   extent *result1 = allocate_blocks(1, 1);
   extent *result2 = allocate_blocks(1, 1);
-
   if (result1->start != result2->start)
   {
     return 1; // Test passed.
   }
-  else
-  {
-    return 0; // Test failed. It allocated two diffrent blocks to the same location
-  }
+  return 0; // Test failed. It allocated two diffrent blocks to the same location
 }
 
 void test_bit_map()
 {
-
   printf("\nTesting Bit Map:\n");
   test(test_basic_allocation, "test_basic_allocation");
   test(test_allocation_with_insufficient_space, "test_allocation_with_insufficient_space");
@@ -228,55 +177,56 @@ void test_bit_map()
 }
 
 ///////////////////////////////////////////// EXAMPLE FILES UNIT TESTS ////////////////////////////
-
 // Prints requested directory block. Needs to be changed as needed
-void print_test_directory()
+int print_test_directory()
 {
   printf("\n");
-  direntry * newEntry = malloc(MINBLOCKSIZE * 4);
+  direntry *newEntry;
+  if (malloc_wrap(MINBLOCKSIZE * 4, (void *)&newEntry, "newEntry"))
+  {
+    return -1;
+  }
   LBAread(newEntry, 4, 6);
-
   // newEntry[0].entries currently doesn't populate correctly - bug with extents
-  for (int i = 0; i < 12; i++) {
+  for (int i = 0; i < 12; i++)
+  {
     printf("%s\n", newEntry[i].name);
-
-    if (newEntry[i].isFile == 1) {
+    if (newEntry[i].isFile == 1)
+    {
       printf("#%d isFile: %d\n", i, newEntry[i].isFile);
     }
   }
-
-  free(newEntry);
+  FREE(newEntry);
+  return 0;
 }
 
 // Creates four levels of direntries to perform basic tests against
-void make_testdir()
+int make_testdir()
 {
   printf("\nTest directory system initalized.\n");
-  direntry * newEntry = malloc(MINBLOCKSIZE * 4);
+  direntry *newEntry;
+  if (malloc_wrap(MINBLOCKSIZE * 4, (void *)&newEntry, "newEntry"))
+  {
+    return -1;
+  }
   int index = 0;
-
-  //First level
+  // First level
   LBAread(newEntry, 4, 6);
-
   strcpy(newEntry[2].name, "file1");
   strcpy(newEntry[3].name, "file2");
   strcpy(newEntry[4].name, "file3");
   strcpy(newEntry[5].name, "file4");
-
   // Create second level - Made in block 10 if extent unit tests aren't active
   init_dir(10, newEntry); // Marks file as directory
   strcpy(newEntry[6].name, "dir1");
-
   strcpy(newEntry[7].name, "file5");
   strcpy(newEntry[8].name, "file6");
   strcpy(newEntry[9].name, "file7");
   strcpy(newEntry[10].name, "file8");
   strcpy(newEntry[11].name, "file9");
-
   // Write first level to block - Writing to block 6
   printf("Writing to block: %d\n", newEntry[0].extents[0].start);
   LBAwrite(newEntry, 4, newEntry[0].extents[0].start);
-
   // Loads into block 10 if extent unit tests aren't active
   LBAread(newEntry, 4, newEntry[6].extents[0].start);
   // Confirm . and .. are in entries 0 and 1
@@ -288,27 +238,21 @@ void make_testdir()
   strcpy(newEntry[6].name, "newEntry5");
   strcpy(newEntry[7].name, "newEntry6");
   strcpy(newEntry[8].name, "newEntry7");
-
   // Create third level - Made in block 14 if extent unit tests aren't active
   init_dir(10, newEntry);
   strcpy(newEntry[9].name, "newdir2");
-
   strcpy(newEntry[10].name, "newEntry9");
   strcpy(newEntry[11].name, "newEntry10");
-
   // Write second level to block - Writing to block 10
   printf("Writing to block: %d\n", newEntry[0].extents[0].start);
   LBAwrite(newEntry, 4, newEntry[0].extents[0].start);
-
   // // Loads from block 14
   LBAread(newEntry, 4, newEntry[9].extents[0].start);
   // printf("%s and %s\n", newEntry[0].name, newEntry[1].name);
   strcpy(newEntry[2].name, "otherEntry1");
-
   // Create fourth level - Made in block 18
   init_dir(10, newEntry);
   strcpy(newEntry[3].name, "otherdir2");
-
   strcpy(newEntry[4].name, "otherEntry3");
   strcpy(newEntry[5].name, "otherEntry4");
   strcpy(newEntry[6].name, "otherEntry5");
@@ -317,11 +261,9 @@ void make_testdir()
   strcpy(newEntry[9].name, "otherEntry8");
   strcpy(newEntry[10].name, "otherEntry9");
   strcpy(newEntry[11].name, "otherEntry10");
-
   // Writing to block 14
   printf("Writing to block: %d\n", newEntry[0].extents[0].start);
   LBAwrite(newEntry, 4, newEntry[0].extents[0].start);
-
   // Loads from block 18
   LBAread(newEntry, 4, newEntry[3].extents[0].start);
   // printf("%s and %s\n", newEntry[0].name, newEntry[1].name);
@@ -334,15 +276,12 @@ void make_testdir()
   strcpy(newEntry[8].name, "testEntry7");
   strcpy(newEntry[9].name, "testEntry8");
   strcpy(newEntry[10].name, "testEntry9");
-
   // Create fifth level - Made in block 22
   init_dir(10, newEntry);
   strcpy(newEntry[11].name, "testDir10");
-
   // // Writing to block 18
   printf("Writing to block: %d\n", newEntry[0].extents[0].start);
   LBAwrite(newEntry, 4, newEntry[0].extents[0].start);
-
   // Loads from block 22 - All files
   LBAread(newEntry, 4, newEntry[11].extents[0].start);
   // printf("%s and %s\n", newEntry[0].name, newEntry[1].name);
@@ -356,12 +295,11 @@ void make_testdir()
   strcpy(newEntry[9].name, "fEntry8");
   strcpy(newEntry[10].name, "fEntry9");
   strcpy(newEntry[11].name, "fEntry10");
-
   // Writing to block 22
   printf("Writing to block: %d\n", newEntry[0].extents[0].start);
   LBAwrite(newEntry, 4, newEntry[0].extents[0].start);
-
-  free(newEntry);
+  FREE(newEntry);
+  return 0;
 }
 
 // void setdir_test()
@@ -373,23 +311,15 @@ void make_testdir()
 //   printf("Test result: %d\n", test);
 // }
 
-
 ////////////////////////////////////////////////
-
-
 void file_system_unit_tests()
 {
-
   printf("\n\nStarting unit tests:\n\n");
-
-  //extent_tests();
-  //test_bit_map();
-
+  // extent_tests();
+  // test_bit_map();
   // make_testdir();
-  //parse_path_tests();
+  // parse_path_tests();
   // print_test_directory();
-
-  //test_mfs();
-
+  // test_mfs();
   printf("\n\nEnding unit tests...\n\n");
 }

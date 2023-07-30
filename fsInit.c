@@ -38,7 +38,14 @@ int initFileSystem(uint64_t numberOfBlocks, uint64_t blockSize)
 
   // Determine if you need to format the volume or not
   // Malloc a block of memory as your VCB pointer - per spec sheet
+  // malloc wrap also broken here
   vcb *vcbPointer = malloc(blockSize);
+  // if (malloc_wrap(blockSize, (void *)vcbPointer, "vcbPointer"))
+  if (vcbPointer == NULL)
+  {
+    printf("vcbPointer malloc failed");
+    return -1;
+  }
 
   // Report failure of malloc if occured - Abort program
   if (vcbPointer == NULL)

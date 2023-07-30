@@ -36,27 +36,25 @@ dir_and_index *parse_path(const char *given_pathname)
     return NULL;
   }
 
-  char *pathname = malloc(strlen(given_pathname));
-  if (pathname == NULL)
+  char *pathname;
+  if (malloc_wrap(strlen(given_pathname), (void *)&pathname, "pathname"))
   {
-    printf("pathname malloc failed\n");
     return NULL;
   }
   strcpy(pathname, given_pathname);
 
   // Token Setup
   char *token;
-  dir_and_index *result = malloc(sizeof(dir_and_index));
-  if (result == NULL)
+  dir_and_index *result;
+  if (malloc_wrap(sizeof(dir_and_index), (void *)&result, "result"))
   {
-    printf("result malloc failed\n");
     return NULL;
   }
   char *saveptr;
   token = strtok_r(pathname, "/", &saveptr);
 
-  direntry *temp_entry = malloc(BLOCK_SIZE * 4);
-  if (temp_entry == NULL)
+  direntry *temp_entry;
+  if (malloc_wrap(BLOCK_SIZE * 4, (void *)&temp_entry, "temp_entry"))
   {
     printf("temp_entry malloc failed\n");
     return NULL;
@@ -93,7 +91,7 @@ dir_and_index *parse_path(const char *given_pathname)
     return result;
   }
 
-  // Go threw all values in the path
+  // Go through all values in the path
   int i;
   while (token != NULL)
   {
@@ -136,21 +134,21 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
       int i;
       for (i = 2; i < path->dir[0].entries; i++)
       {
-        
-        if (strcmp(path->dir[i].name , "\0") == 0)
+
+        if (strcmp(path->dir[i].name, "\0") == 0)
         {
           index = i;
           break;
         }
-
       }
-
-      if(i == path->dir[0].entries)
+      if (i == path->dir[0].entries)
       {
-        printf("File is full!\n");
+        printf("Directory is full!\n");
         return -1;
       }
 
+        path->dir[index].isFile = type;
+        path->dir[index].extents[0].start = path->dir[0].extents[0].start;
     }
     else
     {
@@ -158,10 +156,9 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
     }
     // Setup to find name
     char *token;
-    char *last_token = malloc(100);
-    if (last_token == NULL)
+    char *last_token;
+    if (malloc_wrap(100, (void *)&last_token, "last_token"))
     {
-      printf("last_token malloc failed\n");
       return -1;
     }
     char *saveptr;
@@ -177,12 +174,10 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
     while (token != NULL)
     {
       strcpy(path->dir[index].name, token);
-      // strcpy(last_token, token);
       token = strtok_r(NULL, "/", &saveptr);
     }
-    path->dir->isFile = type;
     // Write the new name of the file to disk
-    // printf("in mkdir: %d\n", path->dir[0].extents[0].start);
+    //printf("in mkdir: %d\n", path->dir[0].extents[0].start);
     LBAwrite(path->dir, path->dir[0].extents[0].count, path->dir[0].extents[0].start);
     FREE(last_token);
     FREE(copy_pathname);
@@ -233,15 +228,14 @@ fdDir *fs_opendir(const char *pathname)
 
   // move to the current directory using the parent and index
   // loadDir(dai->dir, dai->index);
-  fdDir *fD = malloc(sizeof(fdDir));
-  if (fD == NULL)
+  fdDir *fD;
+  if (malloc_wrap(sizeof(fdDir), (void *)&fD, "fD"))
   {
-    printf("fD malloc failed\n");
     return NULL;
   }
   // fill the diriteminfo of each entry within current directory
-  fD->di = malloc(sizeof(struct fs_diriteminfo) * dai->dir->entries);
-  if (fD->di == NULL)
+  if (malloc_wrap(sizeof(struct fs_diriteminfo) * dai->dir->entries,
+                  (void *)&fD->di, "fD->di"))
   {
     printf("fD->di malloc failed\n");
     return NULL;
@@ -311,6 +305,8 @@ char *fs_getcwd(char *pathname, size_t size)
 }
 int fs_setcwd(char *pathname)
 {
+  LBAread(current_working_dir, 4, current_working_dir[0].extents[0].start);
+  printf("CHECK PERMISSION: %d\n", current_working_dir[2].isFile);
   // If no path is given or root is entered, and the home environment is not empty,
   // cd utility will navigate to home (root)
   if ((strcmp(pathname, "") == 0) || (pathname[0] == '/' && strlen(pathname) == 1))
@@ -344,6 +340,7 @@ int fs_setcwd(char *pathname)
 
       if (currentDirectory[strlen(currentDirectory) - 1] != '/')
       {
+        printf("triggered\n");
         strcat(workingDirectory, "/");
       }
 
@@ -353,10 +350,17 @@ int fs_setcwd(char *pathname)
   else
   {
     strcpy(workingDirectory, currentDirectory);
-    strcat(workingDirectory, "/");
+
+    if (currentDirectory[strlen(currentDirectory) - 1] != '/')
+    {
+      printf("triggered\n");
+      strcat(workingDirectory, "/");
+    }
+
     strcat(workingDirectory, pathname);
   }
 
+  printf("Being fed into parse_path: %s\n", workingDirectory);
   dir_and_index *di = parse_path(workingDirectory);
 
   // parse_path detected an invalid path. Error handling.
@@ -369,7 +373,21 @@ int fs_setcwd(char *pathname)
   {
     // Load the new working directory into the global variable buffer
     current_working_dir = di->dir;
+    printf("What is here? Name: %s flag: %d index: %d\n", di->dir->name, di->dir->isFile, di->index);
+
     loadDir(current_working_dir, di->index);
+    printf("Verify where we loaded into: %d\n", current_working_dir[0].extents[0].start);
+
+    // Attempting to cd into a file - Reverse action and abort
+    if (current_working_dir[di->index].isFile == 1) {
+      printf("Verify index: #%d\n", di->index);
+      if (current_working_dir[0].extents[0].start != current_working_dir[di->index].extents[0].start) {
+          printf("Verify we are loading into the parent upon failure: %d\n", current_working_dir[1].extents[0].start);
+          loadDir(current_working_dir, current_working_dir[1].extents[0].start);
+      }
+      printf("Attempting to change into a file. fuckouttahere. \n");
+      return -1;
+    }
 
     // 8) For each dot-dot component - If there is a preceding component
     // that is neither root not dot-dot, then:
@@ -387,7 +405,6 @@ int fs_setcwd(char *pathname)
 
     while (tok != NULL)
     {
-
       if (strcmp(tok, "..") == 0)
       {
         strcpy(previousToken, tok);
@@ -402,7 +419,6 @@ int fs_setcwd(char *pathname)
         strtok(NULL, "/");
         break;
       }
-
       if (strlen(tempDirectory) == 0)
       {
         strcat(tempDirectory, "/");
@@ -412,7 +428,6 @@ int fs_setcwd(char *pathname)
       strcpy(previousToken, tok);
       tok = strtok(NULL, "/");
     }
-
     if (strcmp(previousToken, ".") != 0 && strcmp(previousToken, "..") != 0)
     {
       if (strlen(tempDirectory) == 1)
@@ -425,7 +440,6 @@ int fs_setcwd(char *pathname)
         strcat(tempDirectory, "/");
       }
     }
-
     if (strcmp(tempDirectory, "") == 0)
     {
       strcpy(currentDirectory, "/");
@@ -435,9 +449,13 @@ int fs_setcwd(char *pathname)
       strcpy(currentDirectory, tempDirectory);
     }
 
+    printf("Returned: %s\n", currentDirectory);
     return 0;
-  }
 
+    // Double token method contained too many bugs - Let use an array
+
+
+  }
   return -1;
 
 } // linux chdir
@@ -474,14 +492,13 @@ int fs_stat(const char *path, struct fs_stat *buf)
 // Populate current_working_dir global variable to root upon initalization
 int set_initial_directory()
 {
-  current_working_dir = malloc(BLOCK_SIZE * 4);
-  if (current_working_dir == NULL)
+  if (malloc_wrap(BLOCK_SIZE * 4, (void *)&current_working_dir,
+                  "current_working_dir"))
   {
     printf("current_working_dir malloc failed\n");
     return -1;
   }
   LBAread(current_working_dir, 4, 6);
-
   // Global variable in mfs.c intialized in startup routine
   // current_working_dir = buffer;
   strcpy(currentDirectory, current_working_dir[0].name);

@@ -1,9 +1,9 @@
 /**************************************************************
- * Class:  CSC-415-0# Fall 2021
- * Names:
- * Student IDs:
- * GitHub Name:
- * Group Name:
+ * Class:  CSC-415-01 Fall 2021
+ * Names: Jacob Lawrence
+ * Student IDs: 922384785
+ * GitHub Name: liftcodesleep
+ * Group Name: Coffee on the Rocks
  * Project: Basic File System
  *
  * File: b_io.c
@@ -21,17 +21,15 @@
 #include <fcntl.h>
 #include "b_io.h"
 #include "mfs.h"
-
 #define MAXFCBS 20
 #define B_CHUNK_SIZE 512
-
 // if we read then write in the middle of the block
-
+// then what, commenter above, what then?
 typedef struct b_fcb
 {
   /** TODO add al the information you need in the file control block **/
   struct fs_diriteminfo *info;
-  int buffer_index; // holds the current position in the buffer
+  int buffer_index; // holds the current position of the buffer in the file
   int file_index;   // holds the current position in the file
   int buflen;       // holds how many valid bytes are in the buffer
   short perm;
@@ -47,11 +45,8 @@ int malloc_wrap(size_t size, void **ppv, char *str)
   }
   return *ppv == NULL;
 }
-
 b_fcb fcb_array[MAXFCBS];
-
 int startup = 0; // Indicates that this has not been initialized
-
 // Method to initialize our file system
 void b_init()
 {
@@ -60,10 +55,8 @@ void b_init()
   {
     fcb_array[i].buf = NULL; // indicates a free fcb_array
   }
-
   startup = 1;
 }
-
 // Method to get a free FCB element
 b_io_fd b_getFCB()
 {
@@ -76,7 +69,6 @@ b_io_fd b_getFCB()
   }
   return (-1); // all in use
 }
-
 // Interface to open a buffered file
 // Modification of interface for this assignment, flags match the Linux flags for open
 // O_RDONLY, O_WRONLY, or O_RDWR
@@ -85,6 +77,7 @@ b_io_fd b_open(char *filename, int flags)
   // KEEP AN EYE FOR ALLOCS
   b_io_fd fd;
   dir_and_index *di = parse_path(filename);
+
   if (di == NULL)
   {
     printf("parse_path failed");
@@ -112,6 +105,7 @@ b_io_fd b_open(char *filename, int flags)
     // I don't know what this mode is, I just copied his mkfile call
     // it is rdwr perms for usr/grp/oth
     fs_mkfil(filename, 0777);
+    LBAread(di->dir, 4, 6);
   }
   fd = b_getFCB();
   if (flags & O_WRONLY)
@@ -156,8 +150,8 @@ b_io_fd b_open(char *filename, int flags)
     return -1;
   }
   fcb_array[fd].info = info;
-  fcb_array[fd].buffer_index = 0;
-  if (malloc_wrap(B_CHUNK_SIZE, &fcb_array[fd].buf, "fcb_array[fd].buf"))
+  fcb_array[fd].buffer_index = -1; // buffer is not in file/truly initialized
+  if (malloc_wrap(B_CHUNK_SIZE, (void *)&fcb_array[fd].buf, "fcb_array[fd].buf"))
   {
     close(fd);
     fs_closedir(opened);
@@ -165,13 +159,11 @@ b_io_fd b_open(char *filename, int flags)
   }
   return (fd); // all set
 }
-
 // Interface to seek function
 int b_seek(b_io_fd fd, off_t offset, int whence)
 {
   if (startup == 0)
     b_init(); // Initialize our system
-
   // check that fd is between 0 and (MAXFCBS-1)
   if ((fd < 0) || (fd >= MAXFCBS))
   {
@@ -182,7 +174,6 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
   fcb_array[fd].file_index = whence + offset;
   return (fcb_array[fd].file_index); // Change this
 }
-
 // Interface to write function
 // write needs to check if/when to update buffer
 // if write writes a block in the fcb buffer, the buffer needs an update
@@ -206,9 +197,7 @@ int b_write(b_io_fd fd, char *buffer, int count)
   }
   return (0); // Change this
 }
-
 // Interface to read a buffer
-
 // Filling the callers request is broken into three parts
 // Part 1 is what can be filled from the current buffer, which may or may not be enough
 // Part 2 is after using what was left in our buffer there is still 1 or more block
@@ -244,12 +233,11 @@ int b_read(b_io_fd fd, char *buffer, int count)
     printf("No read access to file permitted\n");
     return -1;
   }
-
   b_fcb *p_fcb = &fcb_array[fd];
   int bytes_read = 0;
   int to_copy = 0;
-  // TODO index is a location in buffer not in file
-  int file_remaining = p_fcb->info->d_reclen - p_fcb->buffer_index;
+  int file_remaining = p_fcb->info->d_reclen - p_fcb->file_index;
+  int buffer_remaining = p_fcb->buflen - p_fcb->buffer_index;
   /*
   TL;DR pages through the file
   treat the file as a series of chunks
@@ -263,30 +251,31 @@ int b_read(b_io_fd fd, char *buffer, int count)
   do
   {
     // thread safe given one file per thread
-    if (p_fcb->buffer_index % B_CHUNK_SIZE == 0)
+    if (p_fcb->file_index % B_CHUNK_SIZE == 0)
     {
-      LBAread(p_fcb->buf, 1,
-              p_fcb->buffer_index / B_CHUNK_SIZE);
+      // TODO make sure this actually works
+      // intent is read directly to their buffer
+      if (count % B_CHUNK_SIZE == 0)
+      {
+        LBAread(buffer, count / B_CHUNK_SIZE, p_fcb->file_index);
+        // TODO Update counts and stuff
+        continue;
+      }
+      LBAread(p_fcb->buf, 1, p_fcb->file_index / B_CHUNK_SIZE);
     }
-    int left_in_chunk = B_CHUNK_SIZE - p_fcb->buffer_index % B_CHUNK_SIZE;
+    int left_in_chunk = B_CHUNK_SIZE - p_fcb->file_index % B_CHUNK_SIZE;
     to_copy = count < (left_in_chunk) ? to_copy : left_in_chunk;
-    // TODO bytes read is index?
-    memcpy(buffer + bytes_read,
-           p_fcb->buf + p_fcb->buffer_index % B_CHUNK_SIZE,
+    // TODO buflen incorrect
+    memcpy(buffer + p_fcb->buflen,
+           p_fcb->buf + p_fcb->file_index % B_CHUNK_SIZE,
            to_copy);
-    p_fcb->buffer_index += to_copy;
-    bytes_read += to_copy;
+    p_fcb->file_index += to_copy;
+    p_fcb->buflen += to_copy;
     count -= to_copy;
     file_remaining -= to_copy;
-    if (count >= B_CHUNK_SIZE)
-    {
-      LBAread(buffer, count / B_CHUNK_SIZE,
-              p_fcb->buffer_index / B_CHUNK_SIZE);
-    }
   } while (count > 0 && file_remaining > 0);
-  return bytes_read;
+  return p_fcb->buflen;
 }
-
 // Interface to Close the file
 int b_close(b_io_fd fd)
 {
