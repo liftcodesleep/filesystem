@@ -197,10 +197,7 @@ unsigned int extent_remove_blocks(extent *extent, uint block_number, uint count)
   pextent current_extent;
   if (malloc_wrap(sizeof(extent), (void *)&current_extent, "current_extent"))
   {
-    // TODO how to error?
-    // make a function that returns pass/fail and then
-    // shoves the thing it did into a pointer
-    return -1;
+    return 0;
   }
   current_extent = extent_at_index(extent, 0);
   int i = 0;
@@ -225,10 +222,7 @@ unsigned int extent_size(extent *extent)
   pextent current_extent;
   if (malloc_wrap(sizeof(extent), (void *)&current_extent, "current_extent"))
   {
-    // TODO how to error?
-    // make a function that returns pass/fail and then
-    // shoves the thing it did into a pointer
-    return -1;
+    return 0;
   }
 
   current_extent = extent_at_index(extent, 0);
