@@ -36,27 +36,25 @@ dir_and_index *parse_path(const char *given_pathname)
     return NULL;
   }
 
-  char *pathname = malloc(strlen(given_pathname));
-  if (pathname == NULL)
+  char *pathname;
+  if (malloc_wrap(strlen(given_pathname), (void *)&pathname, "pathname"))
   {
-    printf("pathname malloc failed\n");
     return NULL;
   }
   strcpy(pathname, given_pathname);
 
   // Token Setup
   char *token;
-  dir_and_index *result = malloc(sizeof(dir_and_index));
-  if (result == NULL)
+  dir_and_index *result;
+  if (malloc_wrap(sizeof(dir_and_index), (void *)&result, "result"))
   {
-    printf("result malloc failed\n");
     return NULL;
   }
   char *saveptr;
   token = strtok_r(pathname, "/", &saveptr);
 
-  direntry *temp_entry = malloc(BLOCK_SIZE * 4);
-  if (temp_entry == NULL)
+  direntry *temp_entry;
+  if (malloc_wrap(BLOCK_SIZE * 4, (void *)&temp_entry, "temp_entry"))
   {
     printf("temp_entry malloc failed\n");
     return NULL;
@@ -136,21 +134,18 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
       int i;
       for (i = 2; i < path->dir[0].entries; i++)
       {
-        
-        if (strcmp(path->dir[i].name , "\0") == 0)
+
+        if (strcmp(path->dir[i].name, "\0") == 0)
         {
           index = i;
           break;
         }
-
       }
-
-      if(i == path->dir[0].entries)
+      if (i == path->dir[0].entries)
       {
-        printf("File is full!\n");
+        printf("Directory is full!\n");
         return -1;
       }
-
     }
     else
     {
@@ -158,10 +153,9 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
     }
     // Setup to find name
     char *token;
-    char *last_token = malloc(100);
-    if (last_token == NULL)
+    char *last_token;
+    if (malloc_wrap(100, (void *)&last_token, "last_token"))
     {
-      printf("last_token malloc failed\n");
       return -1;
     }
     char *saveptr;
@@ -233,15 +227,14 @@ fdDir *fs_opendir(const char *pathname)
 
   // move to the current directory using the parent and index
   // loadDir(dai->dir, dai->index);
-  fdDir *fD = malloc(sizeof(fdDir));
-  if (fD == NULL)
+  fdDir *fD;
+  if (malloc_wrap(sizeof(fdDir), (void *)&fD, "fD"))
   {
-    printf("fD malloc failed\n");
     return NULL;
   }
   // fill the diriteminfo of each entry within current directory
-  fD->di = malloc(sizeof(struct fs_diriteminfo) * dai->dir->entries);
-  if (fD->di == NULL)
+  if (malloc_wrap(sizeof(struct fs_diriteminfo) * dai->dir->entries,
+                  (void *)&fD->di, "fD->di"))
   {
     printf("fD->di malloc failed\n");
     return NULL;
@@ -387,7 +380,6 @@ int fs_setcwd(char *pathname)
 
     while (tok != NULL)
     {
-
       if (strcmp(tok, "..") == 0)
       {
         strcpy(previousToken, tok);
@@ -402,7 +394,6 @@ int fs_setcwd(char *pathname)
         strtok(NULL, "/");
         break;
       }
-
       if (strlen(tempDirectory) == 0)
       {
         strcat(tempDirectory, "/");
@@ -412,7 +403,6 @@ int fs_setcwd(char *pathname)
       strcpy(previousToken, tok);
       tok = strtok(NULL, "/");
     }
-
     if (strcmp(previousToken, ".") != 0 && strcmp(previousToken, "..") != 0)
     {
       if (strlen(tempDirectory) == 1)
@@ -425,7 +415,6 @@ int fs_setcwd(char *pathname)
         strcat(tempDirectory, "/");
       }
     }
-
     if (strcmp(tempDirectory, "") == 0)
     {
       strcpy(currentDirectory, "/");
@@ -434,10 +423,8 @@ int fs_setcwd(char *pathname)
     {
       strcpy(currentDirectory, tempDirectory);
     }
-
     return 0;
   }
-
   return -1;
 
 } // linux chdir
@@ -474,14 +461,13 @@ int fs_stat(const char *path, struct fs_stat *buf)
 // Populate current_working_dir global variable to root upon initalization
 int set_initial_directory()
 {
-  current_working_dir = malloc(BLOCK_SIZE * 4);
-  if (current_working_dir == NULL)
+  if (malloc_wrap(BLOCK_SIZE * 4, (void *)&current_working_dir,
+                  "current_working_dir"))
   {
     printf("current_working_dir malloc failed\n");
     return -1;
   }
   LBAread(current_working_dir, 4, 6);
-
   // Global variable in mfs.c intialized in startup routine
   // current_working_dir = buffer;
   strcpy(currentDirectory, current_working_dir[0].name);

@@ -63,7 +63,6 @@ void clear_bit(uint32_t i, int n)
 {
   i &= ~(1 << (n & MASK));
 }
-
 // legacy function
 int count_free_bits(uint32_t i, int n)
 {
@@ -77,7 +76,6 @@ int count_free_bits(uint32_t i, int n)
   }
   return m;
 }
-
 // legacy function
 int find_free_bit(uint32_t i)
 {
@@ -90,12 +88,10 @@ int find_free_bit(uint32_t i)
   }
   return -1;
 }
-
 // debug print dump of map
 void print_map()
 {
   printf("--\n");
-  // printf("printmap: %ld\n", map.size);
   for (int i = 0; i < map.size; i += 8)
   {
     int foo = (i > map.size - 8) ? map.size % 8 : 8;
@@ -106,7 +102,6 @@ void print_map()
   }
   printf("\n--\n");
 }
-
 // alloc for bitmap
 int init_free_space(int block_count, int block_size)
 {
@@ -132,16 +127,13 @@ int load_free_space(int block_count, int block_size)
 {
   map.size = (block_count - 1) / WORDSIZE + 1;
   // no idea why what init did didn't work for malloc size will rework if time
-  map.blocks = (uint32_t *)malloc(block_size * 5);
-  if (map.blocks == NULL)
+  if (malloc_wrap(block_size * 5, (void *)&map.blocks, "map.blocks"))
   {
-    perror("init_bit_map: map.blocks malloc failed\n");
     return -1;
   }
   LBAread(map.blocks, 5, 1);
   return 2;
 }
-
 // a cool idea that didn't pan out
 int get_count(int index)
 {
@@ -181,7 +173,6 @@ int get_count(int index)
   }
   return count;
 }
-
 // set bits corresponding to passed extent
 void mark_extent(int start, int count)
 {
@@ -190,7 +181,6 @@ void mark_extent(int start, int count)
     set_bit(map.blocks + (start + i) / WORDSIZE, (start % WORDSIZE) + i);
   }
 }
-
 // check a range for a given bit by state
 // if found, return its offset
 int next_block(int start, int end, int match)
@@ -208,7 +198,6 @@ int next_block(int start, int end, int match)
   }
   return found ? begin : -1;
 }
-
 // find satisfactory extents of free space
 int get_extent(int start, int req, int min_size, extent *pextent)
 {
@@ -239,7 +228,6 @@ int get_extent(int start, int req, int min_size, extent *pextent)
     return end - begin;
   }
 }
-
 // find empty space as extents
 // set extents' bits
 // rewrite the free space map
@@ -286,7 +274,6 @@ extent *allocate_blocks(int blocks_requested, int min_extent_size)
   LBAwrite(map.blocks, 5, 1);
   return rc;
 }
-
 void release_blocks(int start, int count)
 {
   for (int i = 0; i < count; i++)
@@ -294,13 +281,11 @@ void release_blocks(int start, int count)
     clear_bit(*(map.blocks + (start + i) / WORDSIZE), (start % WORDSIZE) + i);
   }
 }
-
 // local debug testing
 // int main(int argv, char *argc[])
 // {
 //   init_free_space(256, 512);
 //   // print_map();
-
 //   for (int i = 1; i < 3; i++)
 //   {
 //     print_map();

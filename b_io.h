@@ -1,9 +1,9 @@
 /**************************************************************
- * Class:  CSC-415-0#  Fall 2021
- * Names:
- * Student IDs:
- * GitHub Name:
- * Group Name:
+ * Class:  CSC-415-01 Fall 2021
+ * Names: Jacob Lawrence
+ * Student IDs: 922384785
+ * GitHub Name: liftcodesleep
+ * Group Name: Coffee on the Rocks
  * Project: Basic File System
  *
  * File: b_io.h
@@ -20,8 +20,6 @@
 #define FS_WRITE 1
 #define FS_RDWR 2
 #define FS_EXEC 4
-
-typedef int b_io_fd;
 #define FREE(x)  \
   if (x != NULL) \
   {              \
@@ -29,11 +27,12 @@ typedef int b_io_fd;
     x = NULL;    \
   }
 
+typedef int b_io_fd;
+
 b_io_fd b_open(char *filename, int flags);
 int b_read(b_io_fd fd, char *buf, int count);
 int b_write(b_io_fd fd, char *buf, int count);
 int b_seek(b_io_fd fd, off_t offset, int whence);
 int b_close(b_io_fd fd);
 int malloc_wrap(size_t size, void **ppv, char *str);
-
 #endif
