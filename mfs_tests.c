@@ -101,15 +101,15 @@ int test_write()
 		"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA100",
 		test_size);
 
-	printf("Finished writing\n");
+	printf("Finished writing....\n");
 
-	b_close(file);
+
 
 	file = b_open("Test.txt",FS_READ );
 	char* test_buffer = malloc(test_size);
 	b_read(file,test_buffer,test_size);
 
-	printf("In the test buffer: %s",test_buffer);
+	printf("In the test buffer: %s\n",test_buffer);
 	
 	return 1;
 }

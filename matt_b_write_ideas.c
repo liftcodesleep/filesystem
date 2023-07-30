@@ -83,7 +83,7 @@ int b_write(b_io_fd fd, char *buffer, int count)
 
   	//extent_append( file_extent, current_new_extent->start, current_new_extent->count);
   	LBAwrite(buffer+((i+current_new_extent->count)*B_CHUNK_SIZE), current_new_extent->count, current_new_extent->start );
-  	wrote_bytes += urrent_new_extent->count*B_CHUNK_SIZE;
+  	wrote_bytes += current_new_extent->count*B_CHUNK_SIZE;
   	current_new_extent = extent_at_index(file_extent, 0);
   }
 

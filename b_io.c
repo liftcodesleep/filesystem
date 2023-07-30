@@ -237,7 +237,7 @@ int b_write(b_io_fd fd, char *buffer, int count)
     int i = 0;
     while(current_new_extent !=  NULL)
     {
-      printf("In old extent loop\n");
+      //printf("In old extent loop\n");
       extent_append( file_extent, current_new_extent->start, current_new_extent->count);
       current_new_extent = extent_at_index(new_extent, ++i);
     }

@@ -101,7 +101,7 @@ dir_and_index *parse_path(const char *given_pathname)
 
       if (strcmp(temp_entry[i].name, token) == 0)
       {
-        printf("in parse path: %s\n",temp_entry[i].name);
+        //printf("in parse path: %s\n",temp_entry[i].name);
         result->index = i;
         break;
       }
@@ -112,7 +112,7 @@ dir_and_index *parse_path(const char *given_pathname)
     {
       break;
     }
-    printf("in parse path index: %d\n",result->index);
+    //printf("in parse path index: %d\n",result->index);
     // Update values
     LBAread(temp_entry, 4, temp_entry[i].extents[0].start);
     result->dir = temp_entry;
@@ -121,7 +121,7 @@ dir_and_index *parse_path(const char *given_pathname)
 
   FREE(pathname);
 
-  printf("FINAL RETURN: %d\n",result->index);
+  //printf("FINAL RETURN: %d\n",result->index);
   return result;
 }
 
