@@ -346,6 +346,41 @@ int cmd_cp(int argcnt, char *argvec[])
 int cmd_mv(int argcnt, char *argvec[])
 {
 #if (CMDMV_ON == 1)
+  if(argcnt != 3){
+    printf("Usage: mv file path\n");
+    return (-1);
+  }
+  char *path = argvec[2]; // path argument
+  if (path[0] == '"')
+  {
+    if (path[strlen(path) - 1] == '"')
+    {
+      // remove quotes from string
+      path = path + 1;
+      path[strlen(path) - 1] = 0;
+    }
+  }
+  /* TODO
+    -check for valid file
+    -get that file's directory
+  */
+
+
+  //check for valid path
+  dir_and_index *dai = parse_path(path);
+  if (dai == NULL){
+    printf("invalid path error\n");
+    return (-1);
+  }
+  /* TODO
+    -add the name of the file to the parent of validpath
+    -find the name of the file in its current directory
+    -null the name of the file in its current directory
+    -write the changes to both directories
+  */
+  
+  
+
   return -99;
   // **** TODO ****  For you to implement
 #endif
@@ -396,7 +431,7 @@ int cmd_rm(int argcnt, char *argvec[])
     return (fs_delete(path));
   }
 
-  printf("The path %s is neither a file not a directory\n", path);
+  printf("The path %s is neither a file nor a directory\n", path);
 #endif
   return -1;
 }
