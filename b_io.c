@@ -157,7 +157,7 @@ b_io_fd b_open(char *filename, int flags)
   }
   fcb_array[fd].info = info;
   fcb_array[fd].buffer_index = 0;
-  if (malloc_wrap(B_CHUNK_SIZE, &fcb_array[fd].buf, "fcb_array[fd].buf"))
+  if (malloc_wrap(B_CHUNK_SIZE, (void *)&fcb_array[fd].buf, "fcb_array[fd].buf"))
   {
     close(fd);
     fs_closedir(opened);
