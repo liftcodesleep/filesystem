@@ -77,6 +77,7 @@ b_io_fd b_open(char *filename, int flags)
   // KEEP AN EYE FOR ALLOCS
   b_io_fd fd;
   dir_and_index *di = parse_path(filename);
+
   if (di == NULL)
   {
     printf("parse_path failed");
@@ -104,6 +105,7 @@ b_io_fd b_open(char *filename, int flags)
     // I don't know what this mode is, I just copied his mkfile call
     // it is rdwr perms for usr/grp/oth
     fs_mkfil(filename, 0777);
+    LBAread(di->dir, 4, 6);
   }
   fd = b_getFCB();
   if (flags & O_WRONLY)

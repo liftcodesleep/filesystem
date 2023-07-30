@@ -91,7 +91,7 @@ dir_and_index *parse_path(const char *given_pathname)
     return result;
   }
 
-  // Go threw all values in the path
+  // Go through all values in the path
   int i;
   while (token != NULL)
   {
@@ -146,6 +146,9 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
         printf("Directory is full!\n");
         return -1;
       }
+
+        path->dir[index].isFile = type;
+        path->dir[index].extents[0].start = path->dir[0].extents[0].start;
     }
     else
     {
@@ -171,12 +174,10 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
     while (token != NULL)
     {
       strcpy(path->dir[index].name, token);
-      // strcpy(last_token, token);
       token = strtok_r(NULL, "/", &saveptr);
     }
-    path->dir->isFile = type;
     // Write the new name of the file to disk
-    // printf("in mkdir: %d\n", path->dir[0].extents[0].start);
+    //printf("in mkdir: %d\n", path->dir[0].extents[0].start);
     LBAwrite(path->dir, path->dir[0].extents[0].count, path->dir[0].extents[0].start);
     FREE(last_token);
     FREE(copy_pathname);
@@ -304,6 +305,8 @@ char *fs_getcwd(char *pathname, size_t size)
 }
 int fs_setcwd(char *pathname)
 {
+  LBAread(current_working_dir, 4, current_working_dir[0].extents[0].start);
+  printf("CHECK PERMISSION: %d\n", current_working_dir[2].isFile);
   // If no path is given or root is entered, and the home environment is not empty,
   // cd utility will navigate to home (root)
   if ((strcmp(pathname, "") == 0) || (pathname[0] == '/' && strlen(pathname) == 1))
@@ -337,6 +340,7 @@ int fs_setcwd(char *pathname)
 
       if (currentDirectory[strlen(currentDirectory) - 1] != '/')
       {
+        printf("triggered\n");
         strcat(workingDirectory, "/");
       }
 
@@ -346,10 +350,17 @@ int fs_setcwd(char *pathname)
   else
   {
     strcpy(workingDirectory, currentDirectory);
-    strcat(workingDirectory, "/");
+
+    if (currentDirectory[strlen(currentDirectory) - 1] != '/')
+    {
+      printf("triggered\n");
+      strcat(workingDirectory, "/");
+    }
+
     strcat(workingDirectory, pathname);
   }
 
+  printf("Being fed into parse_path: %s\n", workingDirectory);
   dir_and_index *di = parse_path(workingDirectory);
 
   // parse_path detected an invalid path. Error handling.
@@ -362,7 +373,21 @@ int fs_setcwd(char *pathname)
   {
     // Load the new working directory into the global variable buffer
     current_working_dir = di->dir;
+    printf("What is here? Name: %s flag: %d index: %d\n", di->dir->name, di->dir->isFile, di->index);
+
     loadDir(current_working_dir, di->index);
+    printf("Verify where we loaded into: %d\n", current_working_dir[0].extents[0].start);
+
+    // Attempting to cd into a file - Reverse action and abort
+    if (current_working_dir[di->index].isFile == 1) {
+      printf("Verify index: #%d\n", di->index);
+      if (current_working_dir[0].extents[0].start != current_working_dir[di->index].extents[0].start) {
+          printf("Verify we are loading into the parent upon failure: %d\n", current_working_dir[1].extents[0].start);
+          loadDir(current_working_dir, current_working_dir[1].extents[0].start);
+      }
+      printf("Attempting to change into a file. fuckouttahere. \n");
+      return -1;
+    }
 
     // 8) For each dot-dot component - If there is a preceding component
     // that is neither root not dot-dot, then:
@@ -423,7 +448,13 @@ int fs_setcwd(char *pathname)
     {
       strcpy(currentDirectory, tempDirectory);
     }
+
+    printf("Returned: %s\n", currentDirectory);
     return 0;
+
+    // Double token method contained too many bugs - Let use an array
+
+
   }
   return -1;
 
