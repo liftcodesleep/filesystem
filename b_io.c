@@ -34,9 +34,19 @@ typedef struct b_fcb
   int buffer_index; // holds the current position in the buffer
   int file_index;   // holds the current position in the file
   int buflen;       // holds how many valid bytes are in the buffer
-  char *buf;        // holds the open file buffer
-  char perm;        // 0 = O_RDONLY 1 = O_WRONLY 2 = O_RDWR
+  short perm;
+  char *buf; // holds the open file buffer
 } b_fcb;
+
+int malloc_wrap(size_t size, void **ppv, char *str)
+{
+  *ppv = malloc(size);
+  if (*ppv == NULL)
+  {
+    printf("%s malloc failed", str);
+  }
+  return *ppv == NULL;
+}
 
 b_fcb fcb_array[MAXFCBS];
 
@@ -75,42 +85,55 @@ b_io_fd b_open(char *filename, int flags)
   // KEEP AN EYE FOR ALLOCS
   b_io_fd fd;
   dir_and_index *di = parse_path(filename);
-
+  if (di == NULL)
+  {
+    printf("parse_path failed");
+    return -1;
+  }
   if (startup == 0)
   {
     b_init(); // Initialize our system
   }
   //*** TODO ***:  Modify to save or set any information needed
+  // also handle illegal flag combinations maybe done?
   //
-  //
-
+  if (flags & (O_WRONLY & O_RDWR))
+  {
+    printf("Illegal combination of flags\n");
+    return -1;
+  }
   if (flags & O_CREAT)
   {
-    if (di->index == -1)
-    {
-      // I don't know what this mode is, I just copied his mkfile call
-      fs_mkfil(filename, 0777);
-    }
-    else
+    if (di->index != -1)
     {
       printf("Create invalid, file already exists.\n");
       return -1;
     }
+    // I don't know what this mode is, I just copied his mkfile call
+    // it is rdwr perms for usr/grp/oth
+    fs_mkfil(filename, 0777);
   }
-  if (flags & O_RDONLY)
-  {
-    fcb_array[fd].perm = 0;
-  }
+  fd = b_getFCB();
   if (flags & O_WRONLY)
   {
-    fcb_array[fd].perm = 1;
+    fcb_array[fd].perm |= FS_WRITE;
   }
-  if (flags & O_RDWR)
+  else if (flags & O_RDWR)
   {
-    fcb_array[fd].perm = 2;
+    fcb_array[fd].perm |= FS_RDWR;
   }
-  if (flags & O_TRUNC && di->index != -1)
+  else
   {
+    fcb_array[fd].perm = FS_READ;
+  }
+  if (flags & O_TRUNC)
+  {
+    if (di->index == -1)
+    {
+      b_close(fd);
+      printf("Cannot truncate nonexistent file\n");
+      return -1;
+    }
     di->dir[di->index].size = 0;
     extent_remove_blocks(di->dir[di->index].extents, 0, 0);
     di->dir[di->index].time_last_modified = (unsigned long)time(NULL);
@@ -120,26 +143,24 @@ b_io_fd b_open(char *filename, int flags)
   struct fs_diriteminfo *info = fs_readdir(opened);
   if (info == NULL)
   {
+    b_close(fd);
     fs_closedir(opened);
     perror("diriteminfo failed");
     return -1;
   }
-
-  fd = b_getFCB();
   if (fd == -1)
   {
+    b_close(fd);
     fs_closedir(opened);
     perror("FCB array is full.");
     return -1;
   }
   fcb_array[fd].info = info;
   fcb_array[fd].buffer_index = 0;
-  fcb_array[fd].buf = malloc(B_CHUNK_SIZE);
-  if (fcb_array[fd].buf == NULL)
+  if (malloc_wrap(B_CHUNK_SIZE, &fcb_array[fd].buf, "fcb_array[fd].buf"))
   {
-    fs_closedir(opened);
     close(fd);
-    perror("fcb buffer malloc failed\n");
+    fs_closedir(opened);
     return -1;
   }
   return (fd); // all set
@@ -156,8 +177,10 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
   {
     return (-1); // invalid file descriptor
   }
-  fcb_array[fd].buffer_index = whence + offset;
-  return (fcb_array[fd].buffer_index); // Change this
+  // TODO handle cases
+  // Of note whence is ~only ever start/current pos/end
+  fcb_array[fd].file_index = whence + offset;
+  return (fcb_array[fd].file_index); // Change this
 }
 
 // Interface to write function
@@ -167,19 +190,20 @@ int b_write(b_io_fd fd, char *buffer, int count)
 {
   if (startup == 0)
     b_init(); // Initialize our system
-
   // check that fd is between 0 and (MAXFCBS-1)
   if ((fd < 0) || (fd >= MAXFCBS))
   {
     return (-1); // invalid file descriptor
   }
-
   if (fcb_array[fd].perm == 0)
   {
-    printf("No write access fuckouttahere\n");
+    printf("No write access to file permitted\n");
     return -1;
   }
-
+  if (fcb_array[fd].file_index % B_CHUNK_SIZE == 0)
+  {
+    LBAwrite(buffer, count, fcb_array[fd].file_index);
+  }
   return (0); // Change this
 }
 
@@ -217,7 +241,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
   }
   if (fcb_array[fd].perm == 1)
   {
-    printf("No read access fuckouttahere\n");
+    printf("No read access to file permitted\n");
     return -1;
   }
 
