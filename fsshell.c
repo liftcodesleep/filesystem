@@ -400,12 +400,48 @@ int cmd_mv(int argcnt, char *argvec[])
   //add the file name to the end of the destination path
   char newPath[1000];
   strcat(newPath, path);
+  //add the / to the end of the destination path
+  strcat(newPath, "/");
+  //add the filename to the destination path
   strcat(newPath, fileName);
-  //need to know what the success condition is *****************
-  if (fs_mkfil(newPath, 0777) == 0){
-    
+  //makes the file in the new path if there is an empty index
+  if (fs_mkfil(newPath, 0777) == 1)
+  {
+    int index = -1;
+    for(int i = 0; i < dai->dir->entries ; i++)
+    {
+      if (strcmp(dai->dir[i].name, fileName) == 0)
+      {
+        index = i;
+        break;
+      }
+    }
+    //extra check if the file has been created
+    //within the directory it needs to be moved to
+    if (index < 0)
+    { 
+      printf("ERROR: something went wrong moving file\n");
+    } 
+    else  //copy the file's directory entry contents to new location
+    {
+      dai->dir[index].extents[0] = dai_file->dir[0].extents[0];
+      dai->dir[index].extents[1] = dai_file->dir[0].extents[1];
+      dai->dir[index].extents[2] = dai_file->dir[0].extents[2];
+      dai->dir[index].size = dai_file->dir[0].size;
+      //dai->dir[index].time_created = dai_file->dir[0].time_created;
+      //dai->dir[index].time_last_accessed = dai_file->dir[0].time_last_accessed;
+      //dai->dir[index].time_last_modified = dai_file->dir[0].time_last_modified;
+      //check if old file location deletes successfully
+      if (fs_delete(file) != 0)
+      {
+        printf("ERROR: failure in deleting old file information\n");
+      } 
+      else //write changes to new location
+      {
+        LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
+      }
+    }
   }
-
   /* TODO
     -use fs_delete()
     -either create a helper function that copies the
@@ -417,10 +453,9 @@ int cmd_mv(int argcnt, char *argvec[])
     -null the name of the file in its current directory
     -write the changes to both directories
   */
-  
-  
   free(dai_file);
   free(dai);
+  //might need to check this return for success/fail consistency
   return 1;
   // **** TODO ****  For you to implement
 #endif
