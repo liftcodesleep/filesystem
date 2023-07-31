@@ -485,7 +485,56 @@ int fs_is_dir(char *pathname)
   dir_and_index *di = parse_path(pathname);
   return di->dir[di->index].isFile == 0;
 }
-int fs_delete(char *filename); // removes a file
+int fs_delete(char *filename)
+{
+  dir_and_index *dai = parse_path(filename);
+  int err = 0;
+
+  // Error handling - If filename passed in is a directory
+  if (dai->dir[dai->index].isFile == 0)
+  {
+    printf("Attempting to remove a directory. fs_delete failed.\n");
+    return (-1);
+  }
+
+  if (dai == NULL || dai->dir == NULL || dai->index == -1)
+  {
+    return (-1);
+  }
+
+  LBAread(dai->dir, dai->dir[1].extents[0].count, dai->dir[1].extents[0].start);
+
+  // Delete file - Starting with basic metadeta
+
+  // Wipe name - Scrub each bit name occupied with '\0'
+  int length = strlen(dai->dir[dai->index].name);
+  for (int i = 0; i < length; i++) {
+    dai->dir[dai->index].name[i] = '\0';
+  }
+
+  dai->dir[dai->index].size = 0;
+  dai->dir[dai->index].time_created = 0;
+  dai->dir[dai->index].time_last_modified = 0;
+  dai->dir[dai->index].time_last_accessed = 0;
+  // Scrub location
+  dai->dir[dai->index].extents[0].count = 0;
+  dai->dir[dai->index].extents[0].start = 0;
+
+  err = extent_remove_blocks(dai->dir[dai->index].extents, 0, 0); /// 0,0 are place holders
+  if (err == -1)
+  {
+    printf("extent_remove_blocks failed in fs_delete. Aborting.\n");
+    return (-1);
+  }
+
+  LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
+
+  // Free memory
+  FREE(dai->dir);
+  FREE(dai);
+  return (0);
+
+} // removes a file
 
 int fs_stat(const char *path, struct fs_stat *buf)
 {
@@ -520,9 +569,4 @@ int set_initial_directory()
 void free_directory()
 {
   FREE(current_working_dir);
-}
-
-int fs_delete(char *filename)
-{
-  return -1;
 }

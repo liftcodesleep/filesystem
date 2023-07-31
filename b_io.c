@@ -192,9 +192,44 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
   {
     return (-1); // invalid file descriptor
   }
+
+  if ((whence < 0) || (whence > 2))
+  {
+    printf("Invalid 'whence' directive.\n");
+    return (-1);
+  }
+
+    // Fail condition - Prevention from potentially accesssing uninitalized variables
+  if (fcb_array[fd].file_index == -1) {
+    printf("b_seek failed.\n");
+    return (-1);
+  }
+
   // TODO handle cases
   // Of note whence is ~only ever start/current pos/end
-  fcb_array[fd].file_index = whence + offset;
+  // No ways to detect multiple options other than those that exceed the value of 3
+
+  // The file offset is set to offset bytes
+  if (whence == SEEK_SET)
+  {
+    fcb_array[fd].file_index = offset;
+  }
+
+  // The file offset is set to its current location plus offset bytes
+  if (whence == SEEK_CUR)
+  {
+    fcb_array[fd].file_index = fcb_array[fd].file_index + offset;
+  }
+
+  // The file offset is set to the size of the file plus offset bytes
+  if (whence == SEEK_END)
+  {
+    fcb_array[fd].file_index = fcb_array[fd].info->d_reclen + offset;
+  }
+
+  // fcb_array[fd].file_index = whence + offset;
+  // Returns the resulting offset location as measured in bytes from the
+  // beginning of the file
   return (fcb_array[fd].file_index); // Change this
 }
 

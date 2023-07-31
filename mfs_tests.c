@@ -114,6 +114,19 @@ int test_write()
 	return 1;
 }
 
+int test_delete()
+{
+	int file = b_open("new.test", O_WRONLY | O_CREAT);
+	// int result = 1;
+	int result = fs_delete("new.test");
+
+	if (result == 0) {
+		return 1;
+	}
+
+	return 0;
+}
+
 
 void test_mfs()
 {

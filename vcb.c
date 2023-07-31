@@ -30,8 +30,7 @@ void initVCB(vcb *vcb)
   vcb -> unique_volume_ID = 1920213058;
   vcb -> total_blocks = 19531;
   vcb -> bytes_in_use = 3584; // Byte offset considering 7 blocks in use
-  vcb -> blocks_in_use = 7; // Current blocks in use accounting for bitmap and vcb
-  vcb -> direntry_size = 168; // Byte size of direntry struct
+  vcb -> direntry_size = sizeof(direntry); // Byte size of direntry struct
   vcb -> free_block_map = 1; // Initalize to 1 - Will be reassigned
   // Assuming each init_dir uses 4 blocks every time, 1 would signifed 4 blocks used
   // from the root location. Can use this variable to iterate and search through
