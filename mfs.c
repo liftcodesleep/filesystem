@@ -211,6 +211,14 @@ int fs_rmdir(const char *pathname)
   {
     return -1;
   }
+  //check if there is anything within the directory
+  //if there are used directory entries, remove fails
+  for(int i = 0; i < dai->dir->entries; i++){
+    if(strcmp(dai->dir[i].name, "\0") != 0){
+      printf("ERROR (REMOVE FAILED): THIS DIRECTORY CONTAINS ITEMS\n");
+      return -1;
+    }
+  }
 
   LBAread(dai->dir, dai->dir[1].extents[0].count, dai->dir[1].extents[0].start);
 
