@@ -38,7 +38,7 @@
 /****   SET THESE TO 1 WHEN READY TO TEST THAT COMMAND ****/
 #define CMDLS_ON 1
 #define CMDCP_ON 0
-#define CMDMV_ON 0
+#define CMDMV_ON 1
 #define CMDMD_ON 1
 #define CMDRM_ON 1
 #define CMDCP2L_ON 0
@@ -360,19 +360,26 @@ int cmd_mv(int argcnt, char *argvec[])
       path[strlen(path) - 1] = 0;
     }
   }
-  /* TODO
-    -check for valid file
-    -get that file's directory
-  */
-
-
+  //check for valid file
+  char * file = argvec[1];
+  dir_and_index * dai_file = parse_path(file);
+  if (dai_file == NULL || dai_file->dir[0].isFile == 0){
+    printf("ERROR: INVALID FILE\n");
+    return (-1);
+  }
   //check for valid path
   dir_and_index *dai = parse_path(path);
   if (dai == NULL){
-    printf("invalid path error\n");
+    printf("ERROR: INVALID PATH\n");
     return (-1);
   }
+
   /* TODO
+    -use fs_delete()
+    -either create a helper function that copies the
+      directory entry members into the new directory
+      or figure out how to use mkfil to do it 
+
     -add the name of the file to the parent of validpath
     -find the name of the file in its current directory
     -null the name of the file in its current directory
@@ -380,8 +387,9 @@ int cmd_mv(int argcnt, char *argvec[])
   */
   
   
-
-  return -99;
+  free(dai_file);
+  free(dai);
+  return 1;
   // **** TODO ****  For you to implement
 #endif
   return 0;
