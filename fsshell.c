@@ -374,6 +374,38 @@ int cmd_mv(int argcnt, char *argvec[])
     return (-1);
   }
 
+  //getting the file name to store data later
+  // Setup to find name
+  char *token;
+  char *fileName;
+  if (malloc_wrap(100, (void *)&fileName, "last_token"))
+  {
+    return -1;
+  }
+  char *saveptr;
+  // Setup for getting the name of the file
+  char *copy_pathname = strdup(file);
+  if (copy_pathname == NULL)
+  {
+    printf("copy_pathname malloc failed\n");
+    return -1;
+  }
+  token = strtok_r(copy_pathname, "/", &saveptr);
+  // get last value in path
+  while (token != NULL)
+  {
+    strcpy(fileName, token);
+    token = strtok_r(NULL, "/", &saveptr);
+  }
+  //add the file name to the end of the destination path
+  char newPath[1000];
+  strcat(newPath, path);
+  strcat(newPath, fileName);
+  //need to know what the success condition is *****************
+  if (fs_mkfil(newPath, 0777) == 0){
+    
+  }
+
   /* TODO
     -use fs_delete()
     -either create a helper function that copies the
