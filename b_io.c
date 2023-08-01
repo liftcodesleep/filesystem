@@ -120,7 +120,7 @@ b_io_fd b_open(char *filename, int flags)
   }
   if (flags & O_TRUNC)
   {
-    printf("truncating\n");
+    // literally untested
     if (di->index == -1)
     {
       b_close(fd);
