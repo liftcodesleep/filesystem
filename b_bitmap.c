@@ -232,8 +232,6 @@ int get_extent(int start, int req, int min_size, extent *pextent)
 // set extents' bits
 // rewrite the free space map
 // return the extents
-// TODO bad contract with dirent extents system
-// Need to return 3 extents not arbitrary
 extent *allocate_blocks(int blocks_requested, int min_extent_size)
 {
   if (min_extent_size > blocks_requested)

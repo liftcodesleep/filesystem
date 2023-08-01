@@ -37,16 +37,16 @@
 
 /****   SET THESE TO 1 WHEN READY TO TEST THAT COMMAND ****/
 #define CMDLS_ON 1
-#define CMDCP_ON 0
+#define CMDCP_ON 1
 #define CMDMV_ON 1
 #define CMDMD_ON 1
 #define CMDRM_ON 1
-#define CMDCP2L_ON 0
-#define CMDCP2FS_ON 0
+#define CMDCP2L_ON 1
+#define CMDCP2FS_ON 1
 #define CMDCD_ON 1
 #define CMDPWD_ON 1
 #define CMDTOUCH_ON 1
-#define CMDCAT_ON 0
+#define CMDCAT_ON 1
 
 typedef struct dispatch_t
 {
@@ -346,7 +346,8 @@ int cmd_cp(int argcnt, char *argvec[])
 int cmd_mv(int argcnt, char *argvec[])
 {
 #if (CMDMV_ON == 1)
-  if(argcnt != 3){
+  if (argcnt != 3)
+  {
     printf("Usage: mv file path\n");
     return (-1);
   }
@@ -360,25 +361,27 @@ int cmd_mv(int argcnt, char *argvec[])
       path[strlen(path) - 1] = 0;
     }
   }
-  //check for valid file
-  char * file = argvec[1];
-  dir_and_index * dai_file = parse_path(file);
+  // check for valid file
+  char *file = argvec[1];
+  dir_and_index *dai_file = parse_path(file);
   printf("this is the file: %s\n", file);
-  if (dai_file == NULL || dai_file->index == -1){
+  if (dai_file == NULL || dai_file->index == -1)
+  {
     printf("ERROR: INVALID FILE\n");
     return (-1);
   }
-  //check for valid path
+  // check for valid path
   dir_and_index *dai = parse_path(path);
-  if (dai == NULL){
+  if (dai == NULL)
+  {
     printf("ERROR: INVALID PATH\n");
     return (-1);
   }
-  //go to the parent
+  // go to the parent
   loadDir(dai->dir, 1);
 
-  //getting the file name to store data later
-  // Setup to find name
+  // getting the file name to store data later
+  //  Setup to find name
   char *token;
   char *fileName;
   if (malloc_wrap(100, (void *)&fileName, "last_token"))
@@ -400,20 +403,20 @@ int cmd_mv(int argcnt, char *argvec[])
     strcpy(fileName, token);
     token = strtok_r(NULL, "/", &saveptr);
   }
-//  printf("this is the file parsed: %s\n", fileName);
-  //add the file name to the end of the destination path
+  //  printf("this is the file parsed: %s\n", fileName);
+  // add the file name to the end of the destination path
   char newPath[1000] = "\0";
   strcat(newPath, path);
-  //add the / to the end of the destination path
+  // add the / to the end of the destination path
   strcat(newPath, "/");
-  //add the filename to the destination path
+  // add the filename to the destination path
   strcat(newPath, fileName);
-//  printf("this is the destination: %s\n", newPath);
-  //makes the file in the new path if there is an empty index
+  //  printf("this is the destination: %s\n", newPath);
+  // makes the file in the new path if there is an empty index
   if (fs_mkfil(newPath, 0777) == 1)
   {
     int index = -1;
-    for(int i = 0; i < dai->dir->entries ; i++)
+    for (int i = 0; i < dai->dir->entries; i++)
     {
       if (strcmp(dai->dir[i].name, fileName) == 0)
       {
@@ -422,13 +425,13 @@ int cmd_mv(int argcnt, char *argvec[])
         break;
       }
     }
-    //extra check if the file has been created
-    //within the directory it needs to be moved to
+    // extra check if the file has been created
+    // within the directory it needs to be moved to
     if (index < 0)
-    { 
+    {
       printf("ERROR: something went wrong moving file\n");
-    } 
-    else  //copy the file's directory entry contents to new location
+    }
+    else // copy the file's directory entry contents to new location
     {
       dai->dir[index].extents[0] = dai_file->dir[0].extents[0];
       dai->dir[index].extents[1] = dai_file->dir[0].extents[1];
@@ -436,10 +439,10 @@ int cmd_mv(int argcnt, char *argvec[])
       dai->dir[index].size = dai_file->dir[0].size;
       dai_file->dir[0].size = 0;
 
-      //remove the name of the file from its previous location
-      //move the file directory entry to parent directory
+      // remove the name of the file from its previous location
+      // move the file directory entry to parent directory
       loadDir(dai_file->dir, 1);
-      //null the name of the file from its parent to indicate unused index
+      // null the name of the file from its parent to indicate unused index
       int length = strlen(dai_file->dir[dai_file->index].name);
       printf("this is the name of the file: %s\n", dai_file->dir[dai_file->index].name);
       for (int i = 0; i < length; i++)
@@ -447,7 +450,7 @@ int cmd_mv(int argcnt, char *argvec[])
         dai_file->dir[dai_file->index].name[i] = '\0';
       }
       printf("this is the name of the file: %s\n", dai_file->dir[dai_file->index].name);
-      //write the changes
+      // write the changes
       LBAwrite(dai_file->dir, dai_file->dir[0].extents[0].count, dai_file->dir[0].extents[0].start);
       LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
     }
@@ -456,7 +459,7 @@ int cmd_mv(int argcnt, char *argvec[])
     -use fs_delete()
     -either create a helper function that copies the
       directory entry members into the new directory
-      or figure out how to use mkfil to do it 
+      or figure out how to use mkfil to do it
 
     -add the name of the file to the parent of validpath
     -find the name of the file in its current directory
@@ -465,7 +468,7 @@ int cmd_mv(int argcnt, char *argvec[])
   */
   free(dai_file);
   free(dai);
-  //might need to check this return for success/fail consistency
+  // might need to check this return for success/fail consistency
   return 1;
   // **** TODO ****  For you to implement
 #endif

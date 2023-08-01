@@ -201,11 +201,11 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
   }
 
   // Fail condition - Prevention from potentially accesssing uninitalized variables
-  if (fcb_array[fd].file_index == -1) {
+  if (fcb_array[fd].file_index == -1)
+  {
     printf("b_seek failed.\n");
     return (-1);
   }
-
 
   // No ways to detect multiple options other than those that exceed the value of 3
   // The file offset is set to offset bytes
@@ -269,6 +269,8 @@ int b_write(b_io_fd fd, char *buffer, int count)
       extent_append(loc, temploc->start, temploc->count);
       temploc = extent_at_index(new_blocks, ++i);
     }
+    di->dir[di->index].size += count;
+
     LBAwrite(di->dir, di->dir->extents->count, di->dir->extents->start);
   }
 
@@ -350,6 +352,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
   int bytes_read = 0;
   int to_copy = 0;
   int file_remaining = p_fcb->info->d_reclen - p_fcb->file_index;
+  printf("b_read: reclen: %d fcb.file_index: %d file_remaining: %d\n", p_fcb->info->d_reclen, p_fcb->file_index, file_remaining);
   int buffer_remaining = p_fcb->buflen - p_fcb->buffer_index;
   /*
   TL;DR pages through the file
@@ -361,24 +364,17 @@ int b_read(b_io_fd fd, char *buffer, int count)
   until end of file or count bytes requested are copied
   if end of file is reached return immediately
   */
-  printf("b_read: fcb_array[fd].info.d_name: %s\n", fcb_array[fd].info->d_name);
   do
   {
     // thread safe given one file per thread
     if (p_fcb->file_index % B_CHUNK_SIZE == 0)
     {
-      // TODO make sure this actually works
-      // intent is read directly to their buffer
-      // if (count % B_CHUNK_SIZE == 0)
-      // {
-      //   LBAread(buffer, count / B_CHUNK_SIZE, p_fcb->file_index);
-      //   // TODO Update counts and stuff
-      //   continue;
-      // }
-      LBAread(p_fcb->buf, 1, extent_block_to_LBA(fcb_array[fd].info->location, p_fcb->file_index / B_CHUNK_SIZE));
+      LBAread(p_fcb->buf, 1, extent_block_to_LBA(fcb_array[fd].info->location + 1, p_fcb->file_index / B_CHUNK_SIZE));
     }
     int left_in_chunk = B_CHUNK_SIZE - p_fcb->file_index % B_CHUNK_SIZE;
-    to_copy = count < (left_in_chunk) ? to_copy : left_in_chunk;
+    printf("leftinchunk: %d\n", left_in_chunk);
+    to_copy = count < file_remaining ? count : file_remaining;
+    to_copy = to_copy < (left_in_chunk) ? to_copy : left_in_chunk;
     // TODO buflen incorrect
     memcpy(buffer + p_fcb->buflen,
            p_fcb->buf + p_fcb->file_index % B_CHUNK_SIZE,
@@ -387,6 +383,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
     p_fcb->buflen += to_copy;
     count -= to_copy;
     file_remaining -= to_copy;
+    printf("b_read: count: %d tocopy: %d buffer: %s fcb.buf: %s fcb.buflen: %d file_remaining: %d\n", count, to_copy, buffer, p_fcb->buf, p_fcb->buflen, file_remaining);
   } while (count > 0 && file_remaining > 0);
   return p_fcb->buflen;
 }
