@@ -351,124 +351,55 @@ int cmd_mv(int argcnt, char *argvec[])
     printf("Usage: mv file path\n");
     return (-1);
   }
-  char *path = argvec[2]; // path argument
-  if (path[0] == '"')
-  {
-    if (path[strlen(path) - 1] == '"')
-    {
-      // remove quotes from string
-      path = path + 1;
-      path[strlen(path) - 1] = 0;
-    }
-  }
-  // check for valid file
-  char *file = argvec[1];
-  dir_and_index *dai_file = parse_path(file);
-  printf("this is the file: %s\n", file);
-  if (dai_file == NULL || dai_file->index == -1)
-  {
-    printf("ERROR: INVALID FILE\n");
-    return (-1);
-  }
-  // check for valid path
-  dir_and_index *dai = parse_path(path);
-  if (dai == NULL)
-  {
-    printf("ERROR: INVALID PATH\n");
-    return (-1);
-  }
-  // go to the parent
-  loadDir(dai->dir, 1);
 
-  // getting the file name to store data later
-  //  Setup to find name
-  char *token;
-  char *fileName;
-  if (malloc_wrap(100, (void *)&fileName, "last_token"))
-  {
-    return -1;
-  }
-  char *saveptr;
-  // Setup for getting the name of the file
-  char *copy_pathname = strdup(file);
-  if (copy_pathname == NULL)
-  {
-    printf("copy_pathname malloc failed\n");
-    return -1;
-  }
-  token = strtok_r(copy_pathname, "/", &saveptr);
-  // get last value in path
-  while (token != NULL)
-  {
-    strcpy(fileName, token);
-    token = strtok_r(NULL, "/", &saveptr);
-  }
-  //  printf("this is the file parsed: %s\n", fileName);
-  // add the file name to the end of the destination path
-  char newPath[1000] = "\0";
-  strcat(newPath, path);
-  // add the / to the end of the destination path
-  strcat(newPath, "/");
-  // add the filename to the destination path
-  strcat(newPath, fileName);
-  //  printf("this is the destination: %s\n", newPath);
-  // makes the file in the new path if there is an empty index
-  if (fs_mkfil(newPath, 0777) == 1)
-  {
-    int index = -1;
-    for (int i = 0; i < dai->dir->entries; i++)
-    {
-      if (strcmp(dai->dir[i].name, fileName) == 0)
-      {
-        index = i;
-        printf("This entry was found teehee:3: i = %d\n", index);
-        break;
-      }
-    }
-    // extra check if the file has been created
-    // within the directory it needs to be moved to
-    if (index < 0)
-    {
-      printf("ERROR: something went wrong moving file\n");
-    }
-    else // copy the file's directory entry contents to new location
-    {
-      dai->dir[index].extents[0] = dai_file->dir[0].extents[0];
-      dai->dir[index].extents[1] = dai_file->dir[0].extents[1];
-      dai->dir[index].extents[2] = dai_file->dir[0].extents[2];
-      dai->dir[index].size = dai_file->dir[0].size;
-      dai_file->dir[0].size = 0;
+  // Get the direntries that you want to change
+  dir_and_index *target = parse_path( argvec[1] );
+  loadDir(target->dir,1);
+  dir_and_index *dest = parse_path( argvec[2] );
+  
 
-      // remove the name of the file from its previous location
-      // move the file directory entry to parent directory
-      loadDir(dai_file->dir, 1);
-      // null the name of the file from its parent to indicate unused index
-      int length = strlen(dai_file->dir[dai_file->index].name);
-      printf("this is the name of the file: %s\n", dai_file->dir[dai_file->index].name);
-      for (int i = 0; i < length; i++)
-      {
-        dai_file->dir[dai_file->index].name[i] = '\0';
-      }
-      printf("this is the name of the file: %s\n", dai_file->dir[dai_file->index].name);
-      // write the changes
-      LBAwrite(dai_file->dir, dai_file->dir[0].extents[0].count, dai_file->dir[0].extents[0].start);
-      LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
+  // Find a free spot in destonation
+  for(int i = 2; i < dest->dir->entries; i++)
+  {
+
+    // Found a free spot
+    if( strcmp(dest->dir[i].name, "\0") == 0 )
+    {
+
+      // Copy the value to the new point
+      dest->dir[i].size = target->dir[target->index].size;
+      strcpy(dest->dir[i].name, target->dir[target->index].name);
+      memcpy(dest->dir[i].extents, target->dir[target->index].extents, sizeof(extent)*3);
+      dest->dir[i].extents[0].start = dest->dir->extents->start;
+      dest->dir[i].time_created = target->dir[target->index].time_created;
+      dest->dir[i].time_last_modified = target->dir[target->index].time_last_modified;
+      dest->dir[i].time_last_accessed = target->dir[target->index].time_last_accessed;
+      dest->dir[i].isFile = target->dir[target->index].isFile;
+      dest->dir[i].entries = target->dir[target->index].entries;
+
+      LBAwrite(dest->dir, dest->dir->extents->count, dest->dir->extents->start);
+
+      // Set the old values to 0
+      target->dir[target->index].size;
+      strcpy( target->dir[target->index].name, "\0");
+      target->dir[target->index].extents[0].count = 0;
+      target->dir[target->index].extents[1].count = 0;
+      target->dir[target->index].extents[2].count = 0;
+      target->dir[target->index].extents[0].start = 0;
+      target->dir[target->index].extents[1].start = 0;
+      target->dir[target->index].extents[2].start = 0;
+      target->dir[target->index].time_created = 0;
+      target->dir[target->index].time_last_modified = 0;
+      target->dir[target->index].time_last_accessed = 0;
+      target->dir[target->index].isFile = 0;
+      target->dir[target->index].entries = 0;
+
+      LBAwrite(target->dir, target->dir->extents->count, target->dir->extents->start);
+
+      break;
     }
   }
-  /* TODO
-    -use fs_delete()
-    -either create a helper function that copies the
-      directory entry members into the new directory
-      or figure out how to use mkfil to do it
-
-    -add the name of the file to the parent of validpath
-    -find the name of the file in its current directory
-    -null the name of the file in its current directory
-    -write the changes to both directories
-  */
-  free(dai_file);
-  free(dai);
-  // might need to check this return for success/fail consistency
+  
   return 1;
   // **** TODO ****  For you to implement
 #endif
