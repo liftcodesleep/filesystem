@@ -363,7 +363,8 @@ int cmd_mv(int argcnt, char *argvec[])
   //check for valid file
   char * file = argvec[1];
   dir_and_index * dai_file = parse_path(file);
-  if (dai_file == NULL || dai_file->dir[0].isFile == 0){
+  printf("this is the file: %s\n", file);
+  if (dai_file == NULL || dai_file->index == -1){
     printf("ERROR: INVALID FILE\n");
     return (-1);
   }
@@ -373,6 +374,8 @@ int cmd_mv(int argcnt, char *argvec[])
     printf("ERROR: INVALID PATH\n");
     return (-1);
   }
+  //go to the parent
+  loadDir(dai->dir, 1);
 
   //getting the file name to store data later
   // Setup to find name
@@ -397,13 +400,15 @@ int cmd_mv(int argcnt, char *argvec[])
     strcpy(fileName, token);
     token = strtok_r(NULL, "/", &saveptr);
   }
+//  printf("this is the file parsed: %s\n", fileName);
   //add the file name to the end of the destination path
-  char newPath[1000];
+  char newPath[1000] = "\0";
   strcat(newPath, path);
   //add the / to the end of the destination path
   strcat(newPath, "/");
   //add the filename to the destination path
   strcat(newPath, fileName);
+//  printf("this is the destination: %s\n", newPath);
   //makes the file in the new path if there is an empty index
   if (fs_mkfil(newPath, 0777) == 1)
   {
@@ -413,6 +418,7 @@ int cmd_mv(int argcnt, char *argvec[])
       if (strcmp(dai->dir[i].name, fileName) == 0)
       {
         index = i;
+        printf("This entry was found teehee:3: i = %d\n", index);
         break;
       }
     }
@@ -428,18 +434,22 @@ int cmd_mv(int argcnt, char *argvec[])
       dai->dir[index].extents[1] = dai_file->dir[0].extents[1];
       dai->dir[index].extents[2] = dai_file->dir[0].extents[2];
       dai->dir[index].size = dai_file->dir[0].size;
-      //dai->dir[index].time_created = dai_file->dir[0].time_created;
-      //dai->dir[index].time_last_accessed = dai_file->dir[0].time_last_accessed;
-      //dai->dir[index].time_last_modified = dai_file->dir[0].time_last_modified;
-      //check if old file location deletes successfully
-      if (fs_delete(file) != 0)
+      dai_file->dir[0].size = 0;
+
+      //remove the name of the file from its previous location
+      //move the file directory entry to parent directory
+      loadDir(dai_file->dir, 1);
+      //null the name of the file from its parent to indicate unused index
+      int length = strlen(dai_file->dir[dai_file->index].name);
+      printf("this is the name of the file: %s\n", dai_file->dir[dai_file->index].name);
+      for (int i = 0; i < length; i++)
       {
-        printf("ERROR: failure in deleting old file information\n");
-      } 
-      else //write changes to new location
-      {
-        LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
+        dai_file->dir[dai_file->index].name[i] = '\0';
       }
+      printf("this is the name of the file: %s\n", dai_file->dir[dai_file->index].name);
+      //write the changes
+      LBAwrite(dai_file->dir, dai_file->dir[0].extents[0].count, dai_file->dir[0].extents[0].start);
+      LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
     }
   }
   /* TODO
