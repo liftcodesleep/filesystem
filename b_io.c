@@ -274,7 +274,7 @@ int b_write(b_io_fd fd, char *buffer, int count)
     LBAwrite(di->dir, di->dir->extents->count, di->dir->extents->start);
   }
 
-  printf("In extent %d %d\n", loc[1].start, loc[1].count);
+//  printf("In extent %d %d\n", loc[1].start, loc[1].count);
 
   // write if not starting from the begining of a block
   if (fcb_array[fd].file_index % B_CHUNK_SIZE != 0)
@@ -352,7 +352,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
   int bytes_read = 0;
   int to_copy = 0;
   int file_remaining = p_fcb->info->d_reclen - p_fcb->file_index;
-  printf("b_read: reclen: %d fcb.file_index: %d file_remaining: %d\n", p_fcb->info->d_reclen, p_fcb->file_index, file_remaining);
+//  printf("b_read: reclen: %d fcb.file_index: %d file_remaining: %d\n", p_fcb->info->d_reclen, p_fcb->file_index, file_remaining);
   int buffer_remaining = p_fcb->buflen - p_fcb->buffer_index;
   /*
   TL;DR pages through the file
@@ -372,7 +372,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
       LBAread(p_fcb->buf, 1, extent_block_to_LBA(fcb_array[fd].info->location + 1, p_fcb->file_index / B_CHUNK_SIZE));
     }
     int left_in_chunk = B_CHUNK_SIZE - p_fcb->file_index % B_CHUNK_SIZE;
-    printf("leftinchunk: %d\n", left_in_chunk);
+//    printf("leftinchunk: %d\n", left_in_chunk);
     to_copy = count < file_remaining ? count : file_remaining;
     to_copy = to_copy < (left_in_chunk) ? to_copy : left_in_chunk;
     // TODO buflen incorrect
@@ -383,7 +383,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
     p_fcb->buflen += to_copy;
     count -= to_copy;
     file_remaining -= to_copy;
-    printf("b_read: count: %d tocopy: %d buffer: %s fcb.buf: %s fcb.buflen: %d file_remaining: %d\n", count, to_copy, buffer, p_fcb->buf, p_fcb->buflen, file_remaining);
+//    printf("b_read: count: %d tocopy: %d buffer: %s fcb.buf: %s fcb.buflen: %d file_remaining: %d\n", count, to_copy, buffer, p_fcb->buf, p_fcb->buflen, file_remaining);
   } while (count > 0 && file_remaining > 0);
   return p_fcb->buflen;
 }
