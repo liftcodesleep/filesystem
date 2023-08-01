@@ -42,7 +42,7 @@ int init_dir(int minEntries, direntry *parent)
   int actualNEntries = bytesAlloc / sizeof(direntry);
   // allocate bytes for new directory
   direntry *newDir;
-  if (malloc_wrap(bytesAlloc, (void *)&newDir, "newDir"))
+  if (malloc_wrap(bytesAlloc, (void **)&newDir, "newDir"))
   {
     return -1;
   }
@@ -118,8 +118,12 @@ void loadDir(direntry *dir, int index)
 // function to initialize the root directory
 direntry *getRoot()
 {
-  // malloc wrap breaks something here idk why probably important to look into
-  direntry *root = malloc(BLOCK_SIZE * 4);
+  // direntry *root = malloc(BLOCK_SIZE * 4);
+  direntry *root;
+  if (malloc_wrap(BLOCK_SIZE * 4, (void **)&root, "root"))
+  {
+    return NULL;
+  }
   // printf("size of root: %d\n", sizeof(direntry));
   LBAread(root, 4, 7);
   return root;

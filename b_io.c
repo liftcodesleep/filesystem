@@ -27,7 +27,7 @@
 // then what, commenter above, what then?
 typedef struct b_fcb
 {
-  /** TODO add al the information you need in the file control block **/
+  /** TODO add all the information you need in the file control block **/
   struct fs_diriteminfo *info;
   int buffer_index; // holds the current position of the buffer in the file
   int file_index;   // holds the current position in the file
@@ -70,8 +70,6 @@ b_io_fd b_getFCB()
   return (-1); // all in use
 }
 
-
-
 // Interface to open a buffered file
 // Modification of interface for this assignment, flags match the Linux flags for open
 // O_RDONLY, O_WRONLY, or O_RDWR
@@ -91,7 +89,7 @@ b_io_fd b_open(char *filename, int flags)
     b_init(); // Initialize our system
   }
   //*** TODO ***:  Modify to save or set any information needed
-  // also handle illegal flag combinations maybe done?
+  //
   //
   if (flags & (O_WRONLY & O_RDWR))
   {
@@ -105,11 +103,12 @@ b_io_fd b_open(char *filename, int flags)
       printf("Create invalid, file already exists.\n");
       return -1;
     }
-    // I don't know what this mode is, I just copied his mkfile call
-    // it is rdwr perms for usr/grp/oth
-    fs_mkfil(filename, 0777);
+    if (fs_mkfil(filename, 0777))
+    {
+      printf("mkfile failed\n");
+      return -1;
+    }
     di = parse_path(filename);
-    //LBAread(di->dir, 4, 6);
   }
   fd = b_getFCB();
   if (flags & O_WRONLY)
@@ -126,6 +125,7 @@ b_io_fd b_open(char *filename, int flags)
   }
   if (flags & O_TRUNC)
   {
+    printf("truncating\n");
     if (di->index == -1)
     {
       b_close(fd);
@@ -138,28 +138,28 @@ b_io_fd b_open(char *filename, int flags)
     LBAwrite(di->dir, di->dir->extents->count, di->dir->extents->start);
   }
 
-
-  
-
   fdDir *opened = fs_opendir(filename);
 
   struct fs_diriteminfo *info;
-  //printf("Name of path: %s\n", filename);
-  //printf("Index of opening: %d\n", di->index);
-  //printf("TEST: %s\n", di->dir[2].name);
+  // printf("Name of path: %s\n", filename);
+  // printf("Index of opening: %d\n", di->index);
+  // printf("TEST: %s\n", di->dir[2].name);
 
-  for(int i = 0; i <= di->index; i++)
+  for (int i = 0; i <= di->index; i++)
   {
-    info  = fs_readdir(opened);
+    info = fs_readdir(opened);
   }
-  //printf("?\n");
-  //printf("Name of file reading: %s\n", info->d_name);
 
+  // printf("b_open: info.name: %s\n", info->d_name);
+  // printf("b_open: info.len: %d\n", info->d_reclen);
+  // printf("b_open: info.len: %p\n", &info->location);
+  // printf("?\n");
+  // printf("Name of file reading: %s\n", info->d_name);
   if (info == NULL)
   {
     b_close(fd);
     fs_closedir(opened);
-    perror("diriteminfo failed");
+    printf("diriteminfo failed\n");
     return -1;
   }
   if (fd == -1)
@@ -170,16 +170,16 @@ b_io_fd b_open(char *filename, int flags)
     return -1;
   }
   fcb_array[fd].info = info;
+  fcb_array[fd].file_index = 0;
   fcb_array[fd].buffer_index = -1; // buffer is not in file/truly initialized
-  if (malloc_wrap(B_CHUNK_SIZE, (void *)&fcb_array[fd].buf, "fcb_array[fd].buf"))
+  if (malloc_wrap(B_CHUNK_SIZE, (void **)&fcb_array[fd].buf, "fcb_array[fd].buf"))
   {
     close(fd);
     fs_closedir(opened);
     return -1;
   }
 
-
-  return (fd); // all set
+  return (fd);
 }
 
 // Interface to seek function
@@ -193,6 +193,7 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
     return (-1); // invalid file descriptor
   }
 
+  // The value of whence can be 0 and, at most, 2. Error handling
   if ((whence < 0) || (whence > 2))
   {
     printf("Invalid 'whence' directive.\n");
@@ -235,105 +236,80 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
 // if write writes a block in the fcb buffer, the buffer needs an update
 int b_write(b_io_fd fd, char *buffer, int count)
 {
+
   if (startup == 0)
     b_init(); // Initialize our system
-
   // check that fd is between 0 and (MAXFCBS-1)
   if ((fd < 0) || (fd >= MAXFCBS))
   {
     return (-1); // invalid file descriptor
   }
-
   if (fcb_array[fd].perm == 0)
   {
     printf("No write access fuckouttahere\n");
     return -1;
   }
 
-
-  pextent file_extent = fcb_array[fd].info->location;
-
-  int file_block_size = extent_size(file_extent);
-
-  ////////////// ALLOC AS NEEDED /////////////////
-  int blocks_needed = (count+fcb_array[fd].info->d_reclen) / B_CHUNK_SIZE + 1;
-
-  //printf("Amount of blocks needed: %d\n", blocks_needed);
-
-  pextent current_new_extent = NULL;
-  if(blocks_needed > file_block_size)
-  {
-    pextent new_extent = allocate_blocks( blocks_needed - file_block_size, 1 );
-
-    current_new_extent = extent_at_index(new_extent, 0);
-    int i = 0;
-    while(current_new_extent !=  NULL)
-    {
-      //printf("In old extent loop\n");
-      extent_append( file_extent, current_new_extent->start, current_new_extent->count);
-      current_new_extent = extent_at_index(new_extent, ++i);
-    }
-  }
-  /////////////////////////////////////////////////////
-
-  //printf("WRITING TO: %d %d\n", file_extent->start, file_extent->count);
   int wrote_bytes = 0;
-  
+  dir_and_index *di = parse_path(fcb_array[fd].info->d_name);
+  pextent loc = di->dir[di->index].extents;
 
-  // Write to the middle of a block when start
-  if( fcb_array[fd].file_index % B_CHUNK_SIZE != 0 )
+  // printf("Reading extent for %s\n", di->dir[di->index].name);
+
+  // Alloc blocks if needed
+  if ((extent_size(loc) - 1) < (count - 1) / B_CHUNK_SIZE + 1)
   {
-    current_new_extent = extent_at_index(file_extent, fcb_array[fd].file_index / B_CHUNK_SIZE);
-    // Read the first block on disk so we don't override 
-    LBAread(fcb_array[fd].buf, 1, current_new_extent->start);
-    strcpy(fcb_array[fd].buf+ fcb_array[fd].file_index%B_CHUNK_SIZE  , buffer );
-    LBAwrite(fcb_array[fd].buf, 1, current_new_extent->start );
-    wrote_bytes += fcb_array[fd].file_index%B_CHUNK_SIZE;
-    fcb_array[fd].file_index +=fcb_array[fd].file_index%B_CHUNK_SIZE;
-  }
-  
-
-
-  // THIS STILL NEEDS WORK
-  // Write all the middle blocks
-  if( (count + fcb_array[fd].file_index%B_CHUNK_SIZE-1) / B_CHUNK_SIZE + 1 > 2 )
-  {
-    current_new_extent = extent_at_index(file_extent, fcb_array[fd].file_index / B_CHUNK_SIZE);
-    pextent end_check;
+    pextent new_blocks = allocate_blocks((count - 1) / B_CHUNK_SIZE + 1 - (extent_size(loc) - 1), 1);
 
     int i = 0;
-    while(current_new_extent !=  NULL)
+    pextent temploc = extent_at_index(new_blocks, i);
+
+    while (temploc != NULL)
     {
-
-      printf("In loop %d, %d\n",current_new_extent->start,current_new_extent->count );
-      //extent_append( file_extent, current_new_extent->start, current_new_extent->count);
-      //LBAwrite(buffer+((i+current_new_extent->count)*B_CHUNK_SIZE), current_new_extent->count, current_new_extent->start );
-      LBAwrite(buffer, current_new_extent->count, current_new_extent->start );
-      wrote_bytes += current_new_extent->count*B_CHUNK_SIZE;
-      current_new_extent = extent_at_index(file_extent, ++i);
+      extent_append(loc, temploc->start, temploc->count);
+      temploc = extent_at_index(new_blocks, ++i);
     }
+    LBAwrite(di->dir, di->dir->extents->count, di->dir->extents->start);
   }
-  
-  
 
+  printf("In extent %d %d\n", loc[1].start, loc[1].count);
 
-  // Ending in the middle of a block
-  if( (fcb_array[fd].file_index+count) % B_CHUNK_SIZE != 0 )
+  // write if not starting from the begining of a block
+  if (fcb_array[fd].file_index % B_CHUNK_SIZE != 0)
   {
-    current_new_extent = extent_at_index(file_extent, fcb_array[fd].file_index/B_CHUNK_SIZE);
-
-    // Read the first block on disk so we don't override 
-    LBAread(fcb_array[fd].buf, 1, current_new_extent->start);
-    strcpy(fcb_array[fd].buf, buffer+wrote_bytes );
-    LBAwrite(fcb_array[fd].buf, 1, current_new_extent->start );
-    wrote_bytes += fcb_array[fd].file_index%B_CHUNK_SIZE;
-    fcb_array[fd].file_index += fcb_array[fd].file_index%B_CHUNK_SIZE;
+    LBAread(fcb_array[fd].buf, 1, extent_block_to_LBA(loc + 1, fcb_array[fd].file_index / B_CHUNK_SIZE));
+    memcpy(fcb_array[fd].buf + fcb_array[fd].file_index % B_CHUNK_SIZE, buffer, fcb_array[fd].file_index % B_CHUNK_SIZE);
+    LBAwrite(fcb_array[fd].buf, 1, extent_block_to_LBA(loc + 1, fcb_array[fd].file_index / B_CHUNK_SIZE));
+    wrote_bytes += fcb_array[fd].file_index % B_CHUNK_SIZE;
+    fcb_array[fd].file_index += fcb_array[fd].file_index % B_CHUNK_SIZE;
+  }
+  if (wrote_bytes == count)
+  {
+    return count;
   }
 
+  // write in all full blocks
+  while (wrote_bytes + B_CHUNK_SIZE < count)
+  {
 
-  return wrote_bytes; 
+    LBAwrite(buffer + wrote_bytes, 1, extent_block_to_LBA(loc + 1, fcb_array[fd].file_index / B_CHUNK_SIZE));
+    wrote_bytes += B_CHUNK_SIZE;
+    fcb_array[fd].file_index += B_CHUNK_SIZE;
+  }
+  if (wrote_bytes == count)
+  {
+    return count;
+  }
 
+  // write if not ending at a block
+  LBAread(fcb_array[fd].buf, 1, extent_block_to_LBA(loc + 1, fcb_array[fd].file_index / B_CHUNK_SIZE));
+  // printf("TRYING TO WRITE %d\n", extent_block_to_LBA(loc + 1, fcb_array[fd].file_index / B_CHUNK_SIZE));
+  memcpy(fcb_array[fd].buf, buffer + wrote_bytes, count - wrote_bytes);
+  LBAwrite(fcb_array[fd].buf, 1, extent_block_to_LBA(loc + 1, fcb_array[fd].file_index / B_CHUNK_SIZE));
+  wrote_bytes += count - wrote_bytes;
+  return wrote_bytes;
 }
+
 // Interface to read a buffer
 // Filling the callers request is broken into three parts
 // Part 1 is what can be filled from the current buffer, which may or may not be enough
@@ -385,6 +361,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
   until end of file or count bytes requested are copied
   if end of file is reached return immediately
   */
+  printf("b_read: fcb_array[fd].info.d_name: %s\n", fcb_array[fd].info->d_name);
   do
   {
     // thread safe given one file per thread
@@ -392,13 +369,13 @@ int b_read(b_io_fd fd, char *buffer, int count)
     {
       // TODO make sure this actually works
       // intent is read directly to their buffer
-      if (count % B_CHUNK_SIZE == 0)
-      {
-        LBAread(buffer, count / B_CHUNK_SIZE, p_fcb->file_index);
-        // TODO Update counts and stuff
-        continue;
-      }
-      LBAread(p_fcb->buf, 1, p_fcb->file_index / B_CHUNK_SIZE);
+      // if (count % B_CHUNK_SIZE == 0)
+      // {
+      //   LBAread(buffer, count / B_CHUNK_SIZE, p_fcb->file_index);
+      //   // TODO Update counts and stuff
+      //   continue;
+      // }
+      LBAread(p_fcb->buf, 1, extent_block_to_LBA(fcb_array[fd].info->location, p_fcb->file_index / B_CHUNK_SIZE));
     }
     int left_in_chunk = B_CHUNK_SIZE - p_fcb->file_index % B_CHUNK_SIZE;
     to_copy = count < (left_in_chunk) ? to_copy : left_in_chunk;
@@ -416,5 +393,7 @@ int b_read(b_io_fd fd, char *buffer, int count)
 // Interface to Close the file
 int b_close(b_io_fd fd)
 {
-  return 1;
+  fcb_array[fd].info = NULL; // possible memory leak
+  FREE(fcb_array[fd].buf);
+  return 0;
 }

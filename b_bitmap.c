@@ -127,7 +127,7 @@ int load_free_space(int block_count, int block_size)
 {
   map.size = (block_count - 1) / WORDSIZE + 1;
   // no idea why what init did didn't work for malloc size will rework if time
-  if (malloc_wrap(block_size * 5, (void *)&map.blocks, "map.blocks"))
+  if (malloc_wrap(block_size * 5, (void **)&map.blocks, "map.blocks"))
   {
     return -1;
   }
@@ -274,6 +274,7 @@ extent *allocate_blocks(int blocks_requested, int min_extent_size)
   LBAwrite(map.blocks, 5, 1);
   return rc;
 }
+
 void release_blocks(int start, int count)
 {
   for (int i = 0; i < count; i++)

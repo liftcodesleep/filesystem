@@ -7,7 +7,7 @@
 extent *make_test_extent()
 {
   extent *extent;
-  if (malloc_wrap(sizeof(extent) * 3, (void *)&extent, "extent"))
+  if (malloc_wrap(sizeof(extent) * 3, (void **)&extent, "extent"))
   {
     return NULL;
   }

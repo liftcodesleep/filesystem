@@ -121,7 +121,7 @@ pextent extent_at_index(pextent extent, uint i)
   else if (extent[2].count == SENTINAL_SECOND_EXTENT && i < 67)
   {
     pextent second_extent;
-    if (malloc_wrap(MINBLOCKSIZE, (void *)&second_extent, "second_extent"))
+    if (malloc_wrap(MINBLOCKSIZE, (void **)&second_extent, "second_extent"))
     {
       return NULL;
     }
@@ -139,14 +139,14 @@ pextent extent_at_index(pextent extent, uint i)
   else if (extent[2].count == SENTINAL_THIRD_EXTENT && i < 8000)
   {
     unsigned int *third_extent;
-    if (malloc_wrap(MINBLOCKSIZE, (void *)&third_extent, "third_extent"))
+    if (malloc_wrap(MINBLOCKSIZE, (void **)&third_extent, "third_extent"))
     {
       return NULL;
     }
     LBAread(third_extent, 1, extent[2].start);
 
     pextent second_extent;
-    if (malloc_wrap(MINBLOCKSIZE, (void *)&second_extent, "second_extent"))
+    if (malloc_wrap(MINBLOCKSIZE, (void **)&second_extent, "second_extent"))
     {
       return NULL;
     }
@@ -166,28 +166,25 @@ pextent extent_at_index(pextent extent, uint i)
 
 unsigned int extent_block_to_LBA(extent *extent, unsigned int local_block_number)
 {
-
+  // printf("extent_block_to_LBA: local_block_num: %d\n", local_block_number);
   pextent current_extent;
   unsigned int block_in_extent = 0;
   int i = 0;
   current_extent = extent_at_index(extent, i);
-
+  // printf("extent_block_to_LBA: current_extent: %p\n", current_extent);
   while (current_extent != NULL && current_extent->count != 0)
   {
     // printf("At extent %d Count: %d \n", current_extent->start, current_extent->count);
     // printf("blocks in extent: %d \n\n", block_in_extent, current_extent->count);
-
     if (current_extent->count + block_in_extent >= local_block_number)
     {
+      printf("extent_block_to_LBA: return: %d\n", current_extent->start - block_in_extent + local_block_number);
       return current_extent->start - block_in_extent + local_block_number;
     }
-
     block_in_extent += current_extent->count;
-
     // FREE(current_extent);
     current_extent = extent_at_index(extent, ++i);
   }
-
   return 0;
 }
 
@@ -195,7 +192,7 @@ unsigned int extent_block_to_LBA(extent *extent, unsigned int local_block_number
 unsigned int extent_remove_blocks(extent *extent, uint block_number, uint count)
 {
   pextent current_extent;
-  if (malloc_wrap(sizeof(extent), (void *)&current_extent, "current_extent"))
+  if (malloc_wrap(sizeof(extent), (void **)&current_extent, "current_extent"))
   {
     return 0;
   }
@@ -220,7 +217,7 @@ unsigned int extent_size(extent *extent)
 {
 
   pextent current_extent;
-  if (malloc_wrap(sizeof(extent), (void *)&current_extent, "current_extent"))
+  if (malloc_wrap(sizeof(extent), (void **)&current_extent, "current_extent"))
   {
     return 0;
   }
@@ -264,7 +261,7 @@ int extent_print(extent *extent)
   if (extent[2].count == SENTINAL_SECOND_EXTENT)
   {
     pextent second_extent;
-    if (malloc_wrap(MINBLOCKSIZE, (void *)&second_extent, "second_extent"))
+    if (malloc_wrap(MINBLOCKSIZE, (void **)&second_extent, "second_extent"))
     {
       return -1;
     }
@@ -285,7 +282,7 @@ int extent_print(extent *extent)
   else if (extent[EXTENT_SIZE - 1].count == SENTINAL_THIRD_EXTENT)
   {
     uint *third_extent;
-    if (malloc_wrap(MINBLOCKSIZE, (void *)&third_extent, "third_extent"))
+    if (malloc_wrap(MINBLOCKSIZE, (void **)&third_extent, "third_extent"))
     {
       return -1;
     }
@@ -295,7 +292,7 @@ int extent_print(extent *extent)
     {
 
       pextent second_extent;
-      if (malloc_wrap(MINBLOCKSIZE, (void *)&second_extent, "second_extent"))
+      if (malloc_wrap(MINBLOCKSIZE, (void **)&second_extent, "second_extent"))
       {
         return -1;
       }
@@ -360,7 +357,7 @@ unsigned int append_second_extent(int extent_loc, uint block_number, uint count)
 {
   // Read in the 2nd extent from disk
   pextent extent;
-  if (malloc_wrap(MINBLOCKSIZE, (void *)&extent, "extent"))
+  if (malloc_wrap(MINBLOCKSIZE, (void **)&extent, "extent"))
   {
     // TODO error properly
     return -1;
@@ -426,7 +423,7 @@ unsigned int append_third_extent(int extent_loc, uint block_number, uint count)
 {
   // Read in the 3rd extent from disk
   uint *extent_3;
-  if (malloc_wrap(MINBLOCKSIZE, (void *)&extent_3, "extent_3"))
+  if (malloc_wrap(MINBLOCKSIZE, (void **)&extent_3, "extent_3"))
   {
     // TODO error properly
     return -1;
