@@ -258,9 +258,8 @@ fdDir *fs_opendir(const char *pathname)
   fD->dirEntryPosition = 0;
   for (int i = 0; i < dai->dir->entries; i++)
   {
-
     strcpy(fD->di[i].d_name, dai->dir[i].name);
-    fD->di[i].d_reclen = dai->dir[i].entries;
+    fD->di[i].d_reclen = dai->dir[i].size;
     fD->di[i].fileType = dai->dir[i].isFile;
     fD->di[i].location = dai->dir[i].extents;
   }
