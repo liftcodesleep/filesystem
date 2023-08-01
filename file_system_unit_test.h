@@ -15,7 +15,7 @@
 #include "b_bitmap.h"
 #include "extent.h"
 
-
+void test(int (*func)(), char *name);
 void file_system_unit_tests();
 
 #endif

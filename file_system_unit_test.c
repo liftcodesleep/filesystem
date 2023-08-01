@@ -182,7 +182,7 @@ int print_test_directory()
 {
   printf("\n");
   direntry *newEntry;
-  if (malloc_wrap(MINBLOCKSIZE * 4, (void *)&newEntry, "newEntry"))
+  if (malloc_wrap(MINBLOCKSIZE * 4, (void **)&newEntry, "newEntry"))
   {
     return -1;
   }
@@ -205,7 +205,7 @@ int make_testdir()
 {
   printf("\nTest directory system initalized.\n");
   direntry *newEntry;
-  if (malloc_wrap(MINBLOCKSIZE * 4, (void *)&newEntry, "newEntry"))
+  if (malloc_wrap(MINBLOCKSIZE * 4, (void **)&newEntry, "newEntry"))
   {
     return -1;
   }

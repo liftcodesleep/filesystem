@@ -37,7 +37,7 @@ dir_and_index *parse_path(const char *given_pathname)
   }
 
   char *pathname;
-  if (malloc_wrap(strlen(given_pathname), (void *)&pathname, "pathname"))
+  if (malloc_wrap(strlen(given_pathname), (void **)&pathname, "pathname"))
   {
     return NULL;
   }
@@ -46,7 +46,7 @@ dir_and_index *parse_path(const char *given_pathname)
   // Token Setup
   char *token;
   dir_and_index *result;
-  if (malloc_wrap(sizeof(dir_and_index), (void *)&result, "result"))
+  if (malloc_wrap(sizeof(dir_and_index), (void **)&result, "result"))
   {
     return NULL;
   }
@@ -54,7 +54,7 @@ dir_and_index *parse_path(const char *given_pathname)
   token = strtok_r(pathname, "/", &saveptr);
 
   direntry *temp_entry;
-  if (malloc_wrap(BLOCK_SIZE * 4, (void *)&temp_entry, "temp_entry"))
+  if (malloc_wrap(BLOCK_SIZE * 4, (void **)&temp_entry, "temp_entry"))
   {
     printf("temp_entry malloc failed\n");
     return NULL;
@@ -101,7 +101,7 @@ dir_and_index *parse_path(const char *given_pathname)
 
       if (strcmp(temp_entry[i].name, token) == 0)
       {
-        //printf("in parse path: %s\n",temp_entry[i].name);
+        // printf("in parse path: %s\n",temp_entry[i].name);
         result->index = i;
         break;
       }
@@ -112,8 +112,8 @@ dir_and_index *parse_path(const char *given_pathname)
     {
       break;
     }
-    //printf("in parse path index: %d\n",result->index);
-    // Update values
+    // printf("in parse path index: %d\n",result->index);
+    //  Update values
     LBAread(temp_entry, 4, temp_entry[i].extents[0].start);
     result->dir = temp_entry;
     token = strtok_r(NULL, "/", &saveptr);
@@ -121,7 +121,7 @@ dir_and_index *parse_path(const char *given_pathname)
 
   FREE(pathname);
 
-  //printf("FINAL RETURN: %d\n",result->index);
+  // printf("FINAL RETURN: %d\n",result->index);
   return result;
 }
 
@@ -150,9 +150,9 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
         printf("Directory is full!\n");
         return -1;
       }
-
-        path->dir[index].isFile = type;
-        path->dir[index].extents[0].start = path->dir[0].extents[0].start;
+      path->dir[index].isFile = type;
+      path->dir[index].extents[0].start = path->dir[0].extents[0].start;
+      path->dir[index].extents[0].count = 1;
     }
     else
     {
@@ -161,7 +161,7 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
     // Setup to find name
     char *token;
     char *last_token;
-    if (malloc_wrap(100, (void *)&last_token, "last_token"))
+    if (malloc_wrap(100, (void **)&last_token, "last_token"))
     {
       return -1;
     }
@@ -181,12 +181,12 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
       token = strtok_r(NULL, "/", &saveptr);
     }
     // Write the new name of the file to disk
-    //printf("in mkdir: %d\n", path->dir[0].extents[0].start);
+    // printf("in mkdir: %d\n", path->dir[0].extents[0].start);
     LBAwrite(path->dir, path->dir[0].extents[0].count, path->dir[0].extents[0].start);
     FREE(last_token);
     FREE(copy_pathname);
-
-    return 1;
+    printf("mkfile: path->dir[index].name: %s\n", path->dir[index].name);
+    return 0;
   }
 
   return -1;
@@ -211,10 +211,12 @@ int fs_rmdir(const char *pathname)
   {
     return -1;
   }
-  //check if there is anything within the directory
-  //if there are used directory entries, remove fails
-  for(int i = 2; i < dai->dir->entries; i++){
-    if(strcmp(dai->dir[i].name, "\0") != 0){
+  // check if there is anything within the directory
+  // if there are used directory entries, remove fails
+  for (int i = 0; i < dai->dir->entries; i++)
+  {
+    if (strcmp(dai->dir[i].name, "\0") != 0)
+    {
       printf("ERROR (REMOVE FAILED): THIS DIRECTORY CONTAINS ITEMS\n");
       return -1;
     }
@@ -241,13 +243,13 @@ fdDir *fs_opendir(const char *pathname)
   // move to the current directory using the parent and index
   // loadDir(dai->dir, dai->index);
   fdDir *fD;
-  if (malloc_wrap(sizeof(fdDir), (void *)&fD, "fD"))
+  if (malloc_wrap(sizeof(fdDir), (void **)&fD, "fD"))
   {
     return NULL;
   }
   // fill the diriteminfo of each entry within current directory
   if (malloc_wrap(sizeof(struct fs_diriteminfo) * dai->dir->entries,
-                  (void *)&fD->di, "fD->di"))
+                  (void **)&fD->di, "fD->di"))
   {
     printf("fD->di malloc failed\n");
     return NULL;
@@ -387,9 +389,13 @@ int fs_setcwd(char *pathname)
     loadDir(current_working_dir, di->index);
 
     // Attempting to cd into a file - Reverse action and abort
-    if (current_working_dir[di->index].isFile == 1) {
-      if (current_working_dir[0].extents[0].start != current_working_dir[di->index].extents[0].start) {
-          loadDir(current_working_dir, current_working_dir[1].extents[0].start);
+    if (current_working_dir[di->index].isFile == 1)
+    {
+      printf("Verify index: #%d\n", di->index);
+      if (current_working_dir[0].extents[0].start != current_working_dir[di->index].extents[0].start)
+      {
+        printf("Verify we are loading into the parent upon failure: %d\n", current_working_dir[1].extents[0].start);
+        loadDir(current_working_dir, current_working_dir[1].extents[0].start);
       }
 
       return (-1);
@@ -468,7 +474,10 @@ int fs_setcwd(char *pathname)
       strcpy(currentDirectory, tempDirectory);
     }
 
-    return (0);
+    printf("Returned: %s\n", currentDirectory);
+    return 0;
+
+    // Double token method contained too many bugs - Let use an array
   }
 
   return (-1);
@@ -561,7 +570,8 @@ int fs_stat(const char *path, struct fs_stat *buf)
 // Populate current_working_dir global variable to root upon initalization
 int set_initial_directory()
 {
-  if (malloc_wrap(BLOCK_SIZE * 4, (void *)&current_working_dir,
+  // TODO make idempotent
+  if (malloc_wrap(BLOCK_SIZE * 4, (void **)&current_working_dir,
                   "current_working_dir"))
   {
     printf("current_working_dir malloc failed\n");
