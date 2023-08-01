@@ -178,7 +178,7 @@ unsigned int extent_block_to_LBA(extent *extent, unsigned int local_block_number
     // printf("blocks in extent: %d \n\n", block_in_extent, current_extent->count);
     if (current_extent->count + block_in_extent >= local_block_number)
     {
-      printf("extent_block_to_LBA: return: %d\n", current_extent->start - block_in_extent + local_block_number);
+      //printf("extent_block_to_LBA: return: %d\n", current_extent->start - block_in_extent + local_block_number);
       return current_extent->start - block_in_extent + local_block_number;
     }
     block_in_extent += current_extent->count;

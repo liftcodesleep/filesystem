@@ -396,6 +396,8 @@ int cmd_mv(int argcnt, char *argvec[])
 
       LBAwrite(target->dir, target->dir->extents->count, target->dir->extents->start);
 
+      FREE(target);
+      FREE(dest);
       break;
     }
   }
