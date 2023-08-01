@@ -199,16 +199,14 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
     return (-1);
   }
 
-    // Fail condition - Prevention from potentially accesssing uninitalized variables
+  // Fail condition - Prevention from potentially accesssing uninitalized variables
   if (fcb_array[fd].file_index == -1) {
     printf("b_seek failed.\n");
     return (-1);
   }
 
-  // TODO handle cases
-  // Of note whence is ~only ever start/current pos/end
-  // No ways to detect multiple options other than those that exceed the value of 3
 
+  // No ways to detect multiple options other than those that exceed the value of 3
   // The file offset is set to offset bytes
   if (whence == SEEK_SET)
   {
@@ -227,10 +225,9 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
     fcb_array[fd].file_index = fcb_array[fd].info->d_reclen + offset;
   }
 
-  // fcb_array[fd].file_index = whence + offset;
   // Returns the resulting offset location as measured in bytes from the
   // beginning of the file
-  return (fcb_array[fd].file_index); // Change this
+  return (fcb_array[fd].file_index);
 }
 
 // Interface to write function

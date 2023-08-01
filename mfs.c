@@ -317,8 +317,9 @@ char *fs_getcwd(char *pathname, size_t size)
 }
 int fs_setcwd(char *pathname)
 {
+  // Refresh buffer to ensure most current changes are reflected and accesssible
   LBAread(current_working_dir, 4, current_working_dir[0].extents[0].start);
-  printf("CHECK PERMISSION: %d\n", current_working_dir[2].isFile);
+
   // If no path is given or root is entered, and the home environment is not empty,
   // cd utility will navigate to home (root)
   if ((strcmp(pathname, "") == 0) || (pathname[0] == '/' && strlen(pathname) == 1))
@@ -343,6 +344,7 @@ int fs_setcwd(char *pathname)
   else if (pathname[0] == '.')
   {
     strcpy(workingDirectory, pathname);
+
     // If pathname does not begin with a /, set workingDirectory to
     // the string formed by the concatentation of the value currentDirectory +
     // a '/' character if it does not end with a slash + and pathname
@@ -352,7 +354,6 @@ int fs_setcwd(char *pathname)
 
       if (currentDirectory[strlen(currentDirectory) - 1] != '/')
       {
-        printf("triggered\n");
         strcat(workingDirectory, "/");
       }
 
@@ -365,14 +366,12 @@ int fs_setcwd(char *pathname)
 
     if (currentDirectory[strlen(currentDirectory) - 1] != '/')
     {
-      printf("triggered\n");
       strcat(workingDirectory, "/");
     }
 
     strcat(workingDirectory, pathname);
   }
 
-  printf("Being fed into parse_path: %s\n", workingDirectory);
   dir_and_index *di = parse_path(workingDirectory);
 
   // parse_path detected an invalid path. Error handling.
@@ -385,23 +384,18 @@ int fs_setcwd(char *pathname)
   {
     // Load the new working directory into the global variable buffer
     current_working_dir = di->dir;
-    printf("What is here? Name: %s flag: %d index: %d\n", di->dir->name, di->dir->isFile, di->index);
-
     loadDir(current_working_dir, di->index);
-    printf("Verify where we loaded into: %d\n", current_working_dir[0].extents[0].start);
 
     // Attempting to cd into a file - Reverse action and abort
     if (current_working_dir[di->index].isFile == 1) {
-      printf("Verify index: #%d\n", di->index);
       if (current_working_dir[0].extents[0].start != current_working_dir[di->index].extents[0].start) {
-          printf("Verify we are loading into the parent upon failure: %d\n", current_working_dir[1].extents[0].start);
           loadDir(current_working_dir, current_working_dir[1].extents[0].start);
       }
-      printf("Attempting to change into a file. fuckouttahere. \n");
-      return -1;
+
+      return (-1);
     }
 
-    // 8) For each dot-dot component - If there is a preceding component
+    // For each dot-dot component - If there is a preceding component
     // that is neither root not dot-dot, then:
     // The preceding component, all slash characters seperating the preceding
     // component from dot-dot, dot-dot, and all slash characters seperating dot-dot
@@ -415,15 +409,22 @@ int fs_setcwd(char *pathname)
     strcpy(previousToken, tok);
     tok = strtok(NULL, "/");
 
+    // Two tokens used to piece together the absolute path of the destination
+    // The best implementation ended up being several if conditions for the
+    // circumstances defined in the manpage for linux cd command
+    // previousToken is used to step backwards if '..' is detected at the end.
+    // tempDirectory used as working directory for this algorithm
     while (tok != NULL)
     {
+      // If '..' in path, ignore and look at next file
       if (strcmp(tok, "..") == 0)
       {
         strcpy(previousToken, tok);
         strtok(NULL, "/");
         break;
-        // If token is '.' and root has not already been copied in
       }
+
+      // If token is '.' and root has not already been copied in
       else if (strcmp(previousToken, ".") == 0 && strlen(tempDirectory) == 0)
       {
         strcat(tempDirectory, "/");
@@ -431,6 +432,8 @@ int fs_setcwd(char *pathname)
         strtok(NULL, "/");
         break;
       }
+
+      // Insert inital '/' if not detected
       if (strlen(tempDirectory) == 0)
       {
         strcat(tempDirectory, "/");
@@ -440,6 +443,7 @@ int fs_setcwd(char *pathname)
       strcpy(previousToken, tok);
       tok = strtok(NULL, "/");
     }
+
     if (strcmp(previousToken, ".") != 0 && strcmp(previousToken, "..") != 0)
     {
       if (strlen(tempDirectory) == 1)
@@ -452,6 +456,9 @@ int fs_setcwd(char *pathname)
         strcat(tempDirectory, "/");
       }
     }
+
+    // Error handling - If somehow an empty value got through the start of the
+    // function and through parsePath. Assign '/' to indicate root
     if (strcmp(tempDirectory, "") == 0)
     {
       strcpy(currentDirectory, "/");
@@ -461,14 +468,10 @@ int fs_setcwd(char *pathname)
       strcpy(currentDirectory, tempDirectory);
     }
 
-    printf("Returned: %s\n", currentDirectory);
-    return 0;
-
-    // Double token method contained too many bugs - Let use an array
-
-
+    return (0);
   }
-  return -1;
+
+  return (-1);
 
 } // linux chdir
 
@@ -488,6 +491,8 @@ int fs_is_dir(char *pathname)
 int fs_delete(char *filename)
 {
   dir_and_index *dai = parse_path(filename);
+
+  // Variable to catch return values of function
   int err = 0;
 
   // Error handling - If filename passed in is a directory
@@ -497,6 +502,7 @@ int fs_delete(char *filename)
     return (-1);
   }
 
+  // Error handling - parse_path failed - Not a valid path
   if (dai == NULL || dai->dir == NULL || dai->index == -1)
   {
     return (-1);
@@ -505,10 +511,10 @@ int fs_delete(char *filename)
   LBAread(dai->dir, dai->dir[1].extents[0].count, dai->dir[1].extents[0].start);
 
   // Delete file - Starting with basic metadeta
-
   // Wipe name - Scrub each bit name occupied with '\0'
   int length = strlen(dai->dir[dai->index].name);
-  for (int i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++)
+  {
     dai->dir[dai->index].name[i] = '\0';
   }
 
@@ -527,11 +533,13 @@ int fs_delete(char *filename)
     return (-1);
   }
 
+  // Write changes to memory
   LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
 
   // Free memory
   FREE(dai->dir);
   FREE(dai);
+
   return (0);
 
 } // removes a file
