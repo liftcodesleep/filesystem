@@ -32,27 +32,21 @@ void initVCB(vcb *vcb)
   vcb -> bytes_in_use = 3584; // Byte offset considering 7 blocks in use
   vcb -> direntry_size = sizeof(direntry); // Byte size of direntry struct
   vcb -> free_block_map = 1; // Initalize to 1 - Will be reassigned
+
   // Assuming each init_dir uses 4 blocks every time, 1 would signifed 4 blocks used
   // from the root location. Can use this variable to iterate and search through
   // all dirents in use if they are allocated and specified here.
-  vcb -> dirents_in_use = 1;
+  vcb -> direntry_in_use = 1;
   vcb -> block_size = BLOCK_SIZE;
   vcb -> max_file_name_length = 100;
   vcb -> root_location = 7;
-  vcb -> max_file_path_length = 100;
-
-  // Flag - Set due to direntry_size being hardcoded
-  // Not dynamically set at the moment to catch potential bugs caused
-  if (sizeof(direntry) != 168) {
-    printf("Direntry size does not match hardcoded value in initVCB!\n");
-  }
+  vcb -> max_file_path_length = 256;
 }
 
 int calculateOffset() {
   
   // If Block 7 being used, and 128 bytes currently in use while assigning another direntry
   // 3752 - (7 * 512) -> 3752 - 3584 = 168
-  // For use with memcpy to write in proper place of block
   int offset = (functionVCB -> bytes_in_use - (functionVCB -> blocks_in_use * BLOCK_SIZE));
 }
 
@@ -62,5 +56,5 @@ unsigned long blockSize() {
 
 // Call to increment amounts of dirents in use
 void incrementDirent() {
-  functionVCB -> dirents_in_use = functionVCB -> dirents_in_use + 1;
+  functionVCB -> direntry_in_use = functionVCB -> direntry_in_use + 1;
 }

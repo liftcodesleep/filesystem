@@ -293,7 +293,6 @@ int fs_closedir(fdDir *dirp)
 // Misc directory functions
 char *fs_getcwd(char *pathname, size_t size)
 {
-  printf("Getcwd: Testing for: %s\n", currentDirectory);
   if (currentDirectory == NULL)
   {
     printf("currentDirectory is empty. Fill it.\n");
@@ -514,10 +513,11 @@ int fs_delete(char *filename)
   // Error handling - parse_path failed - Not a valid path
   if (dai == NULL || dai->dir == NULL || dai->index == -1)
   {
+    printf("Invalid path. rm failed.\n");
     return (-1);
   }
 
-  LBAread(dai->dir, dai->dir[1].extents[0].count, dai->dir[1].extents[0].start);
+  LBAread(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
 
   // Delete file - Starting with basic metadeta
   // Wipe name - Scrub each bit name occupied with '\0'
@@ -531,9 +531,7 @@ int fs_delete(char *filename)
   dai->dir[dai->index].time_created = 0;
   dai->dir[dai->index].time_last_modified = 0;
   dai->dir[dai->index].time_last_accessed = 0;
-  // Scrub location
-  dai->dir[dai->index].extents[0].count = 0;
-  dai->dir[dai->index].extents[0].start = 0;
+  dai->dir[dai->index].isFile = 0;
 
   err = extent_remove_blocks(dai->dir[dai->index].extents, 0, 0); /// 0,0 are place holders
   if (err == -1)
@@ -542,12 +540,15 @@ int fs_delete(char *filename)
     return (-1);
   }
 
-  // Write changes to memory
+  // Scrub location
+  dai->dir[dai->index].extents[0].count = 0;
+  dai->dir[dai->index].extents[0].start = 0;
+
+
   LBAwrite(dai->dir, dai->dir[0].extents[0].count, dai->dir[0].extents[0].start);
 
   // Free memory
   FREE(dai->dir);
-  FREE(dai);
 
   return (0);
 

@@ -193,6 +193,7 @@ int b_seek(b_io_fd fd, off_t offset, int whence)
     return (-1); // invalid file descriptor
   }
 
+  // The value of whence can be 0 and, at most, 2. Error handling
   if ((whence < 0) || (whence > 2))
   {
     printf("Invalid 'whence' directive.\n");
