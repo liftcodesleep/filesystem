@@ -289,7 +289,7 @@ int cmd_cat(int argcnt, char *argvec[])
   {
     readcnt = b_read(testfs_src_fd, buf, BUFFERLEN - 1);
     buf[readcnt] = '\0';
-    printf("%s", buf);
+    printf("%s\n", buf);
   } while (readcnt == BUFFERLEN - 1);
   b_close(testfs_src_fd);
 #endif
