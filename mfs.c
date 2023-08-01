@@ -185,7 +185,7 @@ int fs_mk_internal(const char *pathname, mode_t mode, int type)
     LBAwrite(path->dir, path->dir[0].extents[0].count, path->dir[0].extents[0].start);
     FREE(last_token);
     FREE(copy_pathname);
-    printf("mkfile: path->dir[index].name: %s\n", path->dir[index].name);
+//    printf("mkfile: path->dir[index].name: %s\n", path->dir[index].name);
     return 0;
   }
 
@@ -473,7 +473,7 @@ int fs_setcwd(char *pathname)
       strcpy(currentDirectory, tempDirectory);
     }
 
-    printf("Returned: %s\n", currentDirectory);
+//    printf("Returned: %s\n", currentDirectory);
     return 0;
 
     // Double token method contained too many bugs - Let use an array
